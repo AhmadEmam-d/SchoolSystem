@@ -1,15 +1,34 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using SchoolSystem.Domain.Interfaces.Common;
+using SchoolSystem.Persistence;
+using SchoolSystem.Persistence.Repositories.Common;
+using System.Reflection;
+using YourNamespace.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// DbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Generic repository
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+// AutoMapper (optional if using DTO mapping)
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// MediatR - scan multiple assemblies
+builder.Services.AddMediatR(typeof(CreateStudentCommandHandler).Assembly);
+
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -17,9 +36,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
