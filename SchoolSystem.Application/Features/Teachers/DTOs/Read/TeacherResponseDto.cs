@@ -8,5 +8,6 @@
         public string Phone { get; set; }
 
         public List<string> Subjects { get; set; } = new();
+        public object Teacher { get; set; }
     }
 }

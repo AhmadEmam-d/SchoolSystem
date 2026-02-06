@@ -1,0 +1,95 @@
+﻿
+  {
+    "TeachersFetchedSuccessfully": {
+      "EN": "Teachers fetched successfully",
+      "AR": "تم جلب بيانات المدرسين بنجاح"
+    },
+    "TeachersFetchFailed": {
+      "EN": "An error occurred while fetching teachers",
+      "AR": "حدث خطأ أثناء جلب بيانات المدرسين"
+    },
+    "TeacherFetchedSuccessfully": {
+      "EN": "Teacher fetched successfully",
+      "AR": "تم جلب بيانات المدرس بنجاح"
+    },
+    "TeacherFetchFailed": {
+      "EN": "An error occurred while fetching the teacher",
+      "AR": "حدث خطأ أثناء جلب بيانات المدرس"
+    },
+    "TeacherNotFound": {
+      "EN": "Teacher does not exist",
+      "AR": "المدرس غير موجود"
+    },
+    "TeacherCreatedSuccessfully": {
+      "EN": "Teacher created successfully",
+      "AR": "تم إنشاء المدرس بنجاح"
+    },
+    "TeacherCreationFailed": {
+      "EN": "An error occurred while creating the teacher",
+      "AR": "حدث خطأ أثناء إنشاء المدرس"
+    },
+    "TeacherUpdatedSuccessfully": {
+      "EN": "Teacher updated successfully",
+      "AR": "تم تحديث بيانات المدرس بنجاح"
+    },
+    "TeacherUpdateFailed": {
+      "EN": "An error occurred while updating the teacher",
+      "AR": "حدث خطأ أثناء تحديث بيانات المدرس"
+    },
+    "TeacherDeletedSuccessfully": {
+      "EN": "Teacher deleted successfully",
+      "AR": "تم حذف المدرس بنجاح"
+    },
+    "TeacherDeletionFailed": {
+      "EN": "An error occurred while deleting the teacher",
+      "AR": "حدث خطأ أثناء حذف المدرس"
+    },
+    "IDMismatch": {
+      "EN": "ID mismatch between URL and body",
+      "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+    },
+   
+      "SubjectCreatedSuccessfully": {
+        "EN": "Subject created successfully",
+        "AR": "تم إنشاء المادة بنجاح"
+      },
+      "FailedToCreateSubject": {
+        "EN": "Failed to create subject",
+        "AR": "فشل في إنشاء المادة"
+      },
+      "SubjectsFetchedSuccessfully": {
+        "EN": "Subjects fetched successfully",
+        "AR": "تم جلب المواد بنجاح"
+      },
+      "FailedToFetchSubjects": {
+        "EN": "Failed to fetch subjects",
+        "AR": "فشل في جلب المواد"
+      },
+      "SubjectNotFound": {
+        "EN": "Subject not found",
+        "AR": "المادة غير موجودة"
+      },
+      "SubjectFetchedSuccessfully": {
+        "EN": "Subject fetched successfully",
+        "AR": "تم جلب المادة بنجاح"
+      },
+      "SubjectUpdatedSuccessfully": {
+        "EN": "Subject updated successfully",
+        "AR": "تم تحديث المادة بنجاح"
+      },
+      "FailedToUpdateSubject": {
+        "EN": "Failed to update subject",
+        "AR": "فشل في تحديث المادة"
+      },
+      "SubjectDeletedSuccessfully": {
+        "EN": "Subject deleted successfully",
+        "AR": "تم حذف المادة بنجاح"
+      },
+      "FailedToDeleteSubject": {
+        "EN": "Failed to delete subject",
+        "AR": "فشل في حذف المادة"
+      }
+   
+
+  }
+

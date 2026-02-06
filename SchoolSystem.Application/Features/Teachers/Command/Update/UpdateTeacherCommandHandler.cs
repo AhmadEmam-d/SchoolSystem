@@ -22,7 +22,7 @@ public class UpdateTeacherCommandHandler : IRequestHandler<UpdateTeacherCommand>
 
     public async Task<Unit> Handle(UpdateTeacherCommand request, CancellationToken cancellationToken)
     {
-        var teacher = await _teacherRepo.GetByOidAsync(request.Id);
+        var teacher = await _teacherRepo.GetByOidAsync(request.Teacher.Oid);
         if (teacher == null)
             throw new Exception("Teacher not found");
 
