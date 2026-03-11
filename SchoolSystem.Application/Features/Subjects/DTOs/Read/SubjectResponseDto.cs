@@ -9,7 +9,13 @@ namespace SchoolSystem.Application.Features.Subjects.DTOs
     {
         public Guid Oid { get; set; }
         public string Name { get; set; }
-        public List<TeacherResponseDto> Teachers { get; set; } = new List<TeacherResponseDto>();
+        public List<TeacherBasicDto> Teachers { get; set; } = new List<TeacherBasicDto>();
+        public class TeacherBasicDto
+        {
+            public Guid Oid { get; set; }
+            public string FullName { get; set; }
+            public string Email { get; set; }
+        }
     }
 }
 

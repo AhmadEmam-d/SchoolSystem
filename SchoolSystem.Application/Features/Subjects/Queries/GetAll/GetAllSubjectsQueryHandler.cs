@@ -22,9 +22,12 @@ public class GetAllSubjectsQueryHandler : IRequestHandler<GetAllSubjectsQuery, L
 
     public async Task<List<SubjectResponseDto>> Handle(GetAllSubjectsQuery request, CancellationToken cancellationToken)
     {
-        return await _repo
+        var subjects = await _repo
             .GetAllQueryable()
-            .ProjectTo<SubjectResponseDto>(_mapper.ConfigurationProvider)
+            .Include(s => s.TeacherSubjects)
+            .ThenInclude(ts => ts.Teacher)
             .ToListAsync(cancellationToken);
+
+        return _mapper.Map<List<SubjectResponseDto>>(subjects);
     }
 }

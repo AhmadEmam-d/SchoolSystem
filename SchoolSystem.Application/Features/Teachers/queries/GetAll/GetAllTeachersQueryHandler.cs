@@ -24,10 +24,13 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 
         public async Task<List<TeacherResponseDto>> Handle(GetAllTeachersQuery request, CancellationToken cancellationToken)
         {
-            return await _teacherRepo
-                .GetAllQueryable()
-                .ProjectTo<TeacherResponseDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(cancellationToken);
+            var teachers = await _teacherRepo
+                             .GetAllQueryable()
+                            .Include(t => t.TeacherSubjects)
+                            .ThenInclude(ts => ts.Subject)
+                            .ToListAsync(cancellationToken);
+
+            return _mapper.Map<List<TeacherResponseDto>>(teachers);
         }
     }
 }

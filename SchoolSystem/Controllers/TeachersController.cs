@@ -28,7 +28,6 @@ namespace SchoolSystem.API.Controllers
             _messageService = messageService;
         }
 
-        // GET: api/Teachers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -46,7 +45,6 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // GET: api/Teachers/{oid}
         [HttpGet("{oid}")]
         public async Task<IActionResult> GetByOid(Guid oid)
         {
@@ -63,9 +61,7 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
-        // ===========================
-        // 🔹 GET TEACHERS WITH FILTERING, SORTING, PAGINATION
-        // ===========================
+
         [HttpPost("Get")]
         public async Task<IActionResult> GetRequestModel([FromBody] GetTeachersQuery request)
         {
@@ -88,7 +84,6 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // POST: api/Teachers
         [HttpPost]
         public async Task<IActionResult> Create(CreateTeacherCommand command)
         {
@@ -106,7 +101,6 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // PUT: api/Teachers/{oid}
         [HttpPut("{oid}")]
         public async Task<IActionResult> Update(Guid oid, UpdateTeacherCommand command)
         {
@@ -137,7 +131,6 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // DELETE: api/Teachers/{oid}
         [HttpDelete("{oid}")]
         public async Task<IActionResult> Delete(Guid oid, DeleteTeacherCommand command)
         {

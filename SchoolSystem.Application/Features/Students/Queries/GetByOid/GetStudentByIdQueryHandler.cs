@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Students.DTOs.Read;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
@@ -20,8 +21,13 @@ public class GetStudentByIdQueryHandler : IRequestHandler<GetStudentByIdQuery, S
 
     public async Task<StudentDto> Handle(GetStudentByIdQuery request, CancellationToken cancellationToken)
     {
-        var student = await _repository.GetByOidAsync(request.Id);
-        if (student == null || student.IsDeleted) return null;
+        var student = await _repository
+               .GetAllQueryable()
+               .Include(s => s.Parent)  
+               .FirstOrDefaultAsync(s => s.Oid == request.Id, cancellationToken);
+
+        if (student == null)
+            return null;
 
         return _mapper.Map<StudentDto>(student);
     }

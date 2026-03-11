@@ -30,9 +30,7 @@ namespace SchoolSystem.Api.Controllers
             _messageService = messageService;
         }
 
-        // ===========================
-        // 🔹 GET ALL SECTIONS
-        // ===========================
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -50,9 +48,6 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 GET SECTION BY ID
-        // ===========================
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -77,9 +72,6 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 CREATE SECTION
-        // ===========================
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSectionDto dto)
         {
@@ -99,9 +91,7 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 UPDATE SECTION
-        // ===========================
+
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSectionDto dto)
         {
@@ -131,9 +121,6 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 DELETE SECTION
-        // ===========================
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, [FromBody] DeleteSectionCommand command)
         {

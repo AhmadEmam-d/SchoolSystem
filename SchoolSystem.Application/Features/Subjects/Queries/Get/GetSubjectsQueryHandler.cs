@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Common;
-using SchoolSystem.Application.Features.Parents.DTOs.Read;
+using SchoolSystem.Application.Features.Subjects.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
@@ -12,40 +12,55 @@ using System.Threading;
 using System.Threading.Tasks;
 using ValueCloudRestaurants.Application.Extensions;
 
-namespace SchoolSystem.Application.Features.Parents.Queries.Get
+namespace SchoolSystem.Application.Features.Subjects.Queries.Get
 {
-    public class GetParentsQueryHandler : IRequestHandler<GetParentsQuery, QueryResponse<object>>
+    public class GetSubjectsQueryHandler : IRequestHandler<GetSubjectsQuery, QueryResponse<object>>
     {
-        private readonly IGenericRepository<Parent> _parentRepo;
+        private readonly IGenericRepository<Subject> _subjectRepo;
         private readonly IMapper _mapper;
 
-        public GetParentsQueryHandler(IGenericRepository<Parent> parentRepo, IMapper mapper)
+        public GetSubjectsQueryHandler(IGenericRepository<Subject> subjectRepo, IMapper mapper)
         {
-            _parentRepo = parentRepo;
+            _subjectRepo = subjectRepo;
             _mapper = mapper;
         }
 
-        public async Task<QueryResponse<object>> Handle(GetParentsQuery request, CancellationToken ct)
+        public async Task<QueryResponse<object>> Handle(GetSubjectsQuery request, CancellationToken ct)
         {
             var res = new QueryResponse<object>();
             var m = request.Request ?? new RequestModel();
 
             try
             {
-                var baseQuery = _parentRepo.GetAllQueryable()
-                                            .Include(p => p.Students)
+                var baseQuery = _subjectRepo.GetAllQueryable()
+                                            .Include(s => s.TeacherSubjects)
+                                            .ThenInclude(ts => ts.Teacher)
                                             .AsNoTracking();
 
-                // Apply filters
+                // Apply filters (using FilterCondition list)
                 if (m.Filters != null && m.Filters.Any())
                 {
-                    baseQuery = baseQuery.ApplyFilters(m.Filters);
+                    try
+                    {
+                        baseQuery = baseQuery.ApplyFilters(m.Filters);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Filter error: {ex.Message}", ex);
+                    }
                 }
 
                 // Apply sorting
                 if (m.Sort != null && !string.IsNullOrWhiteSpace(m.Sort.SortBy))
                 {
-                    baseQuery = baseQuery.ApplySorting(m.Sort);
+                    try
+                    {
+                        baseQuery = baseQuery.ApplySorting(m.Sort);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Sorting error: {ex.Message}", ex);
+                    }
                 }
 
                 // Get total count before pagination
@@ -67,8 +82,8 @@ namespace SchoolSystem.Application.Features.Parents.Queries.Get
                 // Execute query
                 var paged = await pagedQuery.ToListAsync(ct);
 
-                // Map to DTO (you'll need to create ParentResponseDto)
-                var items = _mapper.Map<List<ParentDto>>(paged).Cast<object>().ToList();
+                // Map to DTO
+                var items = _mapper.Map<List<SubjectResponseDto>>(paged).Cast<object>().ToList();
 
                 // Build response
                 res.Data = items;
@@ -82,7 +97,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.Get
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error in GetParentsQueryHandler: {ex.Message}", ex);
+                throw new Exception($"Error in GetSubjectsQueryHandler: {ex.Message}", ex);
             }
         }
     }

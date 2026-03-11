@@ -26,9 +26,7 @@ namespace SchoolSystem.API.Controllers
             _messageService = messageService;
         }
 
-        // ===========================
-        // 🔹 GET ALL STUDENTS
-        // ===========================
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -46,9 +44,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 GET STUDENT BY ID
-        // ===========================
+
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -69,9 +65,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 CREATE STUDENT
-        // ===========================
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateStudentDto studentDto)
         {
@@ -91,9 +85,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 UPDATE STUDENT
-        // ===========================
+
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateStudentDto studentDto)
         {
@@ -123,9 +115,6 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 DELETE STUDENT
-        // ===========================
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, [FromBody] DeleteStudentCommand command)
         {

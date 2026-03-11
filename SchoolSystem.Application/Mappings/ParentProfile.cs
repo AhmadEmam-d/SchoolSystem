@@ -8,13 +8,13 @@ public class ParentProfile : Profile
 {
     public ParentProfile()
     {
-        // CreateParentDto -> Parent
         CreateMap<CreateParentDto, Parent>();
-
-        // UpdateParentDto -> Parent
         CreateMap<UpdateParentDto, Parent>();
 
-        // Parent -> ParentDto
-        CreateMap<Parent, ParentDto>();
+        CreateMap<Parent, ParentDto>()
+            .ForMember(dest => dest.Students, opt => opt.MapFrom(src => src.Students));
+
+        CreateMap<Student, StudentBasicInfoDto>()
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName));
     }
 }

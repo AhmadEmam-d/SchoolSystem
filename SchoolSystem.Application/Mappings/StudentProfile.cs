@@ -8,8 +8,12 @@ public class StudentProfile : Profile
 {
     public StudentProfile()
     {
-        CreateMap<Student, StudentDto>().ReverseMap();
         CreateMap<CreateStudentDto, Student>();
         CreateMap<UpdateStudentDto, Student>();
+
+        CreateMap<Student, StudentDto>()
+            .ForMember(dest => dest.Parent, opt => opt.MapFrom(src => src.Parent));
+
+        CreateMap<Parent, ParentBasicInfoDto>();
     }
 }

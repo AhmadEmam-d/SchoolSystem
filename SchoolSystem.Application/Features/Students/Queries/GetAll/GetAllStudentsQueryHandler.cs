@@ -22,9 +22,10 @@ public class GetAllStudentsQueryHandler : IRequestHandler<GetAllStudentsQuery, L
 
     public async Task<List<StudentDto>> Handle(GetAllStudentsQuery request, CancellationToken cancellationToken)
     {
-        var students = await _repository.GetAllQueryable()
-            .Where(s => !s.IsDeleted)
-            .ToListAsync(cancellationToken);
+        var students = await _repository
+                .GetAllQueryable()
+                .Include(s => s.Parent)  
+                .ToListAsync(cancellationToken);
 
         return _mapper.Map<List<StudentDto>>(students);
     }

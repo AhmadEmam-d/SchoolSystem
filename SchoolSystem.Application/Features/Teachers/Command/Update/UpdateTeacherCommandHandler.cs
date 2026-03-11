@@ -33,10 +33,8 @@ namespace SchoolSystem.Application.Features.Teachers.Commands.Update
             if (teacher == null)
                 throw new Exception($"Teacher with Oid {request.Oid} not found.");
 
-            // Map basic fields
             _mapper.Map(request.Teacher, teacher);
 
-            // Update TeacherSubjects
             teacher.TeacherSubjects.Clear();
             if (request.Teacher.SubjectOids != null)
             {

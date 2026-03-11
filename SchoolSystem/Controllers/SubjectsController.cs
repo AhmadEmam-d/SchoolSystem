@@ -7,7 +7,7 @@ using SchoolSystem.Application.Features.Subjects.Commands.Update;
 using SchoolSystem.Application.Features.Subjects.DTOs.Create;
 using SchoolSystem.Application.Features.Subjects.DTOs.Update;
 using SchoolSystem.Application.Features.Subjects.DTOs.Update.SchoolSystem.Application.Features.Subjects.DTOs.Update;
-
+using SchoolSystem.Application.Features.Subjects.Queries.Get;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -28,9 +28,6 @@ namespace SchoolSystem.API.Controllers
             _messageService = messageService;
         }
 
-        // ===========================
-        // 🔹 GET ALL SUBJECTS
-        // ===========================
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -48,9 +45,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 GET SUBJECT BY ID
-        // ===========================
+
         [HttpGet("{oid:guid}")]
         public async Task<IActionResult> GetById(Guid oid)
         {
@@ -74,10 +69,28 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetSubjectsQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
 
-        // ===========================
-        // 🔹 CREATE SUBJECT
-        // ===========================
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "SubjectsFetchedSuccessfully",
+                    _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SubjectsFetchFailed",
+                    _messageService,
+                    new List<string> { $"An error occurred while fetching subjects: {ex.Message}" }
+                ));
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSubjectDto dto)
         {
@@ -97,9 +110,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 UPDATE SUBJECT
-        // ===========================
+
         [HttpPut("{oid:guid}")]
         public async Task<IActionResult> Update(Guid oid, [FromBody] UpdateSubjectDto dto)
         {
@@ -129,9 +140,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 DELETE SUBJECT
-        // ===========================
+
         [HttpDelete("{oid:guid}")]
         public async Task<IActionResult> Delete(Guid oid, [FromBody] DeleteSubjectCommand command)
         {

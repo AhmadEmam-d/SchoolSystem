@@ -31,9 +31,7 @@ namespace SchoolSystem.Api.Controllers
             _messageService = messageService;
         }
 
-        // ===========================
-        // 🔹 GET ALL PARENTS
-        // ===========================
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -51,9 +49,7 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 GET PARENT BY ID
-        // ===========================
+
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
@@ -98,9 +94,7 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
-        // ===========================
-        // 🔹 CREATE PARENT
-        // ===========================
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateParentDto dto)
         {
@@ -120,9 +114,7 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 UPDATE PARENT
-        // ===========================
+
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateParentDto dto)
         {
@@ -152,9 +144,7 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // ===========================
-        // 🔹 DELETE PARENT
-        // ===========================
+
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, [FromBody] DeleteParentCommand command)
         {

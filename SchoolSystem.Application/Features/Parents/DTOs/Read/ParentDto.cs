@@ -12,8 +12,13 @@ namespace SchoolSystem.Application.Features.Parents.DTOs.Read
         public string MotherName { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
-        public List<StudentDto> Students { get; set; } = new List<StudentDto>();
+        public List<StudentBasicInfoDto> Students { get; set; } = new();
+    }
 
+    public class StudentBasicInfoDto
+    {
+        public Guid Oid { get; set; }
+        public string FullName { get; set; }
     }
 
 }

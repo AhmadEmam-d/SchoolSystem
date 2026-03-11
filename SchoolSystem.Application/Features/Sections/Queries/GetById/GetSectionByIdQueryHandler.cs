@@ -25,10 +25,9 @@ namespace SchoolSystem.Application.Features.Sections.Queries.GetById
 
         public async Task<SectionDto> Handle(GetSectionByIdQuery request, CancellationToken cancellationToken)
         {
-            // ✅ استخدم GetAllQueryable() مع Include بدلاً من GetByOidAsync
             var section = await _repo.GetAllQueryable()
-                .Include(s => s.Class)           // تحميل الـ Class المرتبط
-                .Include(s => s.Students)        // تحميل الطلاب (اختياري)
+                .Include(s => s.Class)           
+                .Include(s => s.Students)      
                 .FirstOrDefaultAsync(s => s.Oid == request.Id, cancellationToken);
 
             if (section == null)
