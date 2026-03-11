@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SchoolSystem.Application.Features.Students.Commands.Create;
 using SchoolSystem.Application.Interfaces.Services;
 using SchoolSystem.Domain.Interfaces.Common;
 using SchoolSystem.Infrastructure.Services;
@@ -25,8 +26,11 @@ builder.Services.AddMediatR(typeof(CreateStudentCommandHandler).Assembly);
 
 builder.Services.AddScoped<IMessageService, MessageService>();
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    }); builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();

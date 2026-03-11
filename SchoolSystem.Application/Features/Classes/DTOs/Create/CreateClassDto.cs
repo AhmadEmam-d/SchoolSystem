@@ -7,10 +7,8 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Create
     public class CreateClassDto
     {
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string Level { get; set; }
 
-        // Optional for now
-        public Guid? TeacherOid { get; set; }
     }
 
 }

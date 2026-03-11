@@ -1,48 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AutoMapper;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace SchoolSystem.Application.Features.Teachers.Command.Create
+namespace SchoolSystem.Application.Features.Teachers.Commands.Create
 {
-    using AutoMapper;
-    using MediatR;
-    using SchoolSystem.Domain.Entities;
-    using SchoolSystem.Domain.Interfaces.Common;
-
-    public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand, Guid>
+    public class CreateTeacherCommandHandler
+        : IRequestHandler<CreateTeacherCommand, CreateTeacherCommandResponse>
     {
         private readonly IGenericRepository<Teacher> _teacherRepo;
-        private readonly IGenericRepository<Subject> _subjectRepo;
         private readonly IMapper _mapper;
 
         public CreateTeacherCommandHandler(
             IGenericRepository<Teacher> teacherRepo,
-            IGenericRepository<Subject> subjectRepo,
             IMapper mapper)
         {
             _teacherRepo = teacherRepo;
-            _subjectRepo = subjectRepo;
             _mapper = mapper;
         }
 
-        public async Task<Guid> Handle(CreateTeacherCommand request, CancellationToken cancellationToken)
+        public async Task<CreateTeacherCommandResponse> Handle(
+            CreateTeacherCommand request,
+            CancellationToken cancellationToken)
         {
-            var teacher = _mapper.Map<Teacher>(request.Teacher);
-            teacher.Oid = Guid.NewGuid();
-            teacher.CreatedAt = DateTime.UtcNow;
+            var entity = _mapper.Map<Teacher>(request.Teacher);
 
-            // Load Subjects
-            if (request.Teacher.SubjectOids != null && request.Teacher.SubjectOids.Any())
+            await _teacherRepo.AddAsync(entity);
+
+            return new CreateTeacherCommandResponse
             {
-                var subjects = await _subjectRepo.GetAllAsync();
-                teacher.Subjects = subjects
-                    .Where(s => request.Teacher.SubjectOids.Contains(s.Oid))
-                    .ToList();
-            }
-
-            await _teacherRepo.AddAsync(teacher);
-            return teacher.Oid;
+                Oid = entity.Oid
+            };
         }
     }
-
 }

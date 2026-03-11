@@ -6,6 +6,6 @@ using System.Text;
 
 namespace SchoolSystem.Application.Features.Classes.Commands.Update
 {
-    public record UpdateClassCommand(Guid Id, UpdateClassDto ClassDto) : IRequest;
-
+    public record UpdateClassCommand(Guid Oid, UpdateClassDto Class)
+            : IRequest<UpdateClassCommandResponse>;
 }

@@ -7,7 +7,6 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
     public class StudentDto
     {
         public Guid Oid { get; set; }
-        public string AdmissionNumber { get; set; }
         public string FullName { get; set; }
         public string Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
@@ -15,6 +14,7 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
         public string Email { get; set; }
         public string Phone { get; set; }
         public Guid ClassOid { get; set; }
+
         public Guid SectionOid { get; set; }
         public Guid ParentOid { get; set; }
     }

@@ -2,27 +2,33 @@
 using MediatR;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class UpdateSubjectCommandHandler : IRequestHandler<UpdateSubjectCommand>
+namespace SchoolSystem.Application.Features.Subjects.Commands.Update
 {
-    private readonly IGenericRepository<Subject> _repo;
-    private readonly IMapper _mapper;
-
-    public UpdateSubjectCommandHandler(IGenericRepository<Subject> repo, IMapper mapper)
+    public class UpdateSubjectCommandHandler : IRequestHandler<UpdateSubjectCommand, UpdateSubjectCommandResponse>
     {
-        _repo = repo;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Subject> _repo;
+        private readonly IMapper _mapper;
 
-    public async Task<Unit> Handle(UpdateSubjectCommand request, CancellationToken cancellationToken)
-    {
-        var existing = await _repo.GetByOidAsync(request.Id);
-        if (existing == null) throw new Exception("Subject not found");
+        public UpdateSubjectCommandHandler(IGenericRepository<Subject> repo, IMapper mapper)
+        {
+            _repo = repo;
+            _mapper = mapper;
+        }
 
-        _mapper.Map(request.Subject, existing);
-        existing.UpdatedAt = DateTime.UtcNow;
+        public async Task<UpdateSubjectCommandResponse> Handle(UpdateSubjectCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _repo.GetByOidAsync(request.Oid);
+            if (entity == null)
+                throw new Exception($"Subject with Oid {request.Oid} not found.");
 
-        await _repo.UpdateAsync(existing);
-        return Unit.Value;
+            _mapper.Map(request.Subject, entity);
+            await _repo.UpdateAsync(entity);
+
+            return new UpdateSubjectCommandResponse { Oid = entity.Oid };
+        }
     }
 }

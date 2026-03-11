@@ -1,9 +1,17 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using SchoolSystem.Api.Common.Helpers;
+using SchoolSystem.Api.Common.Models;
+using SchoolSystem.Application.Features.Subjects.Commands.Create;
+using SchoolSystem.Application.Features.Subjects.Commands.Update;
 using SchoolSystem.Application.Features.Subjects.DTOs.Create;
+using SchoolSystem.Application.Features.Subjects.DTOs.Update;
 using SchoolSystem.Application.Features.Subjects.DTOs.Update.SchoolSystem.Application.Features.Subjects.DTOs.Update;
-using SchoolSystem.Application.Interfaces.Services; // IMessageService
-using SchoolSystem.Api.Common.Helpers; // ApiResponseFactory
+
+using SchoolSystem.Application.Interfaces.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.API.Controllers
 {
@@ -20,118 +28,133 @@ namespace SchoolSystem.API.Controllers
             _messageService = messageService;
         }
 
-        // 🔹 Create Subject
+        // ===========================
+        // 🔹 GET ALL SUBJECTS
+        // ===========================
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            try
+            {
+                var result = await _mediator.Send(new GetAllSubjectsQuery());
+                return Ok(ApiResponseFactory.Success(result, "SubjectsFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SubjectsFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching subjects." }
+                ));
+            }
+        }
+
+        // ===========================
+        // 🔹 GET SUBJECT BY ID
+        // ===========================
+        [HttpGet("{oid:guid}")]
+        public async Task<IActionResult> GetById(Guid oid)
+        {
+            try
+            {
+                var result = await _mediator.Send(new GetSubjectByIdQuery(oid));
+
+                if (result == null)
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "SubjectNotFound", _messageService,
+                        new List<string> { "Subject does not exist." }
+                    ));
+
+                return Ok(ApiResponseFactory.Success(result, "SubjectFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SubjectFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching the subject." }
+                ));
+            }
+        }
+
+        // ===========================
+        // 🔹 CREATE SUBJECT
+        // ===========================
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSubjectDto dto)
         {
             try
             {
                 var command = new CreateSubjectCommand(dto);
-                var oid = await _mediator.Send(command);
+                var subjectOid = await _mediator.Send(command);
 
-                return Ok(ApiResponseFactory.Success(oid ,"SubjectCreatedSuccessfully", _messageService));
+                return Ok(ApiResponseFactory.Success(subjectOid, "SubjectCreatedSuccessfully", _messageService));
             }
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "SubjectCreationFailed", _messageService, new List<string> {"FailedToCreateSubject"}));
-            }
-        }
-
-        // 🔹 Get All Subjects
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            try
-            {
-                var subjects = await _mediator.Send(new GetAllSubjectsQuery());
-                return Ok(ApiResponseFactory.Success(
-                    subjects,"SubjectsFetchedSuccessfully", _messageService
-                ));
-            }
-            catch
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "SubjectsFetchFailed",
-                    _messageService,
-                    new List<string> {"FailedToFetchSubjects" }
+                    "SubjectCreationFailed", _messageService,
+                    new List<string> { "An error occurred while creating the subject." }
                 ));
             }
         }
 
-        // 🔹 Get Subject By Id
-        [HttpGet("{oid}")]
-        public async Task<IActionResult> GetById(Guid oid)
-        {
-            try
-            {
-                var subject = await _mediator.Send(new GetSubjectByIdQuery(oid));
-                if (subject == null)
-                    return NotFound(ApiResponseFactory.Failure<object>(
-                        "SubjectNotFound",
-                        _messageService,
-                        new List<string> {"SubjectNotFound" }
-                    ));
-
-                return Ok(ApiResponseFactory.Success(subject, "SubjectFetchedSuccessfully", _messageService
-                ));
-            }
-            catch
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "SubjectFetchFailed",
-                    _messageService,
-                    new List<string> { "FailedToFetchSubject" }
-                ));
-            }
-        }
-
-        // 🔹 Update Subject
-        [HttpPut("{oid}")]
+        // ===========================
+        // 🔹 UPDATE SUBJECT
+        // ===========================
+        [HttpPut("{oid:guid}")]
         public async Task<IActionResult> Update(Guid oid, [FromBody] UpdateSubjectDto dto)
         {
             try
             {
                 var command = new UpdateSubjectCommand(oid, dto);
-                await _mediator.Send(command);
 
-                return Ok(ApiResponseFactory.Success(
-                    true,
-                   "SubjectUpdatedSuccessfully",
-                    _messageService
-                ));
+                if (oid != command.Oid)
+                {
+                    return BadRequest(new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Errors = new List<string> { "ID mismatch between URL and body." }
+                    });
+                }
+
+                var response = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(response.Oid, "SubjectUpdatedSuccessfully", _messageService));
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "SubjectUpdateFailed",
-                    _messageService,
-                    new List<string> { "FailedToUpdateSubject" }
+                    "SubjectUpdateFailed", _messageService,
+                    new List<string> { ex.Message }
                 ));
             }
         }
 
-        // 🔹 Delete Subject
-        [HttpDelete("{oid}")]
-        public async Task<IActionResult> Delete(Guid oid)
+        // ===========================
+        // 🔹 DELETE SUBJECT
+        // ===========================
+        [HttpDelete("{oid:guid}")]
+        public async Task<IActionResult> Delete(Guid oid, [FromBody] DeleteSubjectCommand command)
         {
             try
             {
-                var command = new DeleteSubjectCommand(oid);
+                if (oid != command.Oid)
+                {
+                    return BadRequest(new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Errors = new List<string> { "ID mismatch between URL and body." }
+                    });
+                }
+
                 await _mediator.Send(command);
 
-                return Ok(ApiResponseFactory.Success(
-                    true,
-                   "SubjectDeletedSuccessfully",
-                    _messageService
-                ));
+                return Ok(ApiResponseFactory.Success(true, "SubjectDeletedSuccessfully", _messageService));
             }
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "SubjectDeletionFailed",
-                    _messageService,
-                    new List<string> { "FailedToDeleteSubject" }
+                    "SubjectDeletionFailed", _messageService,
+                    new List<string> { "An error occurred while deleting the subject." }
                 ));
             }
         }

@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Subjects.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
@@ -20,7 +22,9 @@ public class GetAllSubjectsQueryHandler : IRequestHandler<GetAllSubjectsQuery, L
 
     public async Task<List<SubjectResponseDto>> Handle(GetAllSubjectsQuery request, CancellationToken cancellationToken)
     {
-        var subjects = await _repo.GetAllAsync();
-        return _mapper.Map<List<SubjectResponseDto>>(subjects);
+        return await _repo
+            .GetAllQueryable()
+            .ProjectTo<SubjectResponseDto>(_mapper.ConfigurationProvider)
+            .ToListAsync(cancellationToken);
     }
 }

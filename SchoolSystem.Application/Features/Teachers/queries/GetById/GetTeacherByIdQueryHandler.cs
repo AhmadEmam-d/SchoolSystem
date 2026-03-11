@@ -22,11 +22,7 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetById
 
         public async Task<TeacherResponseDto> Handle(GetTeacherByIdQuery request, CancellationToken cancellationToken)
         {
-            var teacher = await _teacherRepo.GetByOidAsync(request.Oid/*, includeProperties: "Subjects"*/);
-
-            if (teacher == null)
-                return null;
-
+            var teacher = await _teacherRepo.GetByOidAsync(request.Oid);
             return _mapper.Map<TeacherResponseDto>(teacher);
         }
     }

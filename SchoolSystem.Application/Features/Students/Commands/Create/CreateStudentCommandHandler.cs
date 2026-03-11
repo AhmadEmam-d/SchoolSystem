@@ -6,25 +6,31 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand, Guid>
+namespace SchoolSystem.Application.Features.Students.Commands.Create
 {
-    private readonly IGenericRepository<Student> _repository;
-    private readonly IMapper _mapper;
-
-    public CreateStudentCommandHandler(IGenericRepository<Student> repository, IMapper mapper)
+    public class CreateStudentCommandHandler : IRequestHandler<CreateStudentCommand, CreateStudentCommandResponse>
     {
-        _repository = repository;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Student> _repository;
+        private readonly IMapper _mapper;
 
-    public async Task<Guid> Handle(CreateStudentCommand request, CancellationToken cancellationToken)
-    {
-        var student = _mapper.Map<Student>(request.Student);
-        student.Oid = Guid.NewGuid();
-        student.CreatedAt = DateTime.UtcNow;
+        public CreateStudentCommandHandler(IGenericRepository<Student> repository, IMapper mapper)
+        {
+            _repository = repository;
+            _mapper = mapper;
+        }
 
-        await _repository.CreateAsync(student);
+        public async Task<CreateStudentCommandResponse> Handle(CreateStudentCommand request, CancellationToken cancellationToken)
+        {
+            var student = _mapper.Map<Student>(request.Student);
+            student.Oid = Guid.NewGuid();
+            student.CreatedAt = DateTime.UtcNow;
 
-        return student.Oid;
+            await _repository.CreateAsync(student);
+
+            return new CreateStudentCommandResponse
+            {
+                Oid = student.Oid
+            };
+        }
     }
 }

@@ -323,26 +323,21 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("TeacherOid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Oid");
-
-                    b.HasIndex("TeacherOid");
 
                     b.ToTable("Classes");
                 });
@@ -390,10 +385,6 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AdmissionNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -490,15 +481,10 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("TeacherOid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Oid");
-
-                    b.HasIndex("TeacherOid");
 
                     b.ToTable("Subjects");
                 });
@@ -533,6 +519,36 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasKey("Oid");
 
                     b.ToTable("Teachers");
+                });
+
+            modelBuilder.Entity("TeacherSubject", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("SubjectOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("SubjectOid");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("TeacherSubjects");
                 });
 
             modelBuilder.Entity("Assignment", b =>
@@ -606,15 +622,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("FeeInvoice");
                 });
 
-            modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
-                {
-                    b.HasOne("Teacher", "Teacher")
-                        .WithMany()
-                        .HasForeignKey("TeacherOid");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
@@ -653,13 +660,21 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Class");
                 });
 
-            modelBuilder.Entity("Subject", b =>
+            modelBuilder.Entity("TeacherSubject", b =>
                 {
-                    b.HasOne("Teacher", "Teacher")
-                        .WithMany("Subjects")
-                        .HasForeignKey("TeacherOid")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("Subject", "Subject")
+                        .WithMany("TeacherSubjects")
+                        .HasForeignKey("SubjectOid")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Teacher", "Teacher")
+                        .WithMany("TeacherSubjects")
+                        .HasForeignKey("TeacherOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subject");
 
                     b.Navigation("Teacher");
                 });
@@ -700,9 +715,14 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Students");
                 });
 
+            modelBuilder.Entity("Subject", b =>
+                {
+                    b.Navigation("TeacherSubjects");
+                });
+
             modelBuilder.Entity("Teacher", b =>
                 {
-                    b.Navigation("Subjects");
+                    b.Navigation("TeacherSubjects");
                 });
 #pragma warning restore 612, 618
         }

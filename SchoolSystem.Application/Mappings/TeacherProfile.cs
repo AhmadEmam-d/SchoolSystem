@@ -10,13 +10,9 @@ public class TeacherProfile : Profile
 {
     public TeacherProfile()
     {
-        CreateMap<CreateTeacherDto, Teacher>()
-            .ForMember(dest => dest.Subjects, opt => opt.Ignore());
+        CreateMap<CreateTeacherDto, Teacher>();
 
-        CreateMap<UpdateTeacherDto, Teacher>()
-            .ForMember(dest => dest.Subjects, opt => opt.Ignore());
-        CreateMap<Teacher, TeacherResponseDto>()
-                .ForMember(dest => dest.Subjects,
-                          opt => opt.MapFrom(src => src.Subjects.Select(s => s.Name)));
+        CreateMap<UpdateTeacherDto, Teacher>();
+        CreateMap<Teacher, TeacherResponseDto>();
     }
 }

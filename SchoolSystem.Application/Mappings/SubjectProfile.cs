@@ -10,8 +10,7 @@ namespace SchoolSystem.Application.Profiles
     {
         public SubjectProfile()
         {
-            CreateMap<Subject, SubjectResponseDto>()
-                .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher.FullName));
+            CreateMap<Subject, SubjectResponseDto>();
 
             CreateMap<CreateSubjectDto, Subject>();
             CreateMap<UpdateSubjectDto, Subject>();

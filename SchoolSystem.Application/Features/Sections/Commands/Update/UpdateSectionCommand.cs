@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MediatR;
+﻿using MediatR;
+using SchoolSystem.Application.Features.Sections.DTOs;
 using SchoolSystem.Application.Features.Sections.DTOs.Update;
+using System;
+
 namespace SchoolSystem.Application.Features.Sections.Commands.Update
 {
-   
-
-    public record UpdateSectionCommand(Guid Id, UpdateSectionDto Section) : IRequest;
-
+    public record UpdateSectionCommand(Guid Oid, UpdateSectionDto Section)
+        : IRequest<UpdateSectionCommandResponse>;
 }

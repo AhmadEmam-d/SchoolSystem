@@ -1,17 +1,17 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
-using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
-using SchoolSystem.Application.Features.Teachers.Command.Create;
 using SchoolSystem.Application.Features.Teachers.Command.Delete;
-using SchoolSystem.Application.Features.Teachers.Command.Update;
-using SchoolSystem.Application.Features.Teachers.DTOs.Update;
+using SchoolSystem.Application.Features.Teachers.Commands.Create;
+using SchoolSystem.Application.Features.Teachers.Commands.Update;
+using SchoolSystem.Application.Features.Teachers.queries.Get;
 using SchoolSystem.Application.Features.Teachers.Query.GetAll;
 using SchoolSystem.Application.Features.Teachers.Query.GetById;
 using SchoolSystem.Application.Interfaces.Services;
-using SchoolSystem.Application.Interfaces.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.API.Controllers
 {
@@ -28,9 +28,7 @@ namespace SchoolSystem.API.Controllers
             _messageService = messageService;
         }
 
-        // ===========================
-        // 🔹 GET ALL TEACHERS
-        // ===========================
+        // GET: api/Teachers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -42,82 +40,79 @@ namespace SchoolSystem.API.Controllers
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "TeachersFetchFailed",_messageService,
+                    "TeachersFetchFailed", _messageService,
                     new List<string> { "An error occurred while fetching teachers." }
                 ));
             }
         }
 
-        // ===========================
-        // 🔹 GET TEACHER BY OID
-        // ===========================
+        // GET: api/Teachers/{oid}
         [HttpGet("{oid}")]
         public async Task<IActionResult> GetByOid(Guid oid)
         {
             try
             {
                 var result = await _mediator.Send(new GetTeacherByIdQuery(oid));
+                return Ok(ApiResponseFactory.Success(result, "TeacherFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "TeacherFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching the teacher." }
+                ));
+            }
+        }
+        // ===========================
+        // 🔹 GET TEACHERS WITH FILTERING, SORTING, PAGINATION
+        // ===========================
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetTeachersQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
 
-                if (result?.Teacher == null)
-                {
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "TeacherNotFound",
-                        _messageService,
-                        new List<string> { "Teacher does not exist." }
-                    ));
-                }
-
-                return Ok(ApiResponseFactory.Success(
-                    result.Teacher,
-                    "TeacherFetchedSuccessfully",
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "TeachersFetchedSuccessfully",
                     _messageService));
             }
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "TeacherFetchFailed",
+                    "TeachersFetchFailed",
                     _messageService,
-                    new List<string> { "An error occurred while fetching the teacher." }
+                    new List<string> { "An error occurred while fetching teachers." }
                 ));
             }
         }
 
-
-        // ===========================
-        // 🔹 CREATE TEACHER
-        // ===========================
+        // POST: api/Teachers
         [HttpPost]
         public async Task<IActionResult> Create(CreateTeacherCommand command)
         {
             try
             {
-                Guid teacherOid = await _mediator.Send(command);
-
-                return Ok(ApiResponseFactory.Success(
-                    teacherOid,
-                    "TeacherCreatedSuccessfully",
-                    _messageService));
+                var teacherOid = await _mediator.Send(command);
+                return Ok(ApiResponseFactory.Success(teacherOid, "TeacherCreatedSuccessfully", _messageService));
             }
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "TeacherCreationFailed",
-                    _messageService,
+                    "TeacherCreationFailed", _messageService,
                     new List<string> { "An error occurred while creating the teacher." }
                 ));
             }
         }
 
-
-        // ===========================
-        // 🔹 UPDATE TEACHER
-        // ===========================
+        // PUT: api/Teachers/{oid}
         [HttpPut("{oid}")]
         public async Task<IActionResult> Update(Guid oid, UpdateTeacherCommand command)
         {
             try
             {
-                if (oid != command.Teacher.Oid)
+                if (oid != command.Oid)
                 {
                     return BadRequest(new ApiResponse<bool>
                     {
@@ -126,26 +121,23 @@ namespace SchoolSystem.API.Controllers
                     });
                 }
 
-                await _mediator.Send(command);
+                var response = await _mediator.Send(command);
 
                 return Ok(ApiResponseFactory.Success(
-                    true,
+                    response.Oid,
                     "TeacherUpdatedSuccessfully",
                     _messageService));
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "TeacherUpdateFailed",
-                    _messageService,
-                    new List<string> { "An error occurred while updating the teacher." }
+                    "TeacherUpdateFailed", _messageService,
+                    new List<string> { ex.Message }
                 ));
             }
         }
 
-        // ===========================
-        // 🔹 DELETE TEACHER
-        // ===========================
+        // DELETE: api/Teachers/{oid}
         [HttpDelete("{oid}")]
         public async Task<IActionResult> Delete(Guid oid, DeleteTeacherCommand command)
         {
@@ -160,22 +152,17 @@ namespace SchoolSystem.API.Controllers
                     });
                 }
 
-                await _mediator.Send(command); // Unit returned
+                await _mediator.Send(command);
 
-                return Ok(ApiResponseFactory.Success(
-                    true,
-                    "TeacherDeletedSuccessfully",
-                    _messageService));
+                return Ok(ApiResponseFactory.Success(true, "TeacherDeletedSuccessfully", _messageService));
             }
             catch
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "TeacherDeletionFailed",
-                    _messageService,
+                    "TeacherDeletionFailed", _messageService,
                     new List<string> { "An error occurred while deleting the teacher." }
                 ));
             }
         }
-
     }
 }

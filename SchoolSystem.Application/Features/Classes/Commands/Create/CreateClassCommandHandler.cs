@@ -3,13 +3,13 @@ using MediatR;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Classes.Commands.Create
 {
     public class CreateClassCommandHandler
-        : IRequestHandler<CreateClassCommand, Guid>
+        : IRequestHandler<CreateClassCommand, CreateClassCommandResponse>
     {
         private readonly IGenericRepository<Class> _repo;
         private readonly IMapper _mapper;
@@ -20,15 +20,15 @@ namespace SchoolSystem.Application.Features.Classes.Commands.Create
             _mapper = mapper;
         }
 
-        public async Task<Guid> Handle(CreateClassCommand request, CancellationToken cancellationToken)
+        public async Task<CreateClassCommandResponse> Handle(CreateClassCommand request, CancellationToken cancellationToken)
         {
-            var entity = _mapper.Map<Class>(request.ClassDto);
+            var entity = _mapper.Map<Class>(request.Class);
             entity.Oid = Guid.NewGuid();
             entity.CreatedAt = DateTime.UtcNow;
 
-            await _repo.AddAsync(entity);
-            return entity.Oid;
+            await _repo.CreateAsync(entity);
+
+            return new CreateClassCommandResponse { Oid = entity.Oid };
         }
     }
-
 }
