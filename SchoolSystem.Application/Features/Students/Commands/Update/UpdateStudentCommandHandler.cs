@@ -6,27 +6,35 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class UpdateStudentCommandHandler : IRequestHandler<UpdateStudentCommand, Unit>
+namespace SchoolSystem.Application.Features.Students.Commands.Update
 {
-    private readonly IGenericRepository<Student> _repository;
-    private readonly IMapper _mapper;
-
-    public UpdateStudentCommandHandler(IGenericRepository<Student> repository, IMapper mapper)
+    public class UpdateStudentCommandHandler
+        : IRequestHandler<UpdateStudentCommand, UpdateStudentCommandResponse>
     {
-        _repository = repository;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Student> _repo;
+        private readonly IMapper _mapper;
 
-    public async Task<Unit> Handle(UpdateStudentCommand request, CancellationToken cancellationToken)
-    {
-        var existing = await _repository.GetByOidAsync(request.Id);
-        if (existing == null) throw new Exception("Student not found");
+        public UpdateStudentCommandHandler(IGenericRepository<Student> repo, IMapper mapper)
+        {
+            _repo = repo;
+            _mapper = mapper;
+        }
 
-        _mapper.Map(request.Student, existing);
-        existing.UpdatedAt = DateTime.UtcNow;
+        public async Task<UpdateStudentCommandResponse> Handle(UpdateStudentCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _repo.GetByOidAsync(request.Oid);
+            if (entity == null)
+                throw new Exception($"Student with Oid {request.Oid} not found.");
 
-        await _repository.UpdateAsync(existing);
+            _mapper.Map(request.Student, entity);
+            entity.UpdatedAt = DateTime.UtcNow;
 
-        return Unit.Value; // ✅ Must return Unit
+            await _repo.UpdateAsync(entity);
+
+            return new UpdateStudentCommandResponse
+            {
+                Oid = entity.Oid
+            };
+        }
     }
 }

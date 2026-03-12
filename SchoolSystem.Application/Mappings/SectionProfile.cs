@@ -1,15 +1,23 @@
 ﻿using AutoMapper;
+using SchoolSystem.Application.Features.Classes.DTOs.Read;
 using SchoolSystem.Application.Features.Sections.DTOs.Create;
 using SchoolSystem.Application.Features.Sections.DTOs.Read;
 using SchoolSystem.Application.Features.Sections.DTOs.Update;
+using SchoolSystem.Application.Features.Students.DTOs.Read;
 using SchoolSystem.Domain.Entities;
 
 public class SectionProfile : Profile
 {
     public SectionProfile()
     {
-        CreateMap<CreateSectionDto, Section>();
-        CreateMap<UpdateSectionDto, Section>();
-        CreateMap<Section, SectionDto>();
+        CreateMap<Section, SectionDto>()
+                .ForMember(dest => dest.Class, opt => opt.MapFrom(src => src.Class))
+                .ForMember(dest => dest.Students, opt => opt.MapFrom(src => src.Students));
+
+        // Class → ClassBasicDto
+        CreateMap<Class, ClassBasicDto>();
+
+        // Student → StudentBasicDto
+        CreateMap<Student, StudentBasicDto>();
     }
 }

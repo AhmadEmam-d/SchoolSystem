@@ -3,13 +3,13 @@ using MediatR;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Classes.Commands.Update
 {
     public class UpdateClassCommandHandler
-        : IRequestHandler<UpdateClassCommand>
+        : IRequestHandler<UpdateClassCommand, UpdateClassCommandResponse>
     {
         private readonly IGenericRepository<Class> _repo;
         private readonly IMapper _mapper;
@@ -20,17 +20,18 @@ namespace SchoolSystem.Application.Features.Classes.Commands.Update
             _mapper = mapper;
         }
 
-        public async Task<Unit> Handle(UpdateClassCommand request, CancellationToken cancellationToken)
+        public async Task<UpdateClassCommandResponse> Handle(UpdateClassCommand request, CancellationToken cancellationToken)
         {
-            var entity = await _repo.GetByOidAsync(request.Id);
-            if (entity == null) throw new Exception("Class not found");
+            var entity = await _repo.GetByOidAsync(request.Oid);
+            if (entity == null)
+                throw new Exception($"Class with Oid {request.Oid} not found.");
 
-            _mapper.Map(request.ClassDto, entity);
+            _mapper.Map(request.Class, entity);
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(entity);
-            return Unit.Value;
+
+            return new UpdateClassCommandResponse { Oid = entity.Oid };
         }
     }
-
 }

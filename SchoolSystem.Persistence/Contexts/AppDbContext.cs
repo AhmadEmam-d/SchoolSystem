@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using SchoolSystem.Domain.Entities;
-using System;
 
 namespace YourNamespace.Data
 {
@@ -19,6 +17,7 @@ namespace YourNamespace.Data
         public DbSet<Class> Classes { get; set; }
         public DbSet<Section> Sections { get; set; }
         public DbSet<Subject> Subjects { get; set; }
+        public DbSet<TeacherSubject> TeacherSubjects { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Exam> Exams { get; set; }
         public DbSet<ExamResult> ExamResults { get; set; }
@@ -99,11 +98,24 @@ namespace YourNamespace.Data
             modelBuilder.Entity<Subject>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+            });
 
-                entity.HasOne(s => s.Teacher)
-                      .WithMany(t => t.Subjects)
-                      .HasForeignKey(s => s.TeacherOid)
-                      .OnDelete(DeleteBehavior.Restrict);
+            // -------------------------
+            // TeacherSubject (Many-to-Many)
+            // -------------------------
+            modelBuilder.Entity<TeacherSubject>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.HasOne(ts => ts.Teacher)
+                      .WithMany(t => t.TeacherSubjects)
+                      .HasForeignKey(ts => ts.TeacherOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ts => ts.Subject)
+                      .WithMany(s => s.TeacherSubjects)
+                      .HasForeignKey(ts => ts.SubjectOid)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // -------------------------

@@ -7,9 +7,8 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Update
     public class UpdateClassDto
     {
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string Level { get; set; }
 
-        public Guid? TeacherOid { get; set; }
     }
 
 }

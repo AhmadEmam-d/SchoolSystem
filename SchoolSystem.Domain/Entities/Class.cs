@@ -11,13 +11,11 @@ namespace SchoolSystem.Domain.Entities
     public class Class : BaseEntity
     {
         public string Name { get; set; }
-        public string Description { get; set; }
+        public string Level { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public Guid? TeacherOid { get; set; }
-        public Teacher? Teacher { get; set; }
-
-        public ICollection<Student> Students { get; set; }
-        public ICollection<Section> Sections { get; set; }
+        public ICollection<Student> Students { get; set; } = new List<Student>();
+        public ICollection<Section> Sections { get; set; } = new List<Section>();
     }
 
 

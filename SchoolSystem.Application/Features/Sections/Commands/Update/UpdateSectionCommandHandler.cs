@@ -1,29 +1,40 @@
 ﻿using AutoMapper;
 using MediatR;
-using SchoolSystem.Application.Features.Sections.Commands.Update;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class UpdateSectionCommandHandler : IRequestHandler<UpdateSectionCommand>
+namespace SchoolSystem.Application.Features.Sections.Commands.Update
 {
-    private readonly IGenericRepository<Section> _repo;
-    private readonly IMapper _mapper;
-
-    public UpdateSectionCommandHandler(IGenericRepository<Section> repo, IMapper mapper)
+    public class UpdateSectionCommandHandler
+        : IRequestHandler<UpdateSectionCommand, UpdateSectionCommandResponse>
     {
-        _repo = repo;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Section> _repo;
+        private readonly IMapper _mapper;
 
-    public async Task<Unit> Handle(UpdateSectionCommand request, CancellationToken cancellationToken)
-    {
-        var existing = await _repo.GetByOidAsync(request.Id);
-        if (existing == null) throw new Exception("Section not found");
+        public UpdateSectionCommandHandler(IGenericRepository<Section> repo, IMapper mapper)
+        {
+            _repo = repo;
+            _mapper = mapper;
+        }
 
-        _mapper.Map(request.Section, existing);
-        existing.UpdatedAt = DateTime.UtcNow;
+        public async Task<UpdateSectionCommandResponse> Handle(UpdateSectionCommand request, CancellationToken cancellationToken)
+        {
+            var entity = await _repo.GetByOidAsync(request.Oid);
+            if (entity == null)
+                throw new Exception($"Section with Oid {request.Oid} not found.");
 
-        await _repo.UpdateAsync(existing);
-        return Unit.Value;
+            _mapper.Map(request.Section, entity);
+            entity.UpdatedAt = DateTime.UtcNow;
+
+            await _repo.UpdateAsync(entity);
+
+            return new UpdateSectionCommandResponse
+            {
+                Oid = entity.Oid
+            };
+        }
     }
 }

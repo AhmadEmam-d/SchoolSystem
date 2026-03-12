@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using MediatR;
 using SchoolSystem.Application.Features.Teachers.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 {
@@ -22,7 +24,11 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 
         public async Task<List<TeacherResponseDto>> Handle(GetAllTeachersQuery request, CancellationToken cancellationToken)
         {
-            var teachers = await _teacherRepo.GetAllAsync(/*includeProperties: "Subjects"*/);
+            var teachers = await _teacherRepo
+                             .GetAllQueryable()
+                            .Include(t => t.TeacherSubjects)
+                            .ThenInclude(ts => ts.Subject)
+                            .ToListAsync(cancellationToken);
 
             return _mapper.Map<List<TeacherResponseDto>>(teachers);
         }

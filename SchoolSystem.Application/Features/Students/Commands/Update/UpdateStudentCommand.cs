@@ -1,4 +1,10 @@
 ﻿using MediatR;
+using SchoolSystem.Application.Features.Students.DTOs;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
+using System;
 
-public record UpdateStudentCommand(Guid Id, UpdateStudentDto Student) : IRequest<Unit>;
+namespace SchoolSystem.Application.Features.Students.Commands.Update
+{
+    public record UpdateStudentCommand(Guid Oid, UpdateStudentDto Student)
+        : IRequest<UpdateStudentCommandResponse>;
+}

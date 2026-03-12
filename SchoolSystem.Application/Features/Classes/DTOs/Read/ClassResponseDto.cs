@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SchoolSystem.Application.Features.Sections.DTOs.Read;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,8 +9,10 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Read
     {
         public Guid Oid { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }
-        public Guid? TeacherOid { get; set; }
+        public string Level { get; set; }
+        public DateTime CreatedAt { get; set; }
+       
+
     }
 
 }

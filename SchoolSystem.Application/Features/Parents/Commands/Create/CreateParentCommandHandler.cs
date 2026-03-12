@@ -1,27 +1,34 @@
 ﻿using AutoMapper;
 using MediatR;
-using SchoolSystem.Application.Features.Parents.Commands.Create;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class CreateParentCommandHandler : IRequestHandler<CreateParentCommand, Guid>
+namespace SchoolSystem.Application.Features.Parents.Commands.Create
 {
-    private readonly IGenericRepository<Parent> _repo;
-    private readonly IMapper _mapper;
-
-    public CreateParentCommandHandler(IGenericRepository<Parent> repo, IMapper mapper)
+    public class CreateParentCommandHandler
+        : IRequestHandler<CreateParentCommand, CreateParentCommandResponse>
     {
-        _repo = repo;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Parent> _repo;
+        private readonly IMapper _mapper;
 
-    public async Task<Guid> Handle(CreateParentCommand request, CancellationToken cancellationToken)
-    {
-        var parent = _mapper.Map<Parent>(request.Parent);
-        parent.Oid = Guid.NewGuid();
-        parent.CreatedAt = DateTime.UtcNow;
+        public CreateParentCommandHandler(IGenericRepository<Parent> repo, IMapper mapper)
+        {
+            _repo = repo;
+            _mapper = mapper;
+        }
 
-        await _repo.AddAsync(parent);
-        return parent.Oid;
+        public async Task<CreateParentCommandResponse> Handle(CreateParentCommand request, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Parent>(request.Parent);
+            entity.Oid = Guid.NewGuid();
+            entity.CreatedAt = DateTime.UtcNow;
+
+            await _repo.CreateAsync(entity);
+
+            return new CreateParentCommandResponse { Oid = entity.Oid };
+        }
     }
 }

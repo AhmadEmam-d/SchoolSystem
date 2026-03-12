@@ -1,47 +1,59 @@
 ﻿using AutoMapper;
 using MediatR;
-using SchoolSystem.Application.Features.Teachers.Command.Update;
+using Microsoft.EntityFrameworkCore;
+using SchoolSystem.Application.Features.Teachers.Commands.Update;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-public class UpdateTeacherCommandHandler : IRequestHandler<UpdateTeacherCommand>
+namespace SchoolSystem.Application.Features.Teachers.Commands.Update
 {
-    private readonly IGenericRepository<Teacher> _teacherRepo;
-    private readonly IGenericRepository<Subject> _subjectRepo;
-    private readonly IMapper _mapper;
-
-    public UpdateTeacherCommandHandler(
-        IGenericRepository<Teacher> teacherRepo,
-        IGenericRepository<Subject> subjectRepo,
-        IMapper mapper)
+    public class UpdateTeacherCommandHandler : IRequestHandler<UpdateTeacherCommand, UpdateTeacherCommandResponse>
     {
-        _teacherRepo = teacherRepo;
-        _subjectRepo = subjectRepo;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Teacher> _teacherRepo;
+        private readonly IGenericRepository<TeacherSubject> _teacherSubjectRepo;
+        private readonly IMapper _mapper;
 
-    public async Task<Unit> Handle(UpdateTeacherCommand request, CancellationToken cancellationToken)
-    {
-        var teacher = await _teacherRepo.GetByOidAsync(request.Teacher.Oid);
-        if (teacher == null)
-            throw new Exception("Teacher not found");
-
-        _mapper.Map(request.Teacher, teacher);
-        teacher.UpdatedAt = DateTime.UtcNow;
-
-        // Update subjects
-        teacher.Subjects.Clear();
-
-        if (request.Teacher.SubjectOids.Any())
+        public UpdateTeacherCommandHandler(
+            IGenericRepository<Teacher> teacherRepo,
+            IGenericRepository<TeacherSubject> teacherSubjectRepo,
+            IMapper mapper)
         {
-            var subjects = await _subjectRepo.GetAllAsync();
-            teacher.Subjects = subjects
-                .Where(s => request.Teacher.SubjectOids.Contains(s.Oid))
-                .ToList();
+            _teacherRepo = teacherRepo;
+            _teacherSubjectRepo = teacherSubjectRepo;
+            _mapper = mapper;
         }
 
-        await _teacherRepo.UpdateAsync(teacher);
+        public async Task<UpdateTeacherCommandResponse> Handle(UpdateTeacherCommand request, CancellationToken cancellationToken)
+        {
+            var teacher = await _teacherRepo.GetByOidAsync(request.Oid);
+            if (teacher == null)
+                throw new Exception($"Teacher with Oid {request.Oid} not found.");
 
-        return Unit.Value;
+            _mapper.Map(request.Teacher, teacher);
+
+            teacher.TeacherSubjects.Clear();
+            if (request.Teacher.SubjectOids != null)
+            {
+                foreach (var subjectId in request.Teacher.SubjectOids)
+                {
+                    teacher.TeacherSubjects.Add(new TeacherSubject
+                    {
+                        TeacherOid = teacher.Oid,
+                        SubjectOid = subjectId
+                    });
+                }
+            }
+
+            await _teacherRepo.UpdateAsync(teacher);
+
+            return new UpdateTeacherCommandResponse
+            {
+                Oid = teacher.Oid
+            };
+        }
     }
 }

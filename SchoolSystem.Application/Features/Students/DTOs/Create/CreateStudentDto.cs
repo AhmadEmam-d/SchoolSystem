@@ -7,7 +7,6 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Create
     public class CreateStudentDto
     {
 
-       public string AdmissionNumber { get; set; }
 
         public string FullName { get; set; }
         public string Gender { get; set; }

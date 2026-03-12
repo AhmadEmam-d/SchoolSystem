@@ -5,18 +5,19 @@ using SchoolSystem.Application.Features.Teachers.DTOs.Create.SchoolSystem.Applic
 using SchoolSystem.Application.Features.Teachers.DTOs.Update;
 using SchoolSystem.Application.Features.Teachers.DTOs.Update.SchoolSystem.Application.Features.Teachers.DTOs.Update;
 using SchoolSystem.Domain.Entities;
+using static SchoolSystem.Application.Features.Teachers.DTOs.TeacherResponseDto;
 
 public class TeacherProfile : Profile
 {
     public TeacherProfile()
     {
-        CreateMap<CreateTeacherDto, Teacher>()
-            .ForMember(dest => dest.Subjects, opt => opt.Ignore());
+        CreateMap<CreateTeacherDto, Teacher>();
+        CreateMap<UpdateTeacherDto, Teacher>();
 
-        CreateMap<UpdateTeacherDto, Teacher>()
-            .ForMember(dest => dest.Subjects, opt => opt.Ignore());
         CreateMap<Teacher, TeacherResponseDto>()
-                .ForMember(dest => dest.Subjects,
-                          opt => opt.MapFrom(src => src.Subjects.Select(s => s.Name)));
+            .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src =>
+                src.TeacherSubjects.Select(ts => ts.Subject)));
+
+        CreateMap<Subject, SubjectBasicDto>();
     }
 }

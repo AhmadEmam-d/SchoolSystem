@@ -6,6 +6,6 @@ using System.Text;
 
 namespace SchoolSystem.Application.Features.Classes.Commands.Create
 {
-    public record CreateClassCommand(CreateClassDto ClassDto) : IRequest<Guid>;
-
+    public record CreateClassCommand(CreateClassDto Class)
+            : IRequest<CreateClassCommandResponse>;
 }

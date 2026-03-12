@@ -17,17 +17,15 @@ namespace SchoolSystem.Application.Students.Commands
 
         public async Task<Unit> Handle(DeleteStudentCommand request, CancellationToken cancellationToken)
         {
-            // fetch entity
             var student = await _repository.GetByOidAsync(request.Id);
             if (student == null) throw new KeyNotFoundException("Student not found");
 
-            // soft delete
             student.IsDeleted = true;
             student.UpdatedAt = System.DateTime.UtcNow;
 
             await _repository.UpdateAsync(student);
 
-            return Unit.Value; // Must return Unit
+            return Unit.Value; 
         }
     }
 }

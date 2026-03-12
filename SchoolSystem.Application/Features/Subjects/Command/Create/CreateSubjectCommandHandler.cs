@@ -2,25 +2,31 @@
 using MediatR;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
-public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand, Guid>
+namespace SchoolSystem.Application.Features.Subjects.Commands.Create
 {
-    private readonly IGenericRepository<Subject> _repo;
-    private readonly IMapper _mapper;
-
-    public CreateSubjectCommandHandler(IGenericRepository<Subject> repo, IMapper mapper)
+    public class CreateSubjectCommandHandler : IRequestHandler<CreateSubjectCommand, CreateSubjectCommandResponse>
     {
-        _repo = repo;
-        _mapper = mapper;
-    }
+        private readonly IGenericRepository<Subject> _repo;
+        private readonly IMapper _mapper;
 
-    public async Task<Guid> Handle(CreateSubjectCommand request, CancellationToken cancellationToken)
-    {
-        var subject = _mapper.Map<Subject>(request.Subject);
-        subject.Oid = Guid.NewGuid();
-        subject.CreatedAt = DateTime.UtcNow;
+        public CreateSubjectCommandHandler(IGenericRepository<Subject> repo, IMapper mapper)
+        {
+            _repo = repo;
+            _mapper = mapper;
+        }
 
-        await _repo.AddAsync(subject);
-        return subject.Oid;
+        public async Task<CreateSubjectCommandResponse> Handle(CreateSubjectCommand request, CancellationToken cancellationToken)
+        {
+            var entity = _mapper.Map<Subject>(request.Subject);
+
+            await _repo.AddAsync(entity);
+
+            return new CreateSubjectCommandResponse { Oid = entity.Oid };
+        }
     }
 }

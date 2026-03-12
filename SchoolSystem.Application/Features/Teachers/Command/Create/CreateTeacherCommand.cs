@@ -4,8 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SchoolSystem.Application.Features.Teachers.Command.Create
+namespace SchoolSystem.Application.Features.Teachers.Commands.Create
 {
-    public record CreateTeacherCommand(CreateTeacherDto Teacher) : IRequest<Guid>;
-
+    public record CreateTeacherCommand(CreateTeacherDto Teacher) : IRequest<CreateTeacherCommandResponse>;
 }

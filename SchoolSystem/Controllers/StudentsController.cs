@@ -1,10 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-
+using SchoolSystem.Api.Common.Helpers;
+using SchoolSystem.Api.Common.Models;
+using SchoolSystem.Application.Features.Students.Commands.Create;
+using SchoolSystem.Application.Features.Students.Commands.Update;
 using SchoolSystem.Application.Features.Students.DTOs.Create;
-using SchoolSystem.Application.Features.Students.DTOs.Read;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
-
+using SchoolSystem.Application.Features.Students.Queries.Get;
+using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,62 +19,148 @@ namespace SchoolSystem.API.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IMessageService _messageService;
 
-        public StudentsController(IMediator mediator)
+        public StudentsController(IMediator mediator, IMessageService messageService)
         {
             _mediator = mediator;
+            _messageService = messageService;
         }
 
-        // GET: api/students
+
         [HttpGet]
-        public async Task<ActionResult<List<StudentDto>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var query = new GetAllStudentsQuery();
-            var students = await _mediator.Send(query);
-            return Ok(students);
+            try
+            {
+                var result = await _mediator.Send(new GetAllStudentsQuery());
+                return Ok(ApiResponseFactory.Success(result, "StudentsFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentsFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching students." }
+                ));
+            }
         }
 
-        // GET: api/students/{id}
+
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<StudentDto>> GetById(Guid id)
+        public async Task<IActionResult> GetById(Guid id)
         {
-            var query = new GetStudentByIdQuery(id);
-            var student = await _mediator.Send(query);
+            try
+            {
+                var result = await _mediator.Send(new GetStudentByIdQuery(id));
 
-            if (student == null)
-                return NotFound();
+               
 
-            return Ok(student);
+                return Ok(ApiResponseFactory.Success(result, "StudentFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching the student." }
+                ));
+            }
+        }
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetStudentsQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
+
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "StudentsFetchedSuccessfully",
+                    _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentsFetchFailed",
+                    _messageService,
+                    new List<string> { $"An error occurred while fetching students: {ex.Message}" }
+                ));
+            }
         }
 
-        // POST: api/students
         [HttpPost]
-        public async Task<ActionResult<Guid>> Create([FromBody] CreateStudentDto studentDto)
+        public async Task<IActionResult> Create([FromBody] CreateStudentDto studentDto)
         {
-            var command = new CreateStudentCommand(studentDto);
-            var studentId = await _mediator.Send(command);
+            try
+            {
+                var command = new CreateStudentCommand(studentDto);
+                var studentOid = await _mediator.Send(command);
 
-            return CreatedAtAction(nameof(GetById), new { id = studentId }, studentId);
+                return Ok(ApiResponseFactory.Success(studentOid, "StudentCreatedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentCreationFailed", _messageService,
+                    new List<string> { "An error occurred while creating the student." }
+                ));
+            }
         }
 
-        // PUT: api/students/{id}
+
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult> Update(Guid id, [FromBody] UpdateStudentDto studentDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateStudentDto studentDto)
         {
-            var command = new UpdateStudentCommand(id, studentDto);
-            await _mediator.Send(command);
+            try
+            {
+                var command = new UpdateStudentCommand(id, studentDto);
 
-            return NoContent();
+                if (id != command.Oid)
+                {
+                    return BadRequest(new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Errors = new List<string> { "ID mismatch between URL and body." }
+                    });
+                }
+
+                var response = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(response.Oid, "StudentUpdatedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentUpdateFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
         }
 
-        // DELETE: api/students/{id}
         [HttpDelete("{id:guid}")]
-        public async Task<ActionResult> Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id, [FromBody] DeleteStudentCommand command)
         {
-            var command = new DeleteStudentCommand(id);
-            await _mediator.Send(command);
+            try
+            {
+                if (id != command.Id)
+                {
+                    return BadRequest(new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Errors = new List<string> { "ID mismatch between URL and body." }
+                    });
+                }
 
-            return NoContent();
+                await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(true, "StudentDeletedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentDeletionFailed", _messageService,
+                    new List<string> { "An error occurred while deleting the student." }
+                ));
+            }
         }
     }
 }
