@@ -6,8 +6,9 @@ using SchoolSystem.Application.Features.Sections.Commands.Create;
 using SchoolSystem.Application.Features.Sections.Commands.Delete;
 using SchoolSystem.Application.Features.Sections.Commands.Update;
 using SchoolSystem.Application.Features.Sections.DTOs.Create;
-using SchoolSystem.Application.Features.Sections.DTOs.Update;
 using SchoolSystem.Application.Features.Sections.DTOs.Read;
+using SchoolSystem.Application.Features.Sections.DTOs.Update;
+using SchoolSystem.Application.Features.Sections.Queries.Get;
 using SchoolSystem.Application.Features.Sections.Queries.GetAll;
 using SchoolSystem.Application.Features.Sections.Queries.GetById;
 using SchoolSystem.Application.Interfaces.Services;
@@ -71,7 +72,27 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetSectionsQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
 
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "SectionsFetchedSuccessfully",
+                    _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SectionsFetchFailed",
+                    _messageService,
+                    new List<string> { $"An error occurred while fetching sections: {ex.Message}" }
+                ));
+            }
+        }
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSectionDto dto)
         {

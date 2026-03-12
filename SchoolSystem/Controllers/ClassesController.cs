@@ -7,8 +7,10 @@ using SchoolSystem.Application.Features.Classes.Commands.Delete;
 using SchoolSystem.Application.Features.Classes.Commands.Update;
 using SchoolSystem.Application.Features.Classes.DTOs.Create;
 using SchoolSystem.Application.Features.Classes.DTOs.Update;
+using SchoolSystem.Application.Features.Classes.Queries.Get;
 using SchoolSystem.Application.Features.Classes.Queries.GetAll;
 using SchoolSystem.Application.Features.Classes.Queries.GetByOid;
+using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -68,6 +70,27 @@ namespace SchoolSystem.Api.Controllers
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ClassFetchFailed", _messageService,
                     new List<string> { "An error occurred while fetching the class." }
+                ));
+            }
+        }
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetClassesQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
+
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "ClassesFetchedSuccessfully",
+                    _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ClassesFetchFailed",
+                    _messageService,
+                    new List<string> { $"An error occurred while fetching Classes: {ex.Message}" }
                 ));
             }
         }

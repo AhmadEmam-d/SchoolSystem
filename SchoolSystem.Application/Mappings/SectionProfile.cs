@@ -10,16 +10,14 @@ public class SectionProfile : Profile
 {
     public SectionProfile()
     {
-        CreateMap<CreateSectionDto, Section>();
-
-        CreateMap<UpdateSectionDto, Section>();
-
         CreateMap<Section, SectionDto>()
-            .ForMember(dest => dest.Class, opt => opt.MapFrom(src => src.Class))
-            .ForMember(dest => dest.Students, opt => opt.MapFrom(src => src.Students));
+                .ForMember(dest => dest.Class, opt => opt.MapFrom(src => src.Class))
+                .ForMember(dest => dest.Students, opt => opt.MapFrom(src => src.Students));
 
-        CreateMap<Class, ClassResponseDto>();
+        // Class → ClassBasicDto
+        CreateMap<Class, ClassBasicDto>();
 
-        CreateMap<Student, StudentDto>();
+        // Student → StudentBasicDto
+        CreateMap<Student, StudentBasicDto>();
     }
 }

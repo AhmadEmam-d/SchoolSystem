@@ -24,7 +24,9 @@ public class GetAllStudentsQueryHandler : IRequestHandler<GetAllStudentsQuery, L
     {
         var students = await _repository
                 .GetAllQueryable()
-                .Include(s => s.Parent)  
+                .Include(s => s.Class)           
+                 .Include(s => s.Section)         
+                  .Include(s => s.Parent)
                 .ToListAsync(cancellationToken);
 
         return _mapper.Map<List<StudentDto>>(students);

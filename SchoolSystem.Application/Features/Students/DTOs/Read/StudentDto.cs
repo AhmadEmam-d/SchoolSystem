@@ -17,7 +17,22 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
 
         public Guid SectionOid { get; set; }
         public Guid ParentOid { get; set; }
+        public ClassBasicInfoDto Class { get; set; }
+        public SectionBasicInfoDto Section { get; set; }
         public ParentBasicInfoDto Parent { get; set; }
+    }
+
+    public class ClassBasicInfoDto
+    {
+        public Guid Oid { get; set; }
+        public string Name { get; set; }
+        public string Level { get; set; }
+    }
+
+    public class SectionBasicInfoDto
+    {
+        public Guid Oid { get; set; }
+        public string Name { get; set; }
     }
 
     public class ParentBasicInfoDto

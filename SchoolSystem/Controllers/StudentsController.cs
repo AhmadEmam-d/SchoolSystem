@@ -6,6 +6,7 @@ using SchoolSystem.Application.Features.Students.Commands.Create;
 using SchoolSystem.Application.Features.Students.Commands.Update;
 using SchoolSystem.Application.Features.Students.DTOs.Create;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
+using SchoolSystem.Application.Features.Students.Queries.Get;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -64,7 +65,27 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
+        [HttpPost("Get")]
+        public async Task<IActionResult> GetRequestModel([FromBody] GetStudentsQuery request)
+        {
+            try
+            {
+                var result = await _mediator.Send(request);
 
+                return Ok(ApiResponseFactory.SuccessPaged(
+                    result,
+                    "StudentsFetchedSuccessfully",
+                    _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentsFetchFailed",
+                    _messageService,
+                    new List<string> { $"An error occurred while fetching students: {ex.Message}" }
+                ));
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateStudentDto studentDto)

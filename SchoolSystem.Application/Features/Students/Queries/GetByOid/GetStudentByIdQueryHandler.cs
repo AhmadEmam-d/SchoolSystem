@@ -23,7 +23,9 @@ public class GetStudentByIdQueryHandler : IRequestHandler<GetStudentByIdQuery, S
     {
         var student = await _repository
                .GetAllQueryable()
-               .Include(s => s.Parent)  
+               .Include(s => s.Class)         
+               .Include(s => s.Section)       
+               .Include(s => s.Parent)
                .FirstOrDefaultAsync(s => s.Oid == request.Id, cancellationToken);
 
         if (student == null)
