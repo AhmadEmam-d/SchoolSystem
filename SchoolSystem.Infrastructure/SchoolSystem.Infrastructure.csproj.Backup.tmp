@@ -57,18 +57,12 @@
 
   <ItemGroup>
     <Folder Include="Extensions\" />
-    <Folder Include="Behaviors\" />
-    <Folder Include="Exceptions\" />
-    <Folder Include="Features\Notifications\Queries\Get\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-    <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="11.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -81,7 +75,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SchoolSystem.Domain\SchoolSystem.Domain.csproj" />
+    <ProjectReference Include="..\SchoolSystem.Application\SchoolSystem.Application.csproj" />
   </ItemGroup>
 
 </Project>
