@@ -4,8 +4,7 @@ using System.Text;
 
 namespace SchoolSystem.Application.Features.Teachers.DTOs.Create
 {
-    namespace SchoolSystem.Application.Features.Teachers.DTOs.Create
-    {
+
         public class CreateTeacherDto
         {
             public string FullName { get; set; }
@@ -13,6 +12,6 @@ namespace SchoolSystem.Application.Features.Teachers.DTOs.Create
             public string Phone { get; set; }
             public List<Guid> SubjectOids { get; set; } = new List<Guid>();
         }
-    }
+    
 
 }

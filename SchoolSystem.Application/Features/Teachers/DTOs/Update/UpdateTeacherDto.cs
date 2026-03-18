@@ -4,8 +4,7 @@ using System.Text;
 
 namespace SchoolSystem.Application.Features.Teachers.DTOs.Update
 {
-    namespace SchoolSystem.Application.Features.Teachers.DTOs.Update
-    {
+
         public class UpdateTeacherDto
         {
             public string FullName { get; set; }
@@ -14,6 +13,5 @@ namespace SchoolSystem.Application.Features.Teachers.DTOs.Update
             public List<Guid> SubjectOids { get; set; } = new List<Guid>();
         }
 
-    }
 
 }

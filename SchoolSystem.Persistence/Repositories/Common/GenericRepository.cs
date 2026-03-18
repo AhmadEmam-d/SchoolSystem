@@ -4,7 +4,7 @@ using SchoolSystem.Domain.Interfaces.Common;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using YourNamespace.Data;
+using SchoolSystem.Persistence.Contexts;
 
 namespace SchoolSystem.Persistence.Repositories.Common
 {

@@ -2,13 +2,13 @@
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Classes.Commands.Delete
 {
     public class DeleteClassCommandHandler
-        : IRequestHandler<DeleteClassCommand>
+        : IRequestHandler<DeleteClassCommand>  // بدون Unit
     {
         private readonly IGenericRepository<Class> _repo;
 
@@ -17,14 +17,14 @@ namespace SchoolSystem.Application.Features.Classes.Commands.Delete
             _repo = repo;
         }
 
-        public async Task<Unit> Handle(DeleteClassCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteClassCommand request, CancellationToken cancellationToken)
         {
             var entity = await _repo.GetByOidAsync(request.Id);
-            if (entity == null) throw new Exception("Class not found");
+            if (entity == null)
+                throw new Exception("Class not found");
 
             await _repo.DeleteAsync(entity.Oid);
-            return Unit.Value;
+            // لا ترجع Unit.Value - احذف هذه السطر
         }
     }
-
 }

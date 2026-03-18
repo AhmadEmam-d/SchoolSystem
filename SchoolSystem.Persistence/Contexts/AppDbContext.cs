@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Domain.Entities;
 
-namespace YourNamespace.Data
+namespace SchoolSystem.Persistence.Contexts
 {
     public class AppDbContext : DbContext
     {
@@ -27,11 +27,40 @@ namespace YourNamespace.Data
         public DbSet<Event> Events { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
+        public DbSet<User> Users { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => e.Email).IsUnique();
 
+                entity.Property(e => e.Avatar)
+                      .IsRequired(false); // ✅ يسمح بـ NULL
+
+                entity.Property(e => e.PasswordHash)
+                      .HasMaxLength(500)
+                      .IsRequired();
+
+                entity.HasOne(e => e.Student)
+                      .WithOne()
+                      .HasForeignKey<User>(e => e.StudentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithOne()
+                      .HasForeignKey<User>(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Parent)
+                      .WithOne()
+                      .HasForeignKey<User>(e => e.ParentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(e => e.Role)
+                      .HasConversion<string>();
+            });
             // -------------------------
             // Student
             // -------------------------

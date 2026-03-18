@@ -1,23 +1,27 @@
 ﻿using AutoMapper;
 using SchoolSystem.Application.Features.Teachers.DTOs;
 using SchoolSystem.Application.Features.Teachers.DTOs.Create;
-using SchoolSystem.Application.Features.Teachers.DTOs.Create.SchoolSystem.Application.Features.Teachers.DTOs.Create;
 using SchoolSystem.Application.Features.Teachers.DTOs.Update;
-using SchoolSystem.Application.Features.Teachers.DTOs.Update.SchoolSystem.Application.Features.Teachers.DTOs.Update;
 using SchoolSystem.Domain.Entities;
 using static SchoolSystem.Application.Features.Teachers.DTOs.TeacherResponseDto;
 
-public class TeacherProfile : Profile
+
+namespace SchoolSystem.Application.Profiles
 {
-    public TeacherProfile()
+    public class TeacherProfile : Profile
     {
-        CreateMap<CreateTeacherDto, Teacher>();
-        CreateMap<UpdateTeacherDto, Teacher>();
+        public TeacherProfile()
+        {
+            CreateMap<CreateTeacherDto, Teacher>();
+            CreateMap<UpdateTeacherDto, Teacher>();
 
-        CreateMap<Teacher, TeacherResponseDto>()
-            .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src =>
-                src.TeacherSubjects.Select(ts => ts.Subject)));
+            CreateMap<Teacher, TeacherResponseDto>()
+                .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src =>
+                    src.TeacherSubjects.Select(ts => ts.Subject)));
 
-        CreateMap<Subject, SubjectBasicDto>();
+            CreateMap<Subject, SubjectBasicDto>();
+        }
     }
+
 }
+

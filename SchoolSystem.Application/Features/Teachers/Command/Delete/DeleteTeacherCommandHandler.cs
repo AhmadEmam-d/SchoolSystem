@@ -13,7 +13,7 @@ namespace SchoolSystem.Application.Features.Teachers.Command.Delete
             _teacherRepo = teacherRepo;
         }
 
-        public async Task<Unit> Handle(DeleteTeacherCommand request, CancellationToken cancellationToken)
+        public async Task Handle(DeleteTeacherCommand request, CancellationToken cancellationToken)
         {
             var existing = await _teacherRepo.GetByOidAsync(request.Oid);
             if (existing == null)
@@ -21,7 +21,6 @@ namespace SchoolSystem.Application.Features.Teachers.Command.Delete
 
             await _teacherRepo.DeleteAsync(request.Oid);
 
-            return Unit.Value;
         }
     }
 }

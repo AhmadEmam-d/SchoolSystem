@@ -2,6 +2,8 @@
 using SchoolSystem.Application.Features.Parents.Commands.Delete;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class DeleteParentCommandHandler : IRequestHandler<DeleteParentCommand>
 {
@@ -12,9 +14,8 @@ public class DeleteParentCommandHandler : IRequestHandler<DeleteParentCommand>
         _repo = repo;
     }
 
-    public async Task<Unit> Handle(DeleteParentCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteParentCommand request, CancellationToken cancellationToken)
     {
         await _repo.DeleteAsync(request.Id);
-        return Unit.Value;
     }
 }

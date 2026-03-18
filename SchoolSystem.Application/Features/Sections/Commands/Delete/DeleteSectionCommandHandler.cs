@@ -12,9 +12,8 @@ public class DeleteSectionCommandHandler : IRequestHandler<DeleteSectionCommand>
         _repo = repo;
     }
 
-    public async Task<Unit> Handle(DeleteSectionCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteSectionCommand request, CancellationToken cancellationToken)
     {
         await _repo.DeleteAsync(request.Id);
-        return Unit.Value;
     }
 }

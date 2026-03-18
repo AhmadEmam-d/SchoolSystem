@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using SchoolSystem.Application.Features.Teachers.DTOs;
-using SchoolSystem.Application.Features.Teachers.DTOs.Update.SchoolSystem.Application.Features.Teachers.DTOs.Update;
+using SchoolSystem.Application.Features.Teachers.DTOs.Update;
 using System;
 
 namespace SchoolSystem.Application.Features.Teachers.Commands.Update
