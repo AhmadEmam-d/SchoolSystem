@@ -157,7 +157,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-// ثم في middleware
 app.UseCors("AllowAll");
 
 // ===========================
@@ -168,9 +167,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
-    // لا تستخدم HTTPS redirection في التطوير
-    // app.UseHttpsRedirection(); // عطلي هذا السطر
 }
 else
 {
