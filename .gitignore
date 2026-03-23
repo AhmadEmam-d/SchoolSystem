@@ -1,3 +1,13 @@
-node_modules 
-dist 
-.env 
+node_modules
+dist
+.env
+
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.log
+*.local
+.vscode/
