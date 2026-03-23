@@ -96,13 +96,15 @@ builder.Services.AddAuthorization(options =>
 // ===========================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()      // يسمح لأي مصدر (للتطوير فقط)
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
+
+
 
 // ===========================
 // 🔹 CONTROLLERS WITH JSON OPTIONS
@@ -155,6 +157,8 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+// ثم في middleware
+app.UseCors("AllowAll");
 
 // ===========================
 // 🔹 CONFIGURE PIPELINE
@@ -164,9 +168,15 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // لا تستخدم HTTPS redirection في التطوير
+    // app.UseHttpsRedirection(); // عطلي هذا السطر
+}
+else
+{
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();

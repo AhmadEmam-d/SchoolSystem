@@ -1,63 +1,67 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { CURRENT_USER } from '../lib/mockData';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-
-  const login = useCallback((selectedRole) => {
-    const mockUser = { ...CURRENT_USER, role: selectedRole, name: `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)} User` };
-    setUser(mockUser);
-    setRole(selectedRole);
-    try {
-      if (typeof window !== 'undefined') {
-        // Force update localStorage
-        localStorage.setItem('school_role', selectedRole);
-      }
-    } catch (error) {
-      console.error('Error saving role:', error);
-    }
-  }, []);
-
-  const logout = useCallback(() => {
-    setUser(null);
-    setRole(null);
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('school_role');
-      }
-    } catch (error) {
-      console.error('Error removing role:', error);
-    }
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage or similar for persistence
     try {
-      if (typeof window !== 'undefined') {
-        const storedRole = localStorage.getItem('school_role');
-        if (storedRole) {
-          login(storedRole);
-        }
+      const token = localStorage.getItem('token');
+      const userName = localStorage.getItem('userName');
+      const userId = localStorage.getItem('userId');
+      const userEmail = localStorage.getItem('userEmail');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (token && userName) {
+        setUser({
+          id: userId,
+          name: userName,
+          email: userEmail,
+          role: userRole
+        });
+        setRole(userRole);
+        setIsAuthenticated(true);
       }
     } catch (error) {
-      console.error('Error loading role:', error);
+      console.error('AuthContext error:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [login]);
+  }, []);
+
+  const login = (userData) => {
+    setUser(userData);
+    setRole(userData.role);
+    setIsAuthenticated(true);
+  };
+
+  const logout = () => {
+    setUser(null);
+    setRole(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    window.location.href = '/login';
+  };
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, role, isAuthenticated, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

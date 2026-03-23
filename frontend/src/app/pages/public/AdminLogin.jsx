@@ -1,27 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router';
+import React, { useState } from 'react';
+import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { Shield, Lock, Mail, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 export function AdminLogin() {
-  const { login, logout } = useAuth();
-  const navigate = useNavigate();
+  const { login } = useAuth();
   const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const isRTL = i18n.language === 'ar';
 
-  useEffect(() => { logout(); }, [logout]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login('admin');
-    navigate('/admin/dashboard');
+    setLoading(true);
+    
+    try {
+      const response = await fetch('http://localhost:5073/api/Auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          role: 1
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Login response:', data);
+      
+      if (data.success && data.data && data.data.token) {
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('userId', data.data.userId);
+        localStorage.setItem('userName', data.data.fullName);
+        localStorage.setItem('userEmail', data.data.email);
+        localStorage.setItem('userRole', 'admin');
+        
+        window.dispatchEvent(new Event('storage'));
+
+        login({
+          id: data.data.userId,
+          name: data.data.fullName,
+          email: data.data.email,
+          role: 'admin'
+        });
+        
+        toast.success('Login successful!');
+        setTimeout(() => {
+          window.location.href = '/admin/dashboard';
+        }, 100);
+      } else {
+        toast.error(data.errors?.[0] || 'Invalid email or password');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Network error - Make sure backend is running');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
@@ -63,10 +105,10 @@ export function AdminLogin() {
                     </div>
                     <input
                       id="email"
-                      type="text"
-                      value={emailOrPhone}
-                      onChange={(e) => setEmailOrPhone(e.target.value)}
-                      placeholder="admin@edusmart.com"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="admin@school.com"
                       className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                         isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
                       }`}
@@ -88,7 +130,7 @@ export function AdminLogin() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t('enterPasswordPlaceholder')}
+                      placeholder="********"
                       className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                         isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'
                       }`}
@@ -122,9 +164,10 @@ export function AdminLogin() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 text-base font-medium shadow-lg"
+                  disabled={loading}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 text-base font-medium shadow-lg disabled:opacity-50"
                 >
-                  {t('signInBtn')}
+                  {loading ? 'Signing in...' : t('signInBtn')}
                 </Button>
               </form>
 

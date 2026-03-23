@@ -7,22 +7,35 @@ import { useSidebar } from '../../context/SidebarContext';
 import { useTranslation } from 'react-i18next';
 
 export function DashboardLayout() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { isOpen } = useSidebar();
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
+  console.log('DashboardLayout - isAuthenticated:', isAuthenticated);
+  console.log('DashboardLayout - loading:', loading);
+  console.log('DashboardLayout - user:', user);
+
   useEffect(() => {
-    if (!isAuthenticated) {
+    // انتظري حتى ينتهي التحميل
+    if (!loading && !isAuthenticated) {
+      console.log('Not authenticated, redirecting to /login');
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, loading, navigate]);
 
-  // Set document direction
   useEffect(() => {
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
   }, [isRTL]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
