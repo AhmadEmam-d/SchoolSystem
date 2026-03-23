@@ -1,0 +1,266 @@
+﻿{
+  "TeachersFetchedSuccessfully": {
+    "EN": "Teachers fetched successfully",
+    "AR": "تم جلب بيانات المدرسين بنجاح"
+  },
+  "TeachersFetchFailed": {
+    "EN": "An error occurred while fetching teachers",
+    "AR": "حدث خطأ أثناء جلب بيانات المدرسين"
+  },
+  "TeacherFetchedSuccessfully": {
+    "EN": "Teacher fetched successfully",
+    "AR": "تم جلب بيانات المدرس بنجاح"
+  },
+  "TeacherFetchFailed": {
+    "EN": "An error occurred while fetching the teacher",
+    "AR": "حدث خطأ أثناء جلب بيانات المدرس"
+  },
+  "TeacherNotFound": {
+    "EN": "Teacher does not exist",
+    "AR": "المدرس غير موجود"
+  },
+  "TeacherCreatedSuccessfully": {
+    "EN": "Teacher created successfully",
+    "AR": "تم إنشاء المدرس بنجاح"
+  },
+  "TeacherCreationFailed": {
+    "EN": "An error occurred while creating the teacher",
+    "AR": "حدث خطأ أثناء إنشاء المدرس"
+  },
+  "TeacherUpdatedSuccessfully": {
+    "EN": "Teacher updated successfully",
+    "AR": "تم تحديث بيانات المدرس بنجاح"
+  },
+  "TeacherUpdateFailed": {
+    "EN": "An error occurred while updating the teacher",
+    "AR": "حدث خطأ أثناء تحديث بيانات المدرس"
+  },
+  "TeacherDeletedSuccessfully": {
+    "EN": "Teacher deleted successfully",
+    "AR": "تم حذف المدرس بنجاح"
+  },
+  "TeacherDeletionFailed": {
+    "EN": "An error occurred while deleting the teacher",
+    "AR": "حدث خطأ أثناء حذف المدرس"
+  },
+  "StudentsFetchedSuccessfully": {
+    "EN": "Students fetched successfully",
+    "AR": "تم جلب بيانات الطلاب بنجاح"
+  },
+  "StudentsFetchFailed": {
+    "EN": "An error occurred while fetching students",
+    "AR": "حدث خطأ أثناء جلب بيانات الطلاب"
+  },
+  "StudentFetchedSuccessfully": {
+    "EN": "Student fetched successfully",
+    "AR": "تم جلب بيانات الطالب بنجاح"
+  },
+  "StudentFetchFailed": {
+    "EN": "An error occurred while fetching the student",
+    "AR": "حدث خطأ أثناء جلب بيانات الطالب"
+  },
+  "StudentNotFound": {
+    "EN": "Student does not exist",
+    "AR": "الطالب غير موجود"
+  },
+  "StudentCreatedSuccessfully": {
+    "EN": "Student created successfully",
+    "AR": "تم إنشاء الطالب بنجاح"
+  },
+  "StudentCreationFailed": {
+    "EN": "An error occurred while creating the student",
+    "AR": "حدث خطأ أثناء إنشاء الطالب"
+  },
+  "StudentUpdatedSuccessfully": {
+    "EN": "Student updated successfully",
+    "AR": "تم تحديث بيانات الطالب بنجاح"
+  },
+  "StudentUpdateFailed": {
+    "EN": "An error occurred while updating the student",
+    "AR": "حدث خطأ أثناء تحديث بيانات الطالب"
+  },
+  "StudentDeletedSuccessfully": {
+    "EN": "Student deleted successfully",
+    "AR": "تم حذف الطالب بنجاح"
+  },
+  "StudentDeletionFailed": {
+    "EN": "An error occurred while deleting the student",
+    "AR": "حدث خطأ أثناء حذف الطالب"
+  },
+  "ParentsFetchedSuccessfully": {
+    "EN": "Parents fetched successfully",
+    "AR": "تم جلب بيانات أولياء الأمور بنجاح"
+  },
+  "ParentsFetchFailed": {
+    "EN": "An error occurred while fetching parents",
+    "AR": "حدث خطأ أثناء جلب بيانات أولياء الأمور"
+  },
+  "ParentFetchedSuccessfully": {
+    "EN": "Parent fetched successfully",
+    "AR": "تم جلب بيانات ولي الأمر بنجاح"
+  },
+  "ParentFetchFailed": {
+    "EN": "An error occurred while fetching the parent",
+    "AR": "حدث خطأ أثناء جلب بيانات ولي الأمر"
+  },
+  "ParentNotFound": {
+    "EN": "Parent does not exist",
+    "AR": "ولي الأمر غير موجود"
+  },
+  "ParentCreatedSuccessfully": {
+    "EN": "Parent created successfully",
+    "AR": "تم إنشاء ولي الأمر بنجاح"
+  },
+  "ParentCreationFailed": {
+    "EN": "An error occurred while creating the parent",
+    "AR": "حدث خطأ أثناء إنشاء ولي الأمر"
+  },
+  "ParentUpdatedSuccessfully": {
+    "EN": "Parent updated successfully",
+    "AR": "تم تحديث بيانات ولي الأمر بنجاح"
+  },
+  "ParentUpdateFailed": {
+    "EN": "An error occurred while updating the parent",
+    "AR": "حدث خطأ أثناء تحديث بيانات ولي الأمر"
+  },
+  "ParentDeletedSuccessfully": {
+    "EN": "Parent deleted successfully",
+    "AR": "تم حذف ولي الأمر بنجاح"
+  },
+  "ParentDeletionFailed": {
+    "EN": "An error occurred while deleting the parent",
+    "AR": "حدث خطأ أثناء حذف ولي الأمر"
+  },
+  "ClassesFetchedSuccessfully": {
+    "EN": "Classes fetched successfully",
+    "AR": "تم جلب بيانات الصفوف بنجاح"
+  },
+  "ClassesFetchFailed": {
+    "EN": "An error occurred while fetching classes",
+    "AR": "حدث خطأ أثناء جلب بيانات الصفوف"
+  },
+  "ClassFetchedSuccessfully": {
+    "EN": "Class fetched successfully",
+    "AR": "تم جلب بيانات الصف بنجاح"
+  },
+  "ClassFetchFailed": {
+    "EN": "An error occurred while fetching the class",
+    "AR": "حدث خطأ أثناء جلب بيانات الصف"
+  },
+  "ClassNotFound": {
+    "EN": "Class does not exist",
+    "AR": "الصف غير موجود"
+  },
+  "ClassCreatedSuccessfully": {
+    "EN": "Class created successfully",
+    "AR": "تم إنشاء الصف بنجاح"
+  },
+  "ClassCreationFailed": {
+    "EN": "An error occurred while creating the class",
+    "AR": "حدث خطأ أثناء إنشاء الصف"
+  },
+  "ClassUpdatedSuccessfully": {
+    "EN": "Class updated successfully",
+    "AR": "تم تحديث بيانات الصف بنجاح"
+  },
+  "ClassUpdateFailed": {
+    "EN": "An error occurred while updating the class",
+    "AR": "حدث خطأ أثناء تحديث بيانات الصف"
+  },
+  "ClassDeletedSuccessfully": {
+    "EN": "Class deleted successfully",
+    "AR": "تم حذف الصف بنجاح"
+  },
+  "ClassDeletionFailed": {
+    "EN": "An error occurred while deleting the class",
+    "AR": "حدث خطأ أثناء حذف الصف"
+  },
+  "SectionsFetchedSuccessfully": {
+    "EN": "Sections fetched successfully",
+    "AR": "تم جلب بيانات الأقسام بنجاح"
+  },
+  "SectionsFetchFailed": {
+    "EN": "An error occurred while fetching sections",
+    "AR": "حدث خطأ أثناء جلب بيانات الأقسام"
+  },
+  "SectionFetchedSuccessfully": {
+    "EN": "Section fetched successfully",
+    "AR": "تم جلب بيانات القسم بنجاح"
+  },
+  "SectionFetchFailed": {
+    "EN": "An error occurred while fetching the section",
+    "AR": "حدث خطأ أثناء جلب بيانات القسم"
+  },
+  "SectionNotFound": {
+    "EN": "Section does not exist",
+    "AR": "القسم غير موجود"
+  },
+  "SectionCreatedSuccessfully": {
+    "EN": "Section created successfully",
+    "AR": "تم إنشاء القسم بنجاح"
+  },
+  "SectionCreationFailed": {
+    "EN": "An error occurred while creating the section",
+    "AR": "حدث خطأ أثناء إنشاء القسم"
+  },
+  "SectionUpdatedSuccessfully": {
+    "EN": "Section updated successfully",
+    "AR": "تم تحديث بيانات القسم بنجاح"
+  },
+  "SectionUpdateFailed": {
+    "EN": "An error occurred while updating the section",
+    "AR": "حدث خطأ أثناء تحديث بيانات القسم"
+  },
+  "SectionDeletedSuccessfully": {
+    "EN": "Section deleted successfully",
+    "AR": "تم حذف القسم بنجاح"
+  },
+  "SectionDeletionFailed": {
+    "EN": "An error occurred while deleting the section",
+    "AR": "حدث خطأ أثناء حذف القسم"
+  },
+  "SubjectCreatedSuccessfully": {
+    "EN": "Subject created successfully",
+    "AR": "تم إنشاء المادة بنجاح"
+  },
+  "FailedToCreateSubject": {
+    "EN": "Failed to create subject",
+    "AR": "فشل في إنشاء المادة"
+  },
+  "SubjectsFetchedSuccessfully": {
+    "EN": "Subjects fetched successfully",
+    "AR": "تم جلب المواد بنجاح"
+  },
+  "FailedToFetchSubjects": {
+    "EN": "Failed to fetch subjects",
+    "AR": "فشل في جلب المواد"
+  },
+  "SubjectNotFound": {
+    "EN": "Subject not found",
+    "AR": "المادة غير موجودة"
+  },
+  "SubjectFetchedSuccessfully": {
+    "EN": "Subject fetched successfully",
+    "AR": "تم جلب المادة بنجاح"
+  },
+  "SubjectUpdatedSuccessfully": {
+    "EN": "Subject updated successfully",
+    "AR": "تم تحديث المادة بنجاح"
+  },
+  "FailedToUpdateSubject": {
+    "EN": "Failed to update subject",
+    "AR": "فشل في تحديث المادة"
+  },
+  "SubjectDeletedSuccessfully": {
+    "EN": "Subject deleted successfully",
+    "AR": "تم حذف المادة بنجاح"
+  },
+  "FailedToDeleteSubject": {
+    "EN": "Failed to delete subject",
+    "AR": "فشل في حذف المادة"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  }
+}
