@@ -1,0 +1,68 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Global Native Input/Select Restyling to match Shadcn UI */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="data-slot"]), 
+  select:not([class*="data-slot"]), 
+  textarea:not([class*="data-slot"]) {
+    @apply flex min-h-10 w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-base text-gray-900 transition-colors duration-200 outline-none placeholder:text-gray-500 hover:border-gray-400 focus:border-indigo-500 focus:ring-[3px] focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400 dark:hover:border-gray-600 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20;
+  }
+
+  /* Standardize Native Labels */
+  label:not([class*="data-slot"]) {
+    @apply block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1.5;
+  }
+
+  /* Standardize Native Buttons */
+  button[type="submit"]:not([class*="data-slot"]),
+  .btn-primary {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:focus-visible:ring-indigo-400 capitalize overflow-hidden text-ellipsis;
+  }
+
+  /* Consistent Panel/Card Global class */
+  .panel-card {
+    @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 transition-colors p-6;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+}
+
+/* Fix margins and paddings for RTL */
+[dir="rtl"] .ml-64 {
+  margin-left: 0;
+  margin-right: 16rem;
+}
+
+[dir="rtl"] .pl-64 {
+  padding-left: 0;
+  padding-right: 16rem;
+}
+
+[dir="rtl"] .left-0 {
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .right-0 {
+  right: auto;
+  left: 0;
+}
