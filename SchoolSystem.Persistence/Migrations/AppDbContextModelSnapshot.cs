@@ -58,37 +58,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Assignments");
                 });
 
-            modelBuilder.Entity("Attendance", b =>
-                {
-                    b.Property<Guid>("Oid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPresent")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("StudentOid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Oid");
-
-                    b.HasIndex("StudentOid");
-
-                    b.ToTable("Attendances");
-                });
-
             modelBuilder.Entity("Event", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -126,23 +95,63 @@ namespace SchoolSystem.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ExamName")
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Instructions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MaxScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PassingScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Room")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubjectOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("SubjectOid");
 
                     b.ToTable("Exams");
                 });
@@ -159,17 +168,34 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<Guid>("ExamOid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<double>("Marks")
-                        .HasColumnType("float");
+                    b.Property<bool>("IsPassed")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("Percentage")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("StudentOid")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SubjectOid")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -179,8 +205,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("ExamOid");
 
                     b.HasIndex("StudentOid");
-
-                    b.HasIndex("SubjectOid");
 
                     b.ToTable("ExamResults");
                 });
@@ -312,6 +336,52 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasKey("Oid");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Attendance", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeSpan?>("CheckInTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("CheckOutTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("StudentOid", "Date")
+                        .IsUnique();
+
+                    b.ToTable("Attendances");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
@@ -687,15 +757,23 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Subject");
                 });
 
-            modelBuilder.Entity("Attendance", b =>
+            modelBuilder.Entity("Exam", b =>
                 {
-                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
-                        .WithMany("AttendanceRecords")
-                        .HasForeignKey("StudentOid")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Student");
+                    b.HasOne("Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
                 });
 
             modelBuilder.Entity("ExamResult", b =>
@@ -709,20 +787,12 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
                         .WithMany("ExamResults")
                         .HasForeignKey("StudentOid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Subject", "Subject")
-                        .WithMany()
-                        .HasForeignKey("SubjectOid")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Exam");
 
                     b.Navigation("Student");
-
-                    b.Navigation("Subject");
                 });
 
             modelBuilder.Entity("FeeInvoice", b =>
@@ -745,6 +815,25 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("FeeInvoice");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Attendance", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
+                        .WithMany("AttendanceRecords")
+                        .HasForeignKey("StudentOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>

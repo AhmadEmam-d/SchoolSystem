@@ -14,7 +14,7 @@ namespace SchoolSystem.Domain.Entities
         public Guid TeacherOid { get; set; }
         public Teacher Teacher { get; set; }
 
-        public DayOfWeek Day { get; set; }
+        public System.DayOfWeek Day { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
 

@@ -306,5 +306,209 @@
   "TimetableDeletionFailed": {
     "EN": "An error occurred while deleting the timetable",
     "AR": "حدث خطأ أثناء حذف الجدول الدراسي"
+  },
+  "TodayAttendanceFetchedSuccessfully": {
+    "EN": "Today's attendance fetched successfully",
+    "AR": "تم جلب بيانات حضور اليوم بنجاح"
+  },
+  "WeeklyAttendanceFetchedSuccessfully": {
+    "EN": "Weekly attendance fetched successfully",
+    "AR": "تم جلب بيانات حضور الأسبوع بنجاح"
+  },
+  "MonthlyReportFetchedSuccessfully": {
+    "EN": "Monthly attendance report fetched successfully",
+    "AR": "تم جلب تقرير الحضور الشهري بنجاح"
+  },
+  "AttendancesFetchedSuccessfully": {
+    "EN": "Attendances fetched successfully",
+    "AR": "تم جلب بيانات الحضور بنجاح"
+  },
+  "AttendancesFetchFailed": {
+    "EN": "An error occurred while fetching attendances",
+    "AR": "حدث خطأ أثناء جلب بيانات الحضور"
+  },
+  "AttendanceFetchedSuccessfully": {
+    "EN": "Attendance fetched successfully",
+    "AR": "تم جلب بيانات الحضور بنجاح"
+  },
+  "AttendanceFetchFailed": {
+    "EN": "An error occurred while fetching attendance",
+    "AR": "حدث خطأ أثناء جلب بيانات الحضور"
+  },
+  "AttendanceNotFound": {
+    "EN": "Attendance record not found",
+    "AR": "سجل الحضور غير موجود"
+  },
+  "AttendanceCreatedSuccessfully": {
+    "EN": "Attendance record created successfully",
+    "AR": "تم إنشاء سجل الحضور بنجاح"
+  },
+  "AttendanceCreationFailed": {
+    "EN": "An error occurred while creating attendance record",
+    "AR": "حدث خطأ أثناء إنشاء سجل الحضور"
+  },
+  "AttendanceUpdatedSuccessfully": {
+    "EN": "Attendance record updated successfully",
+    "AR": "تم تحديث سجل الحضور بنجاح"
+  },
+  "AttendanceUpdateFailed": {
+    "EN": "An error occurred while updating attendance record",
+    "AR": "حدث خطأ أثناء تحديث سجل الحضور"
+  },
+  "AttendanceDeletedSuccessfully": {
+    "EN": "Attendance record deleted successfully",
+    "AR": "تم حذف سجل الحضور بنجاح"
+  },
+  "AttendanceDeletionFailed": {
+    "EN": "An error occurred while deleting attendance record",
+    "AR": "حدث خطأ أثناء حذف سجل الحضور"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "TeacherNotFound": {
+    "EN": "Teacher not found",
+    "AR": "المدرس غير موجود"
+  },
+  "SubjectNotFound": {
+    "EN": "Subject not found",
+    "AR": "المادة غير موجودة"
+  },
+  "AssignmentExists": {
+    "EN": "Teacher already assigned to this subject",
+    "AR": "المدرس مرتبط بالفعل بهذه المادة"
+  },
+  "TeacherAssignedToSubjectSuccessfully": {
+    "EN": "Teacher assigned to subject successfully",
+    "AR": "تم ربط المدرس بالمادة بنجاح"
+  },
+  "AssignmentFailed": {
+    "EN": "An error occurred while assigning teacher to subject",
+    "AR": "حدث خطأ أثناء ربط المدرس بالمادة"
+  },
+  "AssignmentsFetchedSuccessfully": {
+    "EN": "Assignments fetched successfully",
+    "AR": "تم جلب الروابط بنجاح"
+  },
+  "AssignmentsFetchFailed": {
+    "EN": "An error occurred while fetching assignments",
+    "AR": "حدث خطأ أثناء جلب الروابط"
+  },
+  "SubjectsByTeacherFetchedSuccessfully": {
+    "EN": "Subjects fetched successfully",
+    "AR": "تم جلب المواد بنجاح"
+  },
+  "SubjectsByTeacherFetchFailed": {
+    "EN": "An error occurred while fetching subjects for teacher",
+    "AR": "حدث خطأ أثناء جلب مواد المدرس"
+  },
+  "TeachersBySubjectFetchedSuccessfully": {
+    "EN": "Teachers fetched successfully",
+    "AR": "تم جلب المدرسين بنجاح"
+  },
+  "TeachersBySubjectFetchFailed": {
+    "EN": "An error occurred while fetching teachers for subject",
+    "AR": "حدث خطأ أثناء جلب مدرسي المادة"
+  },
+  "AssignmentNotFound": {
+    "EN": "Assignment not found",
+    "AR": "الرابط غير موجود"
+  },
+  "TeacherRemovedFromSubjectSuccessfully": {
+    "EN": "Teacher removed from subject successfully",
+    "AR": "تم إلغاء ربط المدرس بالمادة بنجاح"
+  },
+  "RemovalFailed": {
+    "EN": "An error occurred while removing teacher from subject",
+    "AR": "حدث خطأ أثناء إلغاء ربط المدرس بالمادة"
+  },
+  "ExamsSummaryFetchedSuccessfully": {
+    "EN": "Exams summary fetched successfully",
+    "AR": "تم جلب ملخص الامتحانات بنجاح"
+  },
+  "ExamsSummaryFetchFailed": {
+    "EN": "An error occurred while fetching exams summary",
+    "AR": "حدث خطأ أثناء جلب ملخص الامتحانات"
+  },
+  "ExamsFetchedSuccessfully": {
+    "EN": "Exams fetched successfully",
+    "AR": "تم جلب الامتحانات بنجاح"
+  },
+  "ExamsFetchFailed": {
+    "EN": "An error occurred while fetching exams",
+    "AR": "حدث خطأ أثناء جلب الامتحانات"
+  },
+  "ExamNotFound": {
+    "EN": "Exam not found",
+    "AR": "الامتحان غير موجود"
+  },
+  "ExamFetchedSuccessfully": {
+    "EN": "Exam fetched successfully",
+    "AR": "تم جلب الامتحان بنجاح"
+  },
+  "ExamFetchFailed": {
+    "EN": "An error occurred while fetching exam",
+    "AR": "حدث خطأ أثناء جلب الامتحان"
+  },
+  "ExamResultsFetchedSuccessfully": {
+    "EN": "Exam results fetched successfully",
+    "AR": "تم جلب نتائج الامتحان بنجاح"
+  },
+  "ExamResultsFetchFailed": {
+    "EN": "An error occurred while fetching exam results",
+    "AR": "حدث خطأ أثناء جلب نتائج الامتحان"
+  },
+  "ExamCreatedSuccessfully": {
+    "EN": "Exam created successfully",
+    "AR": "تم إنشاء الامتحان بنجاح"
+  },
+  "ExamCreationFailed": {
+    "EN": "An error occurred while creating exam",
+    "AR": "حدث خطأ أثناء إنشاء الامتحان"
+  },
+  "ExamUpdatedSuccessfully": {
+    "EN": "Exam updated successfully",
+    "AR": "تم تحديث الامتحان بنجاح"
+  },
+  "ExamUpdateFailed": {
+    "EN": "An error occurred while updating exam",
+    "AR": "حدث خطأ أثناء تحديث الامتحان"
+  },
+  "ExamDeletedSuccessfully": {
+    "EN": "Exam deleted successfully",
+    "AR": "تم حذف الامتحان بنجاح"
+  },
+  "ExamDeletionFailed": {
+    "EN": "An error occurred while deleting exam",
+    "AR": "حدث خطأ أثناء حذف الامتحان"
+  },
+  "ExamResultAddedSuccessfully": {
+    "EN": "Exam result added successfully",
+    "AR": "تم إضافة نتيجة الامتحان بنجاح"
+  },
+  "ExamResultAddFailed": {
+    "EN": "An error occurred while adding exam result",
+    "AR": "حدث خطأ أثناء إضافة نتيجة الامتحان"
+  },
+  "ExamResultUpdatedSuccessfully": {
+    "EN": "Exam result updated successfully",
+    "AR": "تم تحديث نتيجة الامتحان بنجاح"
+  },
+  "ExamResultUpdateFailed": {
+    "EN": "An error occurred while updating exam result",
+    "AR": "حدث خطأ أثناء تحديث نتيجة الامتحان"
+  },
+  "ExamResultDeletedSuccessfully": {
+    "EN": "Exam result deleted successfully",
+    "AR": "تم حذف نتيجة الامتحان بنجاح"
+  },
+  "ExamResultDeletionFailed": {
+    "EN": "An error occurred while deleting exam result",
+    "AR": "حدث خطأ أثناء حذف نتيجة الامتحان"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
   }
 }

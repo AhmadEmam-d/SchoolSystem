@@ -18,7 +18,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<Section> Sections { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<TeacherSubject> TeacherSubjects { get; set; }
-        public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<SchoolSystem.Domain.Entities.Attendance> Attendances { get; set; }
         public DbSet<Exam> Exams { get; set; }
         public DbSet<ExamResult> ExamResults { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
@@ -173,14 +173,21 @@ namespace SchoolSystem.Persistence.Contexts
             // -------------------------
             // Attendance
             // -------------------------
-            modelBuilder.Entity<Attendance>(entity =>
+            modelBuilder.Entity<SchoolSystem.Domain.Entities.Attendance>(entity =>
             {
                 entity.HasKey(e => e.Oid);
 
-                entity.HasOne(a => a.Student)
+                entity.HasOne(e => e.Student)
                       .WithMany(s => s.AttendanceRecords)
-                      .HasForeignKey(a => a.StudentOid)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .HasForeignKey(e => e.StudentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.StudentOid, e.Date }).IsUnique();
             });
 
             // -------------------------
@@ -189,6 +196,19 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<Exam>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(e => e.Type).HasConversion<int>();
+                entity.Property(e => e.Status).HasConversion<int>();
             });
 
             // -------------------------
@@ -198,19 +218,14 @@ namespace SchoolSystem.Persistence.Contexts
             {
                 entity.HasKey(e => e.Oid);
 
-                entity.HasOne(er => er.Exam)
+                entity.HasOne(e => e.Exam)
                       .WithMany(e => e.Results)
-                      .HasForeignKey(er => er.ExamOid)
+                      .HasForeignKey(e => e.ExamOid)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(er => er.Student)
+                entity.HasOne(e => e.Student)
                       .WithMany(s => s.ExamResults)
-                      .HasForeignKey(er => er.StudentOid)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(er => er.Subject)
-                      .WithMany()
-                      .HasForeignKey(er => er.SubjectOid)
+                      .HasForeignKey(e => e.StudentOid)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
