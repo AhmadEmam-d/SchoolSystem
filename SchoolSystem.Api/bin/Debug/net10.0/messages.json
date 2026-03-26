@@ -510,5 +510,77 @@
   "IDMismatch": {
     "EN": "ID mismatch between URL and body",
     "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "AnnouncementsSummaryFetchedSuccessfully": {
+    "EN": "Announcements summary fetched successfully",
+    "AR": "تم جلب ملخص الإعلانات بنجاح"
+  },
+  "AnnouncementsSummaryFetchFailed": {
+    "EN": "An error occurred while fetching announcements summary",
+    "AR": "حدث خطأ أثناء جلب ملخص الإعلانات"
+  },
+  "AnnouncementsFetchedSuccessfully": {
+    "EN": "Announcements fetched successfully",
+    "AR": "تم جلب الإعلانات بنجاح"
+  },
+  "AnnouncementsFetchFailed": {
+    "EN": "An error occurred while fetching announcements",
+    "AR": "حدث خطأ أثناء جلب الإعلانات"
+  },
+  "AnnouncementFetchedSuccessfully": {
+    "EN": "Announcement fetched successfully",
+    "AR": "تم جلب الإعلان بنجاح"
+  },
+  "AnnouncementFetchFailed": {
+    "EN": "An error occurred while fetching announcement",
+    "AR": "حدث خطأ أثناء جلب الإعلان"
+  },
+  "AnnouncementNotFound": {
+    "EN": "Announcement not found",
+    "AR": "الإعلان غير موجود"
+  },
+  "AnnouncementCreatedSuccessfully": {
+    "EN": "Announcement created successfully",
+    "AR": "تم إنشاء الإعلان بنجاح"
+  },
+  "AnnouncementCreationFailed": {
+    "EN": "An error occurred while creating announcement",
+    "AR": "حدث خطأ أثناء إنشاء الإعلان"
+  },
+  "AnnouncementUpdatedSuccessfully": {
+    "EN": "Announcement updated successfully",
+    "AR": "تم تحديث الإعلان بنجاح"
+  },
+  "AnnouncementUpdateFailed": {
+    "EN": "An error occurred while updating announcement",
+    "AR": "حدث خطأ أثناء تحديث الإعلان"
+  },
+  "AnnouncementDeletedSuccessfully": {
+    "EN": "Announcement deleted successfully",
+    "AR": "تم حذف الإعلان بنجاح"
+  },
+  "AnnouncementDeletionFailed": {
+    "EN": "An error occurred while deleting announcement",
+    "AR": "حدث خطأ أثناء حذف الإعلان"
+  },
+  "AnnouncementsByTargetFetchedSuccessfully": {
+    "EN": "Announcements by target fetched successfully",
+    "AR": "تم جلب الإعلانات حسب الفئة المستهدفة بنجاح"
+  },
+  "AnnouncementsByTargetFetchFailed": {
+    "EN": "An error occurred while fetching announcements by target",
+    "AR": "حدث خطأ أثناء جلب الإعلانات حسب الفئة المستهدفة"
+  },
+  "AnnouncementsByPriorityFetchedSuccessfully": {
+    "EN": "Announcements by priority fetched successfully",
+    "AR": "تم جلب الإعلانات حسب الأولوية بنجاح"
+  },
+  "AnnouncementsByPriorityFetchFailed": {
+    "EN": "An error occurred while fetching announcements by priority",
+    "AR": "حدث خطأ أثناء جلب الإعلانات حسب الأولوية"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
   }
 }

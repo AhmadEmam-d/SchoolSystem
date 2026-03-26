@@ -7,6 +7,7 @@ namespace SchoolSystem.Application.Interfaces.Services
         Guid? UserId { get; }
         string Email { get; }
         string Role { get; }
+        string Name { get; }
         bool IsAuthenticated { get; }
     }
 }

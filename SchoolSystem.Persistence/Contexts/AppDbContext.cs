@@ -29,6 +29,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Timetable> Timetables { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -83,6 +84,18 @@ namespace SchoolSystem.Persistence.Contexts
                       .WithMany(p => p.Students)
                       .HasForeignKey(e => e.ParentOid)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+            // -------------------------
+            // Announcement
+            // -------------------------
+            modelBuilder.Entity<Announcement>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Target).HasConversion<int>();
+                entity.Property(e => e.Priority).HasConversion<int>();
+                entity.HasIndex(e => e.PublishDate);
+                entity.HasIndex(e => e.IsPublished);
+                entity.HasIndex(e => e.IsActive);
             });
             // -------------------------
             // Timetable
