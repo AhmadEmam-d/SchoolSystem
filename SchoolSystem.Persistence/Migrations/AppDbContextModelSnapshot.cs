@@ -436,6 +436,57 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Timetable", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Period")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Room")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("SubjectOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("SubjectOid");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("Timetables");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -723,6 +774,33 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Section");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Timetable", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany("Timetables")
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Teacher", "Teacher")
+                        .WithMany("Timetables")
+                        .HasForeignKey("TeacherOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.User", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Parent", "Parent")
@@ -792,6 +870,8 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Sections");
 
                     b.Navigation("Students");
+
+                    b.Navigation("Timetables");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
@@ -821,6 +901,8 @@ namespace SchoolSystem.Persistence.Migrations
             modelBuilder.Entity("Teacher", b =>
                 {
                     b.Navigation("TeacherSubjects");
+
+                    b.Navigation("Timetables");
                 });
 #pragma warning restore 612, 618
         }

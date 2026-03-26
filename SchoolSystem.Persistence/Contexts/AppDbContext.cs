@@ -28,6 +28,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Timetable> Timetables { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -81,6 +82,28 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasOne(e => e.Parent)
                       .WithMany(p => p.Students)
                       .HasForeignKey(e => e.ParentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            // -------------------------
+            // Timetable
+            // -------------------------
+            modelBuilder.Entity<SchoolSystem.Domain.Entities.Timetable>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany(c => c.Timetables)
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithMany(t => t.Timetables)
+                      .HasForeignKey(e => e.TeacherOid)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 

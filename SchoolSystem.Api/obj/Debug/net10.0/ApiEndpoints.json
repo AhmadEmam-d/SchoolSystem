@@ -820,5 +820,116 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "GetAll",
+    "RelativePath": "api/Timetable",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "Create",
+    "RelativePath": "api/Timetable",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SchoolSystem.Application.Features.Timetable.DTOs.CreateTimetableDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "GetById",
+    "RelativePath": "api/Timetable/{oid}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "oid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "Update",
+    "RelativePath": "api/Timetable/{oid}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "oid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "SchoolSystem.Application.Features.Timetable.DTOs.UpdateTimetableDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "Delete",
+    "RelativePath": "api/Timetable/{oid}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "oid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "GetByClass",
+    "RelativePath": "api/Timetable/class/{classOid}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "classOid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.TimetableController",
+    "Method": "GetByTeacher",
+    "RelativePath": "api/Timetable/teacher/{teacherOid}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "teacherOid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
   }
 ]

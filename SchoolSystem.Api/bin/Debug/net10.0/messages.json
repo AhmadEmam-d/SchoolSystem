@@ -262,5 +262,49 @@
   "IDMismatch": {
     "EN": "ID mismatch between URL and body",
     "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "TimetablesFetchedSuccessfully": {
+    "EN": "Timetables fetched successfully",
+    "AR": "تم جلب الجداول الدراسية بنجاح"
+  },
+  "TimetablesFetchFailed": {
+    "EN": "An error occurred while fetching timetables",
+    "AR": "حدث خطأ أثناء جلب الجداول الدراسية"
+  },
+  "TimetableFetchedSuccessfully": {
+    "EN": "Timetable fetched successfully",
+    "AR": "تم جلب الجدول الدراسي بنجاح"
+  },
+  "TimetableFetchFailed": {
+    "EN": "An error occurred while fetching the timetable",
+    "AR": "حدث خطأ أثناء جلب الجدول الدراسي"
+  },
+  "TimetableNotFound": {
+    "EN": "Timetable does not exist",
+    "AR": "الجدول الدراسي غير موجود"
+  },
+  "TimetableCreatedSuccessfully": {
+    "EN": "Timetable created successfully",
+    "AR": "تم إنشاء الجدول الدراسي بنجاح"
+  },
+  "TimetableCreationFailed": {
+    "EN": "An error occurred while creating the timetable",
+    "AR": "حدث خطأ أثناء إنشاء الجدول الدراسي"
+  },
+  "TimetableUpdatedSuccessfully": {
+    "EN": "Timetable updated successfully",
+    "AR": "تم تحديث الجدول الدراسي بنجاح"
+  },
+  "TimetableUpdateFailed": {
+    "EN": "An error occurred while updating the timetable",
+    "AR": "حدث خطأ أثناء تحديث الجدول الدراسي"
+  },
+  "TimetableDeletedSuccessfully": {
+    "EN": "Timetable deleted successfully",
+    "AR": "تم حذف الجدول الدراسي بنجاح"
+  },
+  "TimetableDeletionFailed": {
+    "EN": "An error occurred while deleting the timetable",
+    "AR": "حدث خطأ أثناء حذف الجدول الدراسي"
   }
 }
