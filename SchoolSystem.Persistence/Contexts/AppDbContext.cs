@@ -30,6 +30,10 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<User> Users { get; set; }
         public DbSet<Timetable> Timetables { get; set; }
         public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<StudentReport> StudentReports { get; set; }
+        public DbSet<TeacherReport> TeacherReports { get; set; }
+        public DbSet<FinancialReport> FinancialReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -223,7 +227,55 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.Type).HasConversion<int>();
                 entity.Property(e => e.Status).HasConversion<int>();
             });
+            // -------------------------
+            // Report
+            // -------------------------
+            modelBuilder.Entity<Report>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Data).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Parameters).HasColumnType("nvarchar(max)");
+                entity.HasIndex(e => e.GeneratedAt);
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.IsArchived);
+            });
+            // -------------------------
+            // StudentReport
+            // -------------------------
+            modelBuilder.Entity<StudentReport>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasOne(e => e.Student)
+                      .WithMany()
+                      .HasForeignKey(e => e.StudentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(e => e.GeneratedAt);
+                entity.HasIndex(e => e.ReportType);
+            });
 
+            // -------------------------
+            // TeacherReport
+            // -------------------------
+            modelBuilder.Entity<TeacherReport>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasOne(e => e.Teacher)
+                      .WithMany()
+                      .HasForeignKey(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasIndex(e => e.GeneratedAt);
+                entity.HasIndex(e => e.ReportType);
+            });
+            // -------------------------
+            // FinancialReport
+            // -------------------------
+            modelBuilder.Entity<FinancialReport>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Details).HasColumnType("nvarchar(max)");
+                entity.HasIndex(e => e.GeneratedAt);
+                entity.HasIndex(e => e.Period);
+            });
             // -------------------------
             // ExamResult
             // -------------------------
@@ -295,6 +347,12 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<Message>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => e.SenderOid);
+                entity.HasIndex(e => e.ReceiverOid);
+                entity.HasIndex(e => e.SentAt);
+                entity.HasIndex(e => e.IsRead);
+
+                
             });
 
             // -------------------------
@@ -303,6 +361,12 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<Notification>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => e.UserOid);
+                entity.HasIndex(e => e.TargetRole);
+                entity.HasIndex(e => e.IsRead);
+                entity.HasIndex(e => e.SentAt);
+                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.Priority);
             });
         }
     }

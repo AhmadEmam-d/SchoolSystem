@@ -1,149 +1,224 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
-import { Calendar as CalendarIcon, Filter, Download, Plus, Edit2 } from 'lucide-react';
+import { Download, Edit2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { api } from '../../../app/lib/api';
 
 export function AdminTimetable() {
+  console.log('🔥🔥🔥 AdminTimetable is rendering! 🔥🔥🔥');
+  
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  
+  const [timetableEntries, setTimetableEntries] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [loading, setLoading] = useState(true);
+
   const days = [
-    { en: 'Sunday', ar: 'الأحد', key: 'sunday' },
-    { en: 'Monday', ar: 'الاثنين', key: 'monday' },
-    { en: 'Tuesday', ar: 'الثلاثاء', key: 'tuesday' },
-    { en: 'Wednesday', ar: 'الأربعاء', key: 'wednesday' },
-    { en: 'Thursday', ar: 'الخميس', key: 'thursday' },
+    { en: 'Sunday', ar: 'الأحد', key: 'Sunday' },
+    { en: 'Monday', ar: 'الاثنين', key: 'Monday' },
+    { en: 'Tuesday', ar: 'الثلاثاء', key: 'Tuesday' },
+    { en: 'Wednesday', ar: 'الأربعاء', key: 'Wednesday' },
+    { en: 'Thursday', ar: 'الخميس', key: 'Thursday' },
   ];
-  
+
   const times = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
 
-  // Mock schedule data
-  const schedule = [
-    { day: 'Sunday', time: '09:00', subject: 'Math', class: '10-A', teacher: 'Mr. Nash', color: 'bg-blue-100 border-blue-200 text-blue-700' },
-    { day: 'Sunday', time: '11:00', subject: 'History', class: '10-A', teacher: 'Mr. Hero', color: 'bg-orange-100 border-orange-200 text-orange-700' },
-    { day: 'Monday', time: '10:00', subject: 'Science', class: '10-B', teacher: 'Mrs. Curie', color: 'bg-green-100 border-green-200 text-green-700' },
-    { day: 'Tuesday', time: '14:00', subject: 'English', class: '8-A', teacher: 'Mr. Shake', color: 'bg-purple-100 border-purple-200 text-purple-700' },
-    { day: 'Wednesday', time: '09:00', subject: 'Art', class: '10-A', teacher: 'Mr. Leo', color: 'bg-pink-100 border-pink-200 text-pink-700' },
-  ];
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      console.log('1. Fetching classes...');
+      const classesData = await api.classes.getAll();
+      console.log('2. Classes data:', classesData);
+      
+      if (classesData && classesData.length > 0) {
+        setClasses(classesData);
+        
+        const firstClassOid = classesData[0].oid;
+        console.log('3. First class OID:', firstClassOid);
+        setSelectedClass(firstClassOid);
+        
+        console.log('4. Fetching timetable for class:', firstClassOid);
+        const timetableData = await api.timetable.getByClass(firstClassOid);
+        console.log('5. Timetable data:', timetableData);
+        
+        if (timetableData && timetableData.weeklySchedule) {
+          console.log('6. Weekly schedule:', timetableData.weeklySchedule);
+          const entries = [];
+          Object.entries(timetableData.weeklySchedule).forEach(([day, slots]) => {
+            if (slots && slots.length > 0) {
+              slots.forEach(slot => {
+                entries.push({
+                  day: day,
+                  startTime: slot.time.split('-')[0],
+                  endTime: slot.time.split('-')[1],
+                  subjectName: slot.subjectName,
+                  className: timetableData.className,
+                  teacherName: slot.teacherName,
+                  room: slot.room
+                });
+              });
+            }
+          });
+          console.log('7. Entries:', entries);
+          setTimetableEntries(entries);
+        } else {
+          console.log('No weeklySchedule in response');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error(t('errorFetchingData'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const getScheduleItem = (dayKey, time) => {
-    const dayName = days.find(d => d.key === dayKey)?.en;
-    return schedule.find(s => s.day === dayName && s.time === time);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleClassChange = async (classOid) => {
+    setSelectedClass(classOid);
+    setLoading(true);
+    try {
+      const timetableData = await api.timetable.getByClass(classOid);
+      if (timetableData && timetableData.weeklySchedule) {
+        const entries = [];
+        Object.entries(timetableData.weeklySchedule).forEach(([day, slots]) => {
+          if (slots && slots.length > 0) {
+            slots.forEach(slot => {
+              entries.push({
+                day: day,
+                startTime: slot.time.split('-')[0],
+                endTime: slot.time.split('-')[1],
+                subjectName: slot.subjectName,
+                className: timetableData.className,
+                teacherName: slot.teacherName,
+                room: slot.room
+              });
+            });
+          }
+        });
+        setTimetableEntries(entries);
+      }
+    } catch (error) {
+      console.error('Error fetching timetable:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getScheduleItem = (day, time) => {
+    return timetableEntries.find(s => s.day === day && s.startTime === time);
   };
 
   const exportTimetable = () => {
-    // Create CSV content
-    const headers = ['Day', 'Time', 'Subject', 'Class', 'Teacher'];
-    const csvRows = [headers.join(',')];
+    const headers = ['Day', 'StartTime', 'EndTime', 'Subject', 'Class', 'Teacher', 'Room'];
+    const rows = timetableEntries.map(item => [
+      item.day,
+      item.startTime,
+      item.endTime,
+      item.subjectName,
+      item.className,
+      item.teacherName,
+      item.room
+    ]);
 
-    // Add schedule data
-    schedule.forEach(item => {
-      const row = [
-        item.day,
-        item.time,
-        item.subject,
-        item.class,
-        item.teacher
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const csvContent = csvRows.join('\n');
-
-    // Create blob and download
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `timetable_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `timetable.csv`;
     link.click();
-    document.body.removeChild(link);
   };
-  
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">{t('loading')}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Timetable</h1>
-          <p className="text-gray-500 mt-1">Manage class schedules and teacher assignments</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('timetablePage')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('timetablePageDesc')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportTimetable}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('export')}
           </Button>
-          <Button onClick={() => navigate('/admin/timetable/edit?type=class')}>
+          <Button onClick={() => navigate('/admin/timetable/edit')}>
             <Edit2 className="h-4 w-4 mr-2" />
-            تعديل الجدول
+            {t('editTimetable')}
           </Button>
         </div>
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <CardTitle>Master Schedule</CardTitle>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Select defaultValue="10-A">
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Class" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10-A">Class 10-A</SelectItem>
-                  <SelectItem value="10-B">Class 10-B</SelectItem>
-                  <SelectItem value="8-A">Class 8-A</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+        <CardHeader>
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <CardTitle>{t('masterSchedule')}</CardTitle>
+            <Select value={selectedClass} onValueChange={handleClassChange}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder={t('selectClass')} />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map(cls => (
+                  <SelectItem key={cls.oid} value={cls.oid}>
+                    {cls.name} - {cls.level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
-              <div className="grid grid-cols-6 border-b border-gray-200">
-                <div className="p-4 font-medium text-gray-500 bg-gray-50">Time</div>
-                {days.map(day => (
-                  <div key={day.key} className="p-4 font-medium text-center text-gray-900 bg-gray-50 border-l border-gray-200">
-                    {isRTL ? day.ar : day.en}
-                  </div>
-                ))}
-              </div>
-              
-              {times.map(time => (
-                <div key={time} className="grid grid-cols-6 border-b border-gray-200 last:border-0">
-                  <div className="p-4 text-sm font-medium text-gray-500 bg-white">
-                    {time}
-                  </div>
-                  {days.map(day => {
-                    const item = getScheduleItem(day.key, time);
-                    return (
-                      <div key={`${day.key}-${time}`} className="p-2 border-l border-gray-200 min-h-[100px] relative">
-                        {item ? (
-                          <div className={`h-full w-full p-2 rounded-lg border ${item.color} shadow-sm`}>
-                            <div className="font-bold text-sm mb-1">{item.subject}</div>
-                            <div className="text-xs mt-1">{item.class}</div>
-                            <div className="text-xs opacity-80">{item.teacher}</div>
-                          </div>
-                        ) : (
-                          <div className="h-full w-full"></div>
-                        )}
-                      </div>
-                    );
-                  })}
+            <div className="grid grid-cols-6 border-b dark:border-gray-700">
+              <div className="p-4 font-medium text-gray-900 dark:text-white">{t('time')}</div>
+              {days.map(day => (
+                <div key={day.key} className="p-4 text-center font-medium text-gray-900 dark:text-white">
+                  {isRTL ? day.ar : day.en}
                 </div>
               ))}
             </div>
+
+            {times.map(time => (
+              <div key={time} className="grid grid-cols-6 border-b dark:border-gray-700">
+                <div className="p-4 text-gray-700 dark:text-gray-300">{time}</div>
+                {days.map(day => {
+                  const item = getScheduleItem(day.key, time);
+                  return (
+                    <div key={`${day.key}-${time}`} className="p-2 min-h-[80px] border-l dark:border-gray-700">
+                      {item && (
+                        <div className="p-2 rounded border shadow-sm bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+                          <div className="font-bold text-sm text-blue-700 dark:text-blue-300">
+                            {item.subjectName}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {item.teacherName}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-500">
+                            {item.room}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

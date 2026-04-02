@@ -582,5 +582,233 @@
   "IDMismatch": {
     "EN": "ID mismatch between URL and body",
     "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "MessagesSummaryFetchedSuccessfully": {
+    "EN": "Messages summary fetched successfully",
+    "AR": "تم جلب ملخص الرسائل بنجاح"
+  },
+  "MessagesSummaryFetchFailed": {
+    "EN": "An error occurred while fetching messages summary",
+    "AR": "حدث خطأ أثناء جلب ملخص الرسائل"
+  },
+  "MessagesFetchedSuccessfully": {
+    "EN": "Messages fetched successfully",
+    "AR": "تم جلب الرسائل بنجاح"
+  },
+  "MessagesFetchFailed": {
+    "EN": "An error occurred while fetching messages",
+    "AR": "حدث خطأ أثناء جلب الرسائل"
+  },
+  "SentMessagesFetchedSuccessfully": {
+    "EN": "Sent messages fetched successfully",
+    "AR": "تم جلب الرسائل المرسلة بنجاح"
+  },
+  "SentMessagesFetchFailed": {
+    "EN": "An error occurred while fetching sent messages",
+    "AR": "حدث خطأ أثناء جلب الرسائل المرسلة"
+  },
+  "ConversationsFetchedSuccessfully": {
+    "EN": "Conversations fetched successfully",
+    "AR": "تم جلب المحادثات بنجاح"
+  },
+  "ConversationsFetchFailed": {
+    "EN": "An error occurred while fetching conversations",
+    "AR": "حدث خطأ أثناء جلب المحادثات"
+  },
+  "MessageFetchedSuccessfully": {
+    "EN": "Message fetched successfully",
+    "AR": "تم جلب الرسالة بنجاح"
+  },
+  "MessageFetchFailed": {
+    "EN": "An error occurred while fetching message",
+    "AR": "حدث خطأ أثناء جلب الرسالة"
+  },
+  "MessageSentSuccessfully": {
+    "EN": "Message sent successfully",
+    "AR": "تم إرسال الرسالة بنجاح"
+  },
+  "MessageSendFailed": {
+    "EN": "An error occurred while sending message",
+    "AR": "حدث خطأ أثناء إرسال الرسالة"
+  },
+  "MessageMarkedAsReadSuccessfully": {
+    "EN": "Message marked as read successfully",
+    "AR": "تم تعيين الرسالة كمقروءة بنجاح"
+  },
+  "MessageMarkReadFailed": {
+    "EN": "An error occurred while marking message as read",
+    "AR": "حدث خطأ أثناء تعيين الرسالة كمقروءة"
+  },
+  "MessageDeletedSuccessfully": {
+    "EN": "Message deleted successfully",
+    "AR": "تم حذف الرسالة بنجاح"
+  },
+  "MessageDeleteFailed": {
+    "EN": "An error occurred while deleting message",
+    "AR": "حدث خطأ أثناء حذف الرسالة"
+  },
+  "MessageNotFound": {
+    "EN": "Message not found",
+    "AR": "الرسالة غير موجودة"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "StudentsSummaryReportFetchedSuccessfully": {
+    "EN": "Students summary report fetched successfully",
+    "AR": "تم جلب تقرير ملخص الطلاب بنجاح"
+  },
+  "StudentsSummaryReportFetchFailed": {
+    "EN": "An error occurred while fetching students summary report",
+    "AR": "حدث خطأ أثناء جلب تقرير ملخص الطلاب"
+  },
+  "GradesReportFetchedSuccessfully": {
+    "EN": "Grades report fetched successfully",
+    "AR": "تم جلب تقرير الدرجات بنجاح"
+  },
+  "GradesReportFetchFailed": {
+    "EN": "An error occurred while fetching grades report",
+    "AR": "حدث خطأ أثناء جلب تقرير الدرجات"
+  },
+  "AcademicPerformanceFetchedSuccessfully": {
+    "EN": "Academic performance report fetched successfully",
+    "AR": "تم جلب تقرير الأداء الأكاديمي بنجاح"
+  },
+  "AcademicPerformanceFetchFailed": {
+    "EN": "An error occurred while fetching academic performance report",
+    "AR": "حدث خطأ أثناء جلب تقرير الأداء الأكاديمي"
+  },
+  "AttendanceDistributionFetchedSuccessfully": {
+    "EN": "Attendance distribution report fetched successfully",
+    "AR": "تم جلب تقرير توزيع الحضور بنجاح"
+  },
+  "AttendanceDistributionFetchFailed": {
+    "EN": "An error occurred while fetching attendance distribution report",
+    "AR": "حدث خطأ أثناء جلب تقرير توزيع الحضور"
+  },
+  "FinancialSummaryFetchedSuccessfully": {
+    "EN": "Financial summary report fetched successfully",
+    "AR": "تم جلب التقرير المالي بنجاح"
+  },
+  "FinancialSummaryFetchFailed": {
+    "EN": "An error occurred while fetching financial summary report",
+    "AR": "حدث خطأ أثناء جلب التقرير المالي"
+  },
+  "TeacherActivityLogFetchedSuccessfully": {
+    "EN": "Teacher activity log fetched successfully",
+    "AR": "تم جلب سجل نشاط المعلمين بنجاح"
+  },
+  "TeacherActivityLogFetchFailed": {
+    "EN": "An error occurred while fetching teacher activity log",
+    "AR": "حدث خطأ أثناء جلب سجل نشاط المعلمين"
+  },
+  "StudentReportGeneratedSuccessfully": {
+    "EN": "Student report generated successfully",
+    "AR": "تم إنشاء تقرير الطالب بنجاح"
+  },
+  "StudentReportGenerationFailed": {
+    "EN": "An error occurred while generating student report",
+    "AR": "حدث خطأ أثناء إنشاء تقرير الطالب"
+  },
+  "TeacherReportGeneratedSuccessfully": {
+    "EN": "Teacher report generated successfully",
+    "AR": "تم إنشاء تقرير المعلم بنجاح"
+  },
+  "TeacherReportGenerationFailed": {
+    "EN": "An error occurred while generating teacher report",
+    "AR": "حدث خطأ أثناء إنشاء تقرير المعلم"
+  },
+  "FinancialReportGeneratedSuccessfully": {
+    "EN": "Financial report generated successfully",
+    "AR": "تم إنشاء التقرير المالي بنجاح"
+  },
+  "FinancialReportGenerationFailed": {
+    "EN": "An error occurred while generating financial report",
+    "AR": "حدث خطأ أثناء إنشاء التقرير المالي"
+  },
+  "ReportArchivedSuccessfully": {
+    "EN": "Report archived successfully",
+    "AR": "تم أرشفة التقرير بنجاح"
+  },
+  "ReportArchiveFailed": {
+    "EN": "An error occurred while archiving report",
+    "AR": "حدث خطأ أثناء أرشفة التقرير"
+  },
+  "ReportDeletedSuccessfully": {
+    "EN": "Report deleted successfully",
+    "AR": "تم حذف التقرير بنجاح"
+  },
+  "ReportDeleteFailed": {
+    "EN": "An error occurred while deleting report",
+    "AR": "حدث خطأ أثناء حذف التقرير"
+  },
+  "ReportNotFound": {
+    "EN": "Report not found",
+    "AR": "التقرير غير موجود"
+  },
+  "ReportFetchFailed": {
+    "EN": "An error occurred while fetching the report",
+    "AR": "حدث خطأ أثناء جلب التقرير"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "NotificationsSummaryFetchedSuccessfully": {
+    "EN": "Notifications summary fetched successfully",
+    "AR": "تم جلب ملخص الإشعارات بنجاح"
+  },
+  "NotificationsSummaryFetchFailed": {
+    "EN": "An error occurred while fetching notifications summary",
+    "AR": "حدث خطأ أثناء جلب ملخص الإشعارات"
+  },
+  "NotificationsFetchedSuccessfully": {
+    "EN": "Notifications fetched successfully",
+    "AR": "تم جلب الإشعارات بنجاح"
+  },
+  "NotificationsFetchFailed": {
+    "EN": "An error occurred while fetching notifications",
+    "AR": "حدث خطأ أثناء جلب الإشعارات"
+  },
+  "NotificationSentSuccessfully": {
+    "EN": "Notification sent successfully",
+    "AR": "تم إرسال الإشعار بنجاح"
+  },
+  "NotificationSendFailed": {
+    "EN": "An error occurred while sending notification",
+    "AR": "حدث خطأ أثناء إرسال الإشعار"
+  },
+  "NotificationMarkedAsReadSuccessfully": {
+    "EN": "Notification marked as read successfully",
+    "AR": "تم تعيين الإشعار كمقروء بنجاح"
+  },
+  "NotificationMarkReadFailed": {
+    "EN": "An error occurred while marking notification as read",
+    "AR": "حدث خطأ أثناء تعيين الإشعار كمقروء"
+  },
+  "AllNotificationsMarkedAsReadSuccessfully": {
+    "EN": "All notifications marked as read successfully",
+    "AR": "تم تعيين جميع الإشعارات كمقروءة بنجاح"
+  },
+  "NotificationsMarkAllReadFailed": {
+    "EN": "An error occurred while marking all notifications as read",
+    "AR": "حدث خطأ أثناء تعيين جميع الإشعارات كمقروءة"
+  },
+  "NotificationDeletedSuccessfully": {
+    "EN": "Notification deleted successfully",
+    "AR": "تم حذف الإشعار بنجاح"
+  },
+  "NotificationDeleteFailed": {
+    "EN": "An error occurred while deleting notification",
+    "AR": "حدث خطأ أثناء حذف الإشعار"
+  },
+  "NotificationNotFound": {
+    "EN": "Notification not found",
+    "AR": "الإشعار غير موجود"
+  },
+  "IDMismatch": {
+    "EN": "ID mismatch between URL and body",
+    "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
   }
 }

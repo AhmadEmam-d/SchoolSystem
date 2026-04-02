@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Common;
-using SchoolSystem.Application.Features.Notifications.Dtos.Read;
+using SchoolSystem.Application.Features.Notifications.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;

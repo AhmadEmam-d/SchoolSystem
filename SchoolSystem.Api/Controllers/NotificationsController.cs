@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
-using SchoolSystem.Application.Features.Notifications.Commands.Create;
 using SchoolSystem.Application.Features.Notifications.Commands.Delete;
-using SchoolSystem.Application.Features.Notifications.Commands.Update;
-using SchoolSystem.Application.Features.Notifications.Dtos.Create;
-using SchoolSystem.Application.Features.Notifications.Queries.GetAll;
-using SchoolSystem.Application.Features.Notifications.Queries.GetById;
+using SchoolSystem.Application.Features.Notifications.Commands.MarkAllRead;
+using SchoolSystem.Application.Features.Notifications.Commands.MarkRead;
+using SchoolSystem.Application.Features.Notifications.Commands.Send;
+using SchoolSystem.Application.Features.Notifications.DTOs;
+using SchoolSystem.Application.Features.Notifications.Queries.GetSummary;
+using SchoolSystem.Application.Features.Notifications.Queries.GetUser;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace SchoolSystem.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // يتطلب تسجيل الدخول
+    [Authorize]
     public class NotificationsController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -30,15 +31,31 @@ namespace SchoolSystem.Api.Controllers
             _messageService = messageService;
         }
 
-        // GET: api/Notifications
-        [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] Guid? userOid)
+        // GET: api/Notifications/summary
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetSummary()
         {
             try
             {
-                var query = new GetAllNotificationsQuery { UserOid = userOid };
-                var result = await _mediator.Send(query);
+                var result = await _mediator.Send(new GetNotificationSummaryQuery());
+                return Ok(ApiResponseFactory.Success(result, "NotificationsSummaryFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "NotificationsSummaryFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
 
+        // GET: api/Notifications
+        [HttpGet]
+        public async Task<IActionResult> GetUserNotifications([FromQuery] bool? isRead, [FromQuery] string? type, [FromQuery] int? take)
+        {
+            try
+            {
+                var result = await _mediator.Send(new GetUserNotificationsQuery { IsRead = isRead, Type = type, Take = take });
                 return Ok(ApiResponseFactory.Success(result, "NotificationsFetchedSuccessfully", _messageService));
             }
             catch (Exception ex)
@@ -50,46 +67,20 @@ namespace SchoolSystem.Api.Controllers
             }
         }
 
-        // GET: api/Notifications/{oid}
-        [HttpGet("{oid}")]
-        public async Task<IActionResult> GetById(Guid oid)
-        {
-            try
-            {
-                var result = await _mediator.Send(new GetNotificationByOidQuery(oid));
-
-                if (result == null)
-                    return NotFound(ApiResponseFactory.Failure<object>(
-                        "NotificationNotFound", _messageService,
-                        new List<string> { "Notification not found" }
-                    ));
-
-                return Ok(ApiResponseFactory.Success(result, "NotificationFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "NotificationFetchFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
-        }
-
         // POST: api/Notifications
         [HttpPost]
-        [Authorize(Roles = "Admin")] // فقط Admin يقدر ينشئ إشعارات
-        public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SendNotification([FromBody] CreateNotificationDto dto)
         {
             try
             {
-                var result = await _mediator.Send(new CreateNotificationCommand(dto));
-
-                return Ok(ApiResponseFactory.Success(result, "NotificationCreatedSuccessfully", _messageService));
+                var result = await _mediator.Send(new SendNotificationCommand(dto));
+                return Ok(ApiResponseFactory.Success(result, "NotificationSentSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "NotificationCreationFailed", _messageService,
+                    "NotificationSendFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }
@@ -101,14 +92,31 @@ namespace SchoolSystem.Api.Controllers
         {
             try
             {
-                var result = await _mediator.Send(new MarkAsReadCommand(oid));
-
+                var result = await _mediator.Send(new MarkNotificationAsReadCommand(oid));
                 return Ok(ApiResponseFactory.Success(result, "NotificationMarkedAsReadSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "NotificationUpdateFailed", _messageService,
+                    "NotificationMarkReadFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+
+        // PUT: api/Notifications/read-all
+        [HttpPut("read-all")]
+        public async Task<IActionResult> MarkAllAsRead()
+        {
+            try
+            {
+                var result = await _mediator.Send(new MarkAllNotificationsAsReadCommand());
+                return Ok(ApiResponseFactory.Success(result, "AllNotificationsMarkedAsReadSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "NotificationsMarkAllReadFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }
@@ -116,19 +124,17 @@ namespace SchoolSystem.Api.Controllers
 
         // DELETE: api/Notifications/{oid}
         [HttpDelete("{oid}")]
-        [Authorize(Roles = "Admin")] // فقط Admin يقدر يحذف إشعارات
         public async Task<IActionResult> Delete(Guid oid)
         {
             try
             {
                 var result = await _mediator.Send(new DeleteNotificationCommand(oid));
-
                 return Ok(ApiResponseFactory.Success(result, "NotificationDeletedSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
-                    "NotificationDeletionFailed", _messageService,
+                    "NotificationDeleteFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }

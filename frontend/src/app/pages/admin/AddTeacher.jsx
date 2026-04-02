@@ -1,47 +1,160 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
+const API_BASE_URL = 'http://localhost:5073/api';
+
 export function AddTeacher() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     arabicName: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
-    gender: 'male',
-    nationalId: '',
-    address: '',
-    city: '',
-    hireDate: '',
-    subjects: [],
-    qualification: '',
-    specialization: '',
-    yearsOfExperience: '',
-    salary: '',
-    contractType: 'full-time',
+    subjectOids: []
   });
 
-  const handleSubmit = (e) => {
+  // Fetch subjects from API
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error(t('pleaseLogin'));
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/Subjects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          setSubjects(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+        toast.error(t('errorFetchingSubjects'));
+      }
+    };
+    
+    fetchSubjects();
+  }, [t]);
+
+  const validateForm = () => {
+    const errors = [];
+    
+    if (!formData.fullName?.trim()) errors.push('Full name is required');
+    if (!formData.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.push('Invalid email format');
+    if (!formData.phone?.match(/^[0-9]{10,15}$/)) errors.push('Phone must be 10-15 digits');
+    if (!formData.subjectOids || formData.subjectOids.length === 0) errors.push('Please select at least one subject');
+    
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success(t('teacherAddedSuccess'));
-    navigate('/admin/teachers');
+    
+    if (!validateForm()) return;
+    
+    setLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login again');
+        setLoading(false);
+        return;
+      }
+
+      // Wrap the data in a "teacher" object as expected by the API
+      const teacherData = {
+        teacher: {
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          subjectOids: formData.subjectOids
+        }
+      };
+      
+      console.log('Sending teacher data:', JSON.stringify(teacherData, null, 2));
+      
+      const response = await fetch(`${API_BASE_URL}/Teachers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(teacherData)
+      });
+      
+      const data = await response.json();
+      console.log('Response:', data);
+      
+      if (response.ok && data.success) {
+        toast.success('Teacher added successfully!');
+        navigate('/admin/teachers');
+      } else {
+        // Display error messages from server
+        if (data.errors) {
+          // Handle nested errors
+          if (data.errors.Teacher && Array.isArray(data.errors.Teacher)) {
+            data.errors.Teacher.forEach(error => toast.error(error));
+          } else if (typeof data.errors === 'object') {
+            Object.values(data.errors).forEach(error => {
+              if (Array.isArray(error)) {
+                error.forEach(msg => toast.error(msg));
+              } else if (typeof error === 'string') {
+                toast.error(error);
+              }
+            });
+          }
+        } else if (data.message) {
+          toast.error(data.message);
+        } else if (data.messages?.EN) {
+          toast.error(data.messages.EN);
+        } else if (data.title) {
+          toast.error(data.title);
+        } else {
+          toast.error(`Failed to add teacher: ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubjectChange = (e) => {
     const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-    setFormData({ ...formData, subjects: selectedOptions });
+    setFormData(prev => ({ ...prev, subjectOids: selectedOptions }));
   };
+
+  if (loading && subjects.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -55,8 +168,8 @@ export function AddTeacher() {
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('addNewTeacher')}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">{t('addNewTeacherDesc')}</p>
+            <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">Add New Teacher</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Fill in the teacher information below</p>
           </div>
         </div>
       </div>
@@ -66,59 +179,45 @@ export function AddTeacher() {
         {/* Personal Information */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('personalInformation')}</CardTitle>
+            <CardTitle>Personal Information</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('firstName')} *
+                  Full Name *
                 </label>
                 <input
                   type="text"
-                  name="firstName"
-                  value={formData.firstName}
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderFirstName')}
+                  placeholder="Enter full name"
+                  disabled={loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('lastName')} *
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderLastName')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('arabicName')} *
+                  Arabic Name
                 </label>
                 <input
                   type="text"
                   name="arabicName"
                   value={formData.arabicName}
                   onChange={handleChange}
-                  required
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('teacherPlaceholder')}
+                  placeholder="الاسم بالعربية"
                   dir="rtl"
+                  disabled={loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('email')} *
+                  Email *
                 </label>
                 <input
                   type="email"
@@ -127,13 +226,14 @@ export function AddTeacher() {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderTeacherEmail')}
+                  placeholder="teacher@school.com"
+                  disabled={loading}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('phone')} *
+                  Phone *
                 </label>
                 <input
                   type="tel"
@@ -142,79 +242,8 @@ export function AddTeacher() {
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderPhone')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('dateOfBirth')} *
-                </label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('gender')} *
-                </label>
-                <select
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="male">{t('male')}</option>
-                  <option value="female">{t('female')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('nationalId')} *
-                </label>
-                <input
-                  type="text"
-                  name="nationalId"
-                  value={formData.nationalId}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderNationalId')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('city')}
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('cityPlaceholder')}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('address')}
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('addressPlaceholder')}
+                  placeholder="01234567890"
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -224,129 +253,38 @@ export function AddTeacher() {
         {/* Professional Information */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('professionalInformation')}</CardTitle>
+            <CardTitle>Professional Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('hireDate')} *
-                </label>
-                <input
-                  type="date"
-                  name="hireDate"
-                  value={formData.hireDate}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('qualification')} *
+                  Teaching Subjects *
                 </label>
                 <select
-                  name="qualification"
-                  value={formData.qualification}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">{t('selectQualification')}</option>
-                  <option value="bachelor">{t('bachelor')}</option>
-                  <option value="master">{t('master')}</option>
-                  <option value="phd">{t('phd')}</option>
-                  <option value="diploma">{t('diploma')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('specialization')} *
-                </label>
-                <input
-                  type="text"
-                  name="specialization"
-                  value={formData.specialization}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('skillsPlaceholder')}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('yearsOfExperience')}
-                </label>
-                <input
-                  type="number"
-                  name="yearsOfExperience"
-                  value={formData.yearsOfExperience}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderExperience')}
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('contractType')} *
-                </label>
-                <select
-                  name="contractType"
-                  value={formData.contractType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="full-time">{t('fullTime')}</option>
-                  <option value="part-time">{t('partTime')}</option>
-                  <option value="contract">{t('contract')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('salaryEGP')}
-                </label>
-                <input
-                  type="number"
-                  name="salary"
-                  value={formData.salary}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder={t('placeholderSalary')}
-                  min="0"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('teachingSubjects')} *
-                </label>
-                <select
-                  name="subjects"
+                  name="subjectOids"
                   multiple
+                  value={formData.subjectOids}
                   onChange={handleSubjectChange}
+                  required
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  size={5}
+                  size={6}
+                  disabled={loading}
                 >
-                  <option value="math">{t('math')}</option>
-                  <option value="arabic">{t('arabic')}</option>
-                  <option value="english">{t('english')}</option>
-                  <option value="science">{t('science')}</option>
-                  <option value="physics">{t('physics')}</option>
-                  <option value="chemistry">{t('chemistry')}</option>
-                  <option value="biology">{t('biology')}</option>
-                  <option value="history">{t('history')}</option>
-                  <option value="geography">{t('geography')}</option>
-                  <option value="french">{t('french')}</option>
-                  <option value="computer">{t('computer')}</option>
-                  <option value="art">{t('art')}</option>
+                  {subjects.map(subject => (
+                    <option key={subject.oid} value={subject.oid}>
+                      {subject.name}
+                    </option>
+                  ))}
                 </select>
-                <p className="text-sm text-gray-500 mt-1">{t('selectMultipleSubjects')}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Hold Ctrl (or Cmd on Mac) to select multiple subjects
+                </p>
+                {formData.subjectOids.length > 0 && (
+                  <p className="text-sm text-green-600 mt-1">
+                    Selected: {formData.subjectOids.length} subject(s)
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -358,15 +296,17 @@ export function AddTeacher() {
             type="button"
             onClick={() => navigate('/admin/teachers')}
             className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            disabled={loading}
           >
-            {t('cancel')}
+            Cancel
           </button>
           <button
             type="submit"
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            disabled={loading}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="h-5 w-5" />
-            {t('saveTeacher')}
+            {loading ? 'Saving...' : 'Save Teacher'}
           </button>
         </div>
       </form>

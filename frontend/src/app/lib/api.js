@@ -243,5 +243,105 @@ export const api = {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       }).then(res => res.json())
+  },
+
+  // TimeTables endpoints
+  timetable: {
+    getAll: () =>
+      fetch(`${API_BASE_URL}/Timetable`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      .then(res => res.json())
+      .then(data => data.success ? data.data : []),
+    
+    getByTeacher: (teacherOid) =>
+      fetch(`${API_BASE_URL}/Timetable/teacher/${teacherOid}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      .then(res => res.json())
+      .then(data => data.success ? data.data : null),
+    
+    getByClass: (classOid) =>
+      fetch(`${API_BASE_URL}/Timetable/class/${classOid}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+      .then(res => res.json())
+      .then(data => data.success ? data.data : null),
+    
+    create: (data) =>
+      fetch(`${API_BASE_URL}/Timetable`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    
+    update: (oid, data) =>
+      fetch(`${API_BASE_URL}/Timetable/${oid}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    
+    delete: (oid) =>
+      fetch(`${API_BASE_URL}/Timetable/${oid}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json())
+  },
+
+  // Attendance endpoints
+ // Attendance endpoints
+  attendance: {
+    getToday: (classOid) =>
+      fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json()),
+    
+    getWeekly: (classOid, startDate) =>
+      fetch(`${API_BASE_URL}/Attendance/weekly${classOid ? `?classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json()),
+    
+    getMonthlyReport: (year, month, classOid) =>
+      fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json()),
+    
+    getAll: (classOid, date) =>
+      fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json()),
+    
+    create: (data) =>
+      fetch(`${API_BASE_URL}/Attendance`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    
+    update: (oid, data) =>
+      fetch(`${API_BASE_URL}/Attendance/${oid}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(data)
+      }).then(res => res.json()),
+    
+    delete: (oid) =>
+      fetch(`${API_BASE_URL}/Attendance/${oid}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }).then(res => res.json())
   }
 };
