@@ -15,6 +15,17 @@ export function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
   const isRTL = i18n.language === 'ar';
 
+  // Helper function to get user's display name
+  const getUserDisplayName = () => {
+    return user?.fullName || user?.name || user?.email || 'User';
+  };
+
+  // Helper function to get avatar letter
+  const getAvatarLetter = () => {
+    const displayName = getUserDisplayName();
+    return displayName.charAt(0).toUpperCase();
+  };
+
   const handleProfileClick = () => {
     navigate(`/${user?.role}/profile`);
     setShowDropdown(false);
@@ -102,11 +113,11 @@ export function Navbar() {
             }`}
           >
             <div className="hidden sm:block">
-              <p className={`text-sm font-medium text-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{user?.name}</p>
+              <p className={`text-sm font-medium text-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{getUserDisplayName()}</p>
               <p className={`text-xs text-muted-foreground capitalize ${isRTL ? 'text-right' : 'text-left'}`}>{getRoleLabel()}</p>
             </div>
             <div className="h-9 w-9 sm:h-10 sm:w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-semibold border-2 border-primary/20 text-sm sm:text-base">
-              {user?.name.charAt(0).toUpperCase()}
+              {getAvatarLetter()}
             </div>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform hidden sm:block ${showDropdown ? 'rotate-180' : ''}`} />
           </button>
