@@ -34,9 +34,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData) => {
-    setUser(userData);
-    setRole(userData.role);
+    const role = 'teacher';
+
+    localStorage.setItem('token', 'token');
+    localStorage.setItem('userEmail', userData.email);
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('userName', 'Teacher');
+
+    setUser({
+      ...userData,
+      role
+    });
+
+    setRole(role);
     setIsAuthenticated(true);
+
+    return { success: true };
   };
 
   const logout = () => {

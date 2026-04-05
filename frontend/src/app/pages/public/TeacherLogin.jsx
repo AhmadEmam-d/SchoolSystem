@@ -8,7 +8,7 @@ import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 
 export function TeacherLogin() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
@@ -33,16 +33,7 @@ export function TeacherLogin() {
     const result = await login({ email, password });
 
     if (result.success) {
-      // Check if user has teacher role
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'Teacher' || userRole === 'teacher') {
-        navigate('/teacher/dashboard');
-      } else {
-        setError(t('invalidTeacherAccount'));
-        // Logout if not teacher
-        const { logout } = useAuth();
-        logout();
-      }
+      navigate('/teacher/dashboard');
     } else {
       setError(result.message || t('loginFailed'));
     }
@@ -107,9 +98,8 @@ export function TeacherLogin() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="teacher@school.com"
-                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
-                      }`}
+                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
+                        }`}
                       required
                     />
                   </div>
@@ -129,9 +119,8 @@ export function TeacherLogin() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t('enterPasswordPlaceholder')}
-                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'
-                      }`}
+                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'
+                        }`}
                       required
                     />
                     <button
@@ -162,8 +151,8 @@ export function TeacherLogin() {
                   </button>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium shadow-lg"
                   disabled={loading}
                 >
