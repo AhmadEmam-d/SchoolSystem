@@ -8,7 +8,7 @@ import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 
 export function TeacherLogin() {
-  const { login, isAuthenticated, logout } = useAuth(); // أضف logout هنا
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
@@ -21,10 +21,7 @@ export function TeacherLogin() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'Teacher' || userRole === 'teacher') {
-        navigate('/teacher/dashboard');
-      }
+      navigate('/teacher/dashboard');
     }
   }, [isAuthenticated, navigate]);
 
@@ -33,28 +30,24 @@ export function TeacherLogin() {
     setLoading(true);
     setError('');
 
-    try {
-      const result = await login({ email, password });
-      
-      console.log('Login result:', result); // للتأكد من النتيجة
+    const result = await login({ email, password });
 
-      if (result && result.success) {
-        const userRole = localStorage.getItem('userRole');
-        if (userRole === 'Teacher' || userRole === 'teacher') {
-          navigate('/teacher/dashboard');
-        } else {
-          setError(t('invalidTeacherAccount'));
-          logout(); // تسجيل خروج إذا لم يكن المعلم
-        }
+    if (result.success) {
+      // Check if user has teacher role
+      const userRole = localStorage.getItem('userRole');
+      if (userRole === 'Teacher' || userRole === 'teacher') {
+        navigate('/teacher/dashboard');
       } else {
-        setError(result?.message || t('loginFailed'));
+        setError(t('invalidTeacherAccount'));
+        // Logout if not teacher
+        const { logout } = useAuth();
+        logout();
       }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(t('loginFailed'));
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.message || t('loginFailed'));
     }
+
+    setLoading(false);
   };
 
   const handleForgotPassword = () => {
