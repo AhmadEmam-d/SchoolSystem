@@ -2,7 +2,7 @@
 using SchoolSystem.Application.Features.Attendance.DTOs;
 using SchoolSystem.Domain.Entities;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class AttendanceProfile : Profile
     {

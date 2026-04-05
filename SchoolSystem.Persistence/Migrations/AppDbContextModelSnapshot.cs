@@ -558,6 +558,54 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Attendances");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Entity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PerformedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Oid");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -589,6 +637,55 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("TeacherOid");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.EmailConfiguration", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SenderEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SmtpServer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("UseSsl")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Oid");
+
+                    b.ToTable("EmailConfigurations");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.FinancialReport", b =>
@@ -738,6 +835,48 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Reports");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Setting", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("Category", "Key")
+                        .IsUnique();
+
+                    b.ToTable("Settings");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -845,6 +984,44 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("StudentOid");
 
                     b.ToTable("StudentReports");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.SystemBackup", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BackupName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BackupPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("BackupSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("BackupTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.ToTable("SystemBackups");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.TeacherReport", b =>
@@ -958,9 +1135,15 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Department")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("EmployeeId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -985,6 +1168,9 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")
@@ -1018,6 +1204,40 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasFilter("[TeacherOid] IS NOT NULL");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.UserPreference", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PreferenceKey")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PreferenceValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("UserId", "PreferenceKey")
+                        .IsUnique();
+
+                    b.ToTable("UserPreferences");
                 });
 
             modelBuilder.Entity("Section", b =>
@@ -1332,6 +1552,17 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.UserPreference", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Section", b =>

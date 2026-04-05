@@ -34,6 +34,11 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<StudentReport> StudentReports { get; set; }
         public DbSet<TeacherReport> TeacherReports { get; set; }
         public DbSet<FinancialReport> FinancialReports { get; set; }
+        public DbSet<Setting> Settings { get; set; }
+        public DbSet<SystemBackup> SystemBackups { get; set; }
+        public DbSet<UserPreference> UserPreferences { get; set; }
+        public DbSet<EmailConfiguration> EmailConfigurations { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -367,6 +372,33 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasIndex(e => e.SentAt);
                 entity.HasIndex(e => e.Type);
                 entity.HasIndex(e => e.Priority);
+            });
+            // Settings unique constraint
+            modelBuilder.Entity<Setting>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => new { e.Category, e.Key }).IsUnique();
+            });
+
+            modelBuilder.Entity<SystemBackup>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+            });
+
+            modelBuilder.Entity<UserPreference>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => new { e.UserId, e.PreferenceKey }).IsUnique();
+            });
+
+            modelBuilder.Entity<EmailConfiguration>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+            });
+
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
             });
         }
     }

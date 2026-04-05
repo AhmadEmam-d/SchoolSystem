@@ -810,5 +810,222 @@
   "IDMismatch": {
     "EN": "ID mismatch between URL and body",
     "AR": "المعرف في الرابط لا يطابق المعرف في البيانات"
+  },
+  "SettingsFetchedSuccessfully": {
+    "EN": "Settings fetched successfully",
+    "AR": "تم جلب الإعدادات بنجاح"
+  },
+  "SettingsFetchFailed": {
+    "EN": "An error occurred while fetching settings",
+    "AR": "حدث خطأ أثناء جلب الإعدادات"
+  },
+  "GeneralSettingsFetchedSuccessfully": {
+    "EN": "General settings fetched successfully",
+    "AR": "تم جلب الإعدادات العامة بنجاح"
+  },
+  "GeneralSettingsFetchFailed": {
+    "EN": "An error occurred while fetching general settings",
+    "AR": "حدث خطأ أثناء جلب الإعدادات العامة"
+  },
+  "NotificationPreferencesFetchedSuccessfully": {
+    "EN": "Notification preferences fetched successfully",
+    "AR": "تم جلب تفضيلات الإشعارات بنجاح"
+  },
+  "NotificationPreferencesFetchFailed": {
+    "EN": "An error occurred while fetching notification preferences",
+    "AR": "حدث خطأ أثناء جلب تفضيلات الإشعارات"
+  },
+  "SecuritySettingsFetchedSuccessfully": {
+    "EN": "Security settings fetched successfully",
+    "AR": "تم جلب إعدادات الأمان بنجاح"
+  },
+  "SecuritySettingsFetchFailed": {
+    "EN": "An error occurred while fetching security settings",
+    "AR": "حدث خطأ أثناء جلب إعدادات الأمان"
+  },
+  "SchoolInfoFetchedSuccessfully": {
+    "EN": "School information fetched successfully",
+    "AR": "تم جلب معلومات المدرسة بنجاح"
+  },
+  "SchoolInfoFetchFailed": {
+    "EN": "An error occurred while fetching school information",
+    "AR": "حدث خطأ أثناء جلب معلومات المدرسة"
+  },
+  "LanguageSettingsFetchedSuccessfully": {
+    "EN": "Language settings fetched successfully",
+    "AR": "تم جلب إعدادات اللغة بنجاح"
+  },
+  "LanguageSettingsFetchFailed": {
+    "EN": "An error occurred while fetching language settings",
+    "AR": "حدث خطأ أثناء جلب إعدادات اللغة"
+  },
+  "AppearanceSettingsFetchedSuccessfully": {
+    "EN": "Appearance settings fetched successfully",
+    "AR": "تم جلب إعدادات المظهر بنجاح"
+  },
+  "AppearanceSettingsFetchFailed": {
+    "EN": "An error occurred while fetching appearance settings",
+    "AR": "حدث خطأ أثناء جلب إعدادات المظهر"
+  },
+  "SystemSettingsFetchedSuccessfully": {
+    "EN": "System settings fetched successfully",
+    "AR": "تم جلب إعدادات النظام بنجاح"
+  },
+  "SystemSettingsFetchFailed": {
+    "EN": "An error occurred while fetching system settings",
+    "AR": "حدث خطأ أثناء جلب إعدادات النظام"
+  },
+  "EmailConfigFetchedSuccessfully": {
+    "EN": "Email configuration fetched successfully",
+    "AR": "تم جلب إعدادات البريد الإلكتروني بنجاح"
+  },
+  "EmailConfigFetchFailed": {
+    "EN": "An error occurred while fetching email configuration",
+    "AR": "حدث خطأ أثناء جلب إعدادات البريد الإلكتروني"
+  },
+  "BackupsFetchedSuccessfully": {
+    "EN": "Backups fetched successfully",
+    "AR": "تم جلب النسخ الاحتياطية بنجاح"
+  },
+  "BackupsFetchFailed": {
+    "EN": "An error occurred while fetching backups",
+    "AR": "حدث خطأ أثناء جلب النسخ الاحتياطية"
+  },
+  "SystemHealthFetchedSuccessfully": {
+    "EN": "System health fetched successfully",
+    "AR": "تم جلب حالة النظام بنجاح"
+  },
+  "SystemHealthFetchFailed": {
+    "EN": "An error occurred while fetching system health",
+    "AR": "حدث خطأ أثناء جلب حالة النظام"
+  },
+  "SettingsUpdatedSuccessfully": {
+    "EN": "Settings updated successfully",
+    "AR": "تم تحديث الإعدادات بنجاح"
+  },
+  "SettingsUpdateFailed": {
+    "EN": "An error occurred while updating settings",
+    "AR": "حدث خطأ أثناء تحديث الإعدادات"
+  },
+  "GeneralSettingsUpdatedSuccessfully": {
+    "EN": "General settings updated successfully",
+    "AR": "تم تحديث الإعدادات العامة بنجاح"
+  },
+  "GeneralSettingsUpdateFailed": {
+    "EN": "An error occurred while updating general settings",
+    "AR": "حدث خطأ أثناء تحديث الإعدادات العامة"
+  },
+  "NotificationPreferencesUpdatedSuccessfully": {
+    "EN": "Notification preferences updated successfully",
+    "AR": "تم تحديث تفضيلات الإشعارات بنجاح"
+  },
+  "NotificationPreferencesUpdateFailed": {
+    "EN": "An error occurred while updating notification preferences",
+    "AR": "حدث خطأ أثناء تحديث تفضيلات الإشعارات"
+  },
+  "SecuritySettingsUpdatedSuccessfully": {
+    "EN": "Security settings updated successfully",
+    "AR": "تم تحديث إعدادات الأمان بنجاح"
+  },
+  "SecuritySettingsUpdateFailed": {
+    "EN": "An error occurred while updating security settings",
+    "AR": "حدث خطأ أثناء تحديث إعدادات الأمان"
+  },
+  "SchoolInfoUpdatedSuccessfully": {
+    "EN": "School information updated successfully",
+    "AR": "تم تحديث معلومات المدرسة بنجاح"
+  },
+  "SchoolInfoUpdateFailed": {
+    "EN": "An error occurred while updating school information",
+    "AR": "حدث خطأ أثناء تحديث معلومات المدرسة"
+  },
+  "LanguageSettingsUpdatedSuccessfully": {
+    "EN": "Language settings updated successfully",
+    "AR": "تم تحديث إعدادات اللغة بنجاح"
+  },
+  "LanguageSettingsUpdateFailed": {
+    "EN": "An error occurred while updating language settings",
+    "AR": "حدث خطأ أثناء تحديث إعدادات اللغة"
+  },
+  "AppearanceSettingsUpdatedSuccessfully": {
+    "EN": "Appearance settings updated successfully",
+    "AR": "تم تحديث إعدادات المظهر بنجاح"
+  },
+  "AppearanceSettingsUpdateFailed": {
+    "EN": "An error occurred while updating appearance settings",
+    "AR": "حدث خطأ أثناء تحديث إعدادات المظهر"
+  },
+  "SystemSettingsUpdatedSuccessfully": {
+    "EN": "System settings updated successfully",
+    "AR": "تم تحديث إعدادات النظام بنجاح"
+  },
+  "SystemSettingsUpdateFailed": {
+    "EN": "An error occurred while updating system settings",
+    "AR": "حدث خطأ أثناء تحديث إعدادات النظام"
+  },
+  "EmailConfigUpdatedSuccessfully": {
+    "EN": "Email configuration updated successfully",
+    "AR": "تم تحديث إعدادات البريد الإلكتروني بنجاح"
+  },
+  "EmailConfigUpdateFailed": {
+    "EN": "An error occurred while updating email configuration",
+    "AR": "حدث خطأ أثناء تحديث إعدادات البريد الإلكتروني"
+  },
+  "BackupCreatedSuccessfully": {
+    "EN": "Backup created successfully",
+    "AR": "تم إنشاء النسخة الاحتياطية بنجاح"
+  },
+  "BackupCreationFailed": {
+    "EN": "An error occurred while creating backup",
+    "AR": "حدث خطأ أثناء إنشاء النسخة الاحتياطية"
+  },
+  "PasswordChangedSuccessfully": {
+    "EN": "Password changed successfully",
+    "AR": "تم تغيير كلمة المرور بنجاح"
+  },
+  "PasswordChangeFailed": {
+    "EN": "An error occurred while changing password",
+    "AR": "حدث خطأ أثناء تغيير كلمة المرور"
+  },
+  "EmailTestSuccessful": {
+    "EN": "Test email sent successfully",
+    "AR": "تم إرسال البريد الإلكتروني التجريبي بنجاح"
+  },
+  "EmailTestFailed": {
+    "EN": "Failed to send test email",
+    "AR": "فشل إرسال البريد الإلكتروني التجريبي"
+  },
+  "ProfileFetchedSuccessfully": {
+    "EN": "Profile fetched successfully",
+    "AR": "تم جلب الملف الشخصي بنجاح"
+  },
+  "ProfileFetchFailed": {
+    "EN": "An error occurred while fetching profile",
+    "AR": "حدث خطأ أثناء جلب الملف الشخصي"
+  },
+  "ProfileUpdatedSuccessfully": {
+    "EN": "Profile updated successfully",
+    "AR": "تم تحديث الملف الشخصي بنجاح"
+  },
+  "ProfileUpdateFailed": {
+    "EN": "An error occurred while updating profile",
+    "AR": "حدث خطأ أثناء تحديث الملف الشخصي"
+  },
+  "ActivityFetchedSuccessfully": {
+    "EN": "Activity fetched successfully",
+    "AR": "تم جلب النشاطات بنجاح"
+  },
+  "ActivityFetchFailed": {
+    "EN": "An error occurred while fetching activity",
+    "AR": "حدث خطأ أثناء جلب النشاطات"
+  },
+  "AvatarUploadedSuccessfully": {
+    "EN": "Avatar uploaded successfully",
+    "AR": "تم رفع الصورة الشخصية بنجاح"
+  },
+  "AvatarUploadFailed": {
+    "EN": "Failed to upload avatar",
+    "AR": "فشل رفع الصورة الشخصية"
   }
+
 }

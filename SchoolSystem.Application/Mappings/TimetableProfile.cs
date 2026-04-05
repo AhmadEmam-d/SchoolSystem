@@ -2,7 +2,7 @@
 using SchoolSystem.Application.Features.Timetable.DTOs;
 using SchoolSystem.Domain.Entities;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class TimetableProfile : Profile
     {

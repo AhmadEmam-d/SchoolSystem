@@ -5,7 +5,7 @@ using SchoolSystem.Application.Features.Subjects.DTOs.Update.SchoolSystem.Applic
 using SchoolSystem.Domain.Entities;
 using static SchoolSystem.Application.Features.Subjects.DTOs.SubjectResponseDto;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class SubjectProfile : Profile
     {

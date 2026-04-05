@@ -1519,6 +1519,90 @@
         }
       }
     },
+    "/api/Profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Profile/change-password": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeUserPasswordCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Profile/activity": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Reports/students-summary": {
       "get": {
         "tags": [
@@ -1999,6 +2083,463 @@
             "application/*+json": {
               "schema": {
                 "$ref": "#/components/schemas/GetSectionsQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/general": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/notifications": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/security": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSecuritySettingsCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSecuritySettingsCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSecuritySettingsCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/school-info": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSchoolInfoCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSchoolInfoCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSchoolInfoCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/language": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLanguageSettingsCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLanguageSettingsCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLanguageSettingsCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/appearance": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppearanceSettingsCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppearanceSettingsCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppearanceSettingsCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/system": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemSettingsCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemSettingsCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemSettingsCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/email-config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailConfigCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailConfigCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailConfigCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/backups": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/system-health": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/change-password": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/backups/create": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackupCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackupCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackupCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Settings/email-config/test": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestEmailConfigCommand"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestEmailConfigCommand"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestEmailConfigCommand"
               }
             }
           }
@@ -2827,6 +3368,135 @@
   },
   "components": {
     "schemas": {
+      "AppearanceSettingsDto": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "secondaryColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "backgroundColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "surfaceColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "compactMode": {
+            "type": "boolean"
+          },
+          "rtlMode": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BackupSettingsDto": {
+        "type": "object",
+        "properties": {
+          "lastBackupTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "backupFrequency": {
+            "type": "string",
+            "nullable": true
+          },
+          "backupLocation": {
+            "type": "string",
+            "nullable": true
+          },
+          "autoBackup": {
+            "type": "boolean"
+          },
+          "retentionDays": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CacheSettingsDto": {
+        "type": "object",
+        "properties": {
+          "enableCache": {
+            "type": "boolean"
+          },
+          "cacheDurationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cacheProvider": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordCommand": {
+        "type": "object",
+        "properties": {
+          "changePassword": {
+            "$ref": "#/components/schemas/ChangePasswordDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "nullable": true
+          },
+          "confirmPassword": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangeUserPasswordCommand": {
+        "type": "object",
+        "properties": {
+          "passwordData": {
+            "$ref": "#/components/schemas/ChangeUserPasswordDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChangeUserPasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "nullable": true
+          },
+          "newPassword": {
+            "type": "string",
+            "nullable": true
+          },
+          "confirmPassword": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateAnnouncementDto": {
         "type": "object",
         "properties": {
@@ -2891,6 +3561,16 @@
             "nullable": true
           },
           "checkOutTime": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateBackupCommand": {
+        "type": "object",
+        "properties": {
+          "backupName": {
             "type": "string",
             "nullable": true
           }
@@ -3329,6 +4009,34 @@
         },
         "additionalProperties": false
       },
+      "EmailServerConfigDto": {
+        "type": "object",
+        "properties": {
+          "smtpServer": {
+            "type": "string",
+            "nullable": true
+          },
+          "port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "senderEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "senderName": {
+            "type": "string",
+            "nullable": true
+          },
+          "useSsl": {
+            "type": "boolean"
+          },
+          "isConfigured": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "FilterCondition": {
         "type": "object",
         "properties": {
@@ -3359,6 +4067,18 @@
         ],
         "type": "integer",
         "format": "int32"
+      },
+      "GeneralSettingsDto": {
+        "type": "object",
+        "properties": {
+          "notifications": {
+            "$ref": "#/components/schemas/NotificationSettingsDto"
+          },
+          "security": {
+            "$ref": "#/components/schemas/SecuritySettingsDto"
+          }
+        },
+        "additionalProperties": false
       },
       "GetClassesQuery": {
         "type": "object",
@@ -3414,6 +4134,52 @@
         },
         "additionalProperties": false
       },
+      "LanguageSettingsDto": {
+        "type": "object",
+        "properties": {
+          "defaultLanguage": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateFormat": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeFormat": {
+            "type": "string",
+            "nullable": true
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true
+          },
+          "supportedLanguages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupportedLanguageDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoggingSettingsDto": {
+        "type": "object",
+        "properties": {
+          "enableLogging": {
+            "type": "boolean"
+          },
+          "logLevel": {
+            "type": "string",
+            "nullable": true
+          },
+          "retentionDays": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "LoginDto": {
         "required": [
           "email",
@@ -3433,6 +4199,24 @@
           },
           "role": {
             "$ref": "#/components/schemas/UserRole"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NotificationSettingsDto": {
+        "type": "object",
+        "properties": {
+          "emailNotifications": {
+            "type": "boolean"
+          },
+          "pushNotifications": {
+            "type": "boolean"
+          },
+          "attendanceReminders": {
+            "type": "boolean"
+          },
+          "gradeUpdates": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -3519,6 +4303,98 @@
         },
         "additionalProperties": false
       },
+      "SchoolInfoDto": {
+        "type": "object",
+        "properties": {
+          "schoolName": {
+            "type": "string",
+            "nullable": true
+          },
+          "schoolAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "schoolPhone": {
+            "type": "string",
+            "nullable": true
+          },
+          "schoolEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "schoolLogo": {
+            "type": "string",
+            "nullable": true
+          },
+          "principalName": {
+            "type": "string",
+            "nullable": true
+          },
+          "establishedYear": {
+            "type": "string",
+            "nullable": true
+          },
+          "website": {
+            "type": "string",
+            "nullable": true
+          },
+          "registrationNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "descriptionAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "addressAr": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SecuritySettingsDto": {
+        "type": "object",
+        "properties": {
+          "twoFactorAuthentication": {
+            "type": "boolean"
+          },
+          "sessionTimeoutMinutes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SettingsDto": {
+        "type": "object",
+        "properties": {
+          "general": {
+            "$ref": "#/components/schemas/GeneralSettingsDto"
+          },
+          "schoolInfo": {
+            "$ref": "#/components/schemas/SchoolInfoDto"
+          },
+          "language": {
+            "$ref": "#/components/schemas/LanguageSettingsDto"
+          },
+          "appearance": {
+            "$ref": "#/components/schemas/AppearanceSettingsDto"
+          },
+          "system": {
+            "$ref": "#/components/schemas/SystemSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "SortModel": {
         "type": "object",
         "properties": {
@@ -3527,6 +4403,58 @@
             "nullable": true
           },
           "sortDirection": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SupportedLanguageDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "flagIcon": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SystemSettingsDto": {
+        "type": "object",
+        "properties": {
+          "backup": {
+            "$ref": "#/components/schemas/BackupSettingsDto"
+          },
+          "emailServer": {
+            "$ref": "#/components/schemas/EmailServerConfigDto"
+          },
+          "cache": {
+            "$ref": "#/components/schemas/CacheSettingsDto"
+          },
+          "logging": {
+            "$ref": "#/components/schemas/LoggingSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TestEmailConfigCommand": {
+        "type": "object",
+        "properties": {
+          "emailConfig": {
+            "$ref": "#/components/schemas/EmailServerConfigDto"
+          },
+          "testEmail": {
             "type": "string",
             "nullable": true
           }
@@ -3577,6 +4505,15 @@
         },
         "additionalProperties": false
       },
+      "UpdateAppearanceSettingsCommand": {
+        "type": "object",
+        "properties": {
+          "appearanceSettings": {
+            "$ref": "#/components/schemas/AppearanceSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateAttendanceDto": {
         "type": "object",
         "properties": {
@@ -3613,6 +4550,15 @@
           "level": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateEmailConfigCommand": {
+        "type": "object",
+        "properties": {
+          "emailConfig": {
+            "$ref": "#/components/schemas/EmailServerConfigDto"
           }
         },
         "additionalProperties": false
@@ -3692,6 +4638,24 @@
         },
         "additionalProperties": false
       },
+      "UpdateLanguageSettingsCommand": {
+        "type": "object",
+        "properties": {
+          "languageSettings": {
+            "$ref": "#/components/schemas/LanguageSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateNotificationPreferencesCommand": {
+        "type": "object",
+        "properties": {
+          "notificationSettings": {
+            "$ref": "#/components/schemas/NotificationSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateParentDto": {
         "type": "object",
         "properties": {
@@ -3714,6 +4678,15 @@
         },
         "additionalProperties": false
       },
+      "UpdateSchoolInfoCommand": {
+        "type": "object",
+        "properties": {
+          "schoolInfo": {
+            "$ref": "#/components/schemas/SchoolInfoDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateSectionDto": {
         "type": "object",
         "properties": {
@@ -3724,6 +4697,24 @@
           "classOid": {
             "type": "string",
             "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSecuritySettingsCommand": {
+        "type": "object",
+        "properties": {
+          "securitySettings": {
+            "$ref": "#/components/schemas/SecuritySettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSettingsCommand": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/SettingsDto"
           }
         },
         "additionalProperties": false
@@ -3780,6 +4771,15 @@
           "name": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSystemSettingsCommand": {
+        "type": "object",
+        "properties": {
+          "systemSettings": {
+            "$ref": "#/components/schemas/SystemSettingsDto"
           }
         },
         "additionalProperties": false
@@ -3864,6 +4864,41 @@
           "period": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserProfileCommand": {
+        "type": "object",
+        "properties": {
+          "profileData": {
+            "$ref": "#/components/schemas/UpdateUserProfileDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserProfileDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string",
             "nullable": true
           }
         },

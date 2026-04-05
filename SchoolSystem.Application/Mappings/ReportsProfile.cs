@@ -2,7 +2,7 @@
 using SchoolSystem.Application.Features.Reports.DTOs;
 using SchoolSystem.Domain.Entities;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class ReportsProfile : Profile
     {

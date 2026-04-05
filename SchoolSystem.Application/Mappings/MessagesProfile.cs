@@ -3,7 +3,7 @@ using SchoolSystem.Application.Features.Messages.DTOs;
 using SchoolSystem.Domain.Entities;
 using System;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class MessagesProfile : Profile
     {

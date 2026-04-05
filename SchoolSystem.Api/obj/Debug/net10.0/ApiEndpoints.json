@@ -956,6 +956,58 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SchoolSystem.Api.Controllers.ProfileController",
+    "Method": "GetProfile",
+    "RelativePath": "api/Profile",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.ProfileController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/Profile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "UpdateUserProfileCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.ProfileController",
+    "Method": "GetRecentActivity",
+    "RelativePath": "api/Profile/activity",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.ProfileController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/Profile/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.UserProfile.Commands.ChangeUserPasswordCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SchoolSystem.Api.Controllers.ReportsController",
     "Method": "DeleteReport",
     "RelativePath": "api/Reports/{oid}",
@@ -1259,6 +1311,292 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetAllSettings",
+    "RelativePath": "api/Settings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateSettings",
+    "RelativePath": "api/Settings",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateSettingsCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetAppearanceSettings",
+    "RelativePath": "api/Settings/appearance",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateAppearanceSettings",
+    "RelativePath": "api/Settings/appearance",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateAppearanceSettingsCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetAllBackups",
+    "RelativePath": "api/Settings/backups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "CreateBackup",
+    "RelativePath": "api/Settings/backups/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.CreateBackupCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/Settings/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.ChangePasswordCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetEmailConfig",
+    "RelativePath": "api/Settings/email-config",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateEmailConfig",
+    "RelativePath": "api/Settings/email-config",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateEmailConfigCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "TestEmailConfig",
+    "RelativePath": "api/Settings/email-config/test",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.TestEmailConfigCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetGeneralSettings",
+    "RelativePath": "api/Settings/general",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetLanguageSettings",
+    "RelativePath": "api/Settings/language",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateLanguageSettings",
+    "RelativePath": "api/Settings/language",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateLanguageSettingsCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetNotificationPreferences",
+    "RelativePath": "api/Settings/notifications",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateNotificationPreferences",
+    "RelativePath": "api/Settings/notifications",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateNotificationPreferencesCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetSchoolInfo",
+    "RelativePath": "api/Settings/school-info",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateSchoolInfo",
+    "RelativePath": "api/Settings/school-info",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateSchoolInfoCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetSecuritySettings",
+    "RelativePath": "api/Settings/security",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateSecuritySettings",
+    "RelativePath": "api/Settings/security",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateSecuritySettingsCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetSystemSettings",
+    "RelativePath": "api/Settings/system",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "UpdateSystemSettings",
+    "RelativePath": "api/Settings/system",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "command",
+        "Type": "SchoolSystem.Application.Features.Settings.Commands.Update.UpdateSystemSettingsCommand",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.SettingsController",
+    "Method": "GetSystemHealth",
+    "RelativePath": "api/Settings/system-health",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {

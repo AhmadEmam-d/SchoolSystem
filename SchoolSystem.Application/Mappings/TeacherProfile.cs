@@ -6,7 +6,7 @@ using SchoolSystem.Domain.Entities;
 using static SchoolSystem.Application.Features.Teachers.DTOs.TeacherResponseDto;
 
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class TeacherProfile : Profile
     {

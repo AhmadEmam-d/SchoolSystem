@@ -3,7 +3,7 @@ using SchoolSystem.Application.Features.Exams.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Enums;
 
-namespace SchoolSystem.Application.Profiles
+namespace SchoolSystem.Application.Mappings
 {
     public class ExamsProfile : Profile
     {

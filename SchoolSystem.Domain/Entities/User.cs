@@ -14,6 +14,9 @@ namespace SchoolSystem.Domain.Entities
         public bool IsActive { get; set; } = true;
         public DateTime? LastLoginAt { get; set; }
         public string Avatar { get; set; }
+        public string? Department { get; set; }
+        public string? Position { get; set; }
+        public string? EmployeeId { get; set; }
 
         public Guid? StudentOid { get; set; }
         public Student Student { get; set; }
