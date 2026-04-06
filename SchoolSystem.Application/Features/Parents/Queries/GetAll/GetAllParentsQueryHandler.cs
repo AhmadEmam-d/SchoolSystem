@@ -24,6 +24,7 @@ public class GetAllParentsQueryHandler : IRequestHandler<GetAllParentsQuery, IEn
     public async Task<IEnumerable<ParentDto>> Handle(GetAllParentsQuery request, CancellationToken cancellationToken)
     {
         var parents = await _repo.GetAllQueryable()
+            .Include(p => p.User)
             .Include(p => p.Students)  
             .ToListAsync(cancellationToken);
 

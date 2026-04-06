@@ -26,6 +26,7 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
         {
             var teachers = await _teacherRepo
                              .GetAllQueryable()
+                             .Include(Teacher => Teacher.User)
                             .Include(t => t.TeacherSubjects)
                             .ThenInclude(ts => ts.Subject)
                             .ToListAsync(cancellationToken);

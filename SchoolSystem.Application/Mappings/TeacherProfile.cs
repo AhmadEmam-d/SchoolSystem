@@ -17,7 +17,9 @@ namespace SchoolSystem.Application.Mappings
 
             CreateMap<Teacher, TeacherResponseDto>()
                 .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src =>
-                    src.TeacherSubjects.Select(ts => ts.Subject)));
+                    src.TeacherSubjects.Select(ts => ts.Subject)))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null));
 
             CreateMap<Subject, SubjectBasicDto>();
         }

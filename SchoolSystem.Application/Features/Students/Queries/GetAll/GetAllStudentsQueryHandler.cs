@@ -24,6 +24,7 @@ public class GetAllStudentsQueryHandler : IRequestHandler<GetAllStudentsQuery, L
     {
         var students = await _repository
                 .GetAllQueryable()
+                .Include(s => s.User)
                 .Include(s => s.Class)           
                  .Include(s => s.Section)         
                   .Include(s => s.Parent)

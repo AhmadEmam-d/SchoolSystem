@@ -8,6 +8,8 @@ namespace SchoolSystem.Application.Features.Teachers.DTOs
         public string FullName { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
+        public Guid UserId { get; set; }
+        public string UserName { get; set; }
         public List<SubjectBasicDto> Subjects { get; set; } = new List<SubjectBasicDto>();
         public class SubjectBasicDto
         {
