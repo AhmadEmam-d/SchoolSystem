@@ -55,7 +55,14 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimeTableByTeac
                         SubjectName = t.Subject.Name,
                         TeacherName = teacher.FullName,
                         Room = t.Room,
-                        ClassName = t.Class?.Name ?? "N/A"
+                        ClassName = t.Class?.Name ?? "N/A",
+                        // أضف هذه الخصائص
+                        ClassOid = t.ClassOid,
+                        SubjectOid = t.SubjectOid,
+                        Day = t.Day.ToString(),
+                        StartTime = t.StartTime.ToString(@"hh\:mm"),
+                        EndTime = t.EndTime.ToString(@"hh\:mm"),
+                        Period = t.Period
                     }).ToList();
 
                 weeklySchedule[day] = dayTimetables;
@@ -65,7 +72,7 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimeTableByTeac
             {
                 TeacherOid = teacher.Oid,
                 TeacherName = teacher.FullName,
-                WeeklySchedule = weeklySchedule
+                WeeklySchedule = weeklySchedule,
             };
         }
     }

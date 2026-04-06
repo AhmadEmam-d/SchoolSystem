@@ -66,6 +66,11 @@ namespace SchoolSystem.Application.Features.Timetable.DTOs
         public string Room { get; set; }
         public string ClassName { get; set; }
 
-
+        public Guid ClassOid { get; set; }      // معرف الصف
+        public Guid SubjectOid { get; set; }    // معرف المادة
+        public string Day { get; set; }         // اليوم
+        public string StartTime { get; set; }   // وقت البدء
+        public string EndTime { get; set; }     // وقت الانتهاء
+        public int Period { get; set; }
     }
 }
