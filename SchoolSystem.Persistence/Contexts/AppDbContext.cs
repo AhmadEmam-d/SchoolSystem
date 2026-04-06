@@ -41,32 +41,34 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<AuditLog> AuditLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Oid);
                 entity.HasIndex(e => e.Email).IsUnique();
 
                 entity.Property(e => e.Avatar)
-                      .IsRequired(false); // ✅ يسمح بـ NULL
+                      .IsRequired(false); // يسمح بـ NULL
 
                 entity.Property(e => e.PasswordHash)
                       .HasMaxLength(500)
                       .IsRequired();
 
+                // العلاقة مع Student (واحد لواحد)
                 entity.HasOne(e => e.Student)
-                      .WithOne()
-                      .HasForeignKey<User>(e => e.StudentOid)
+                      .WithOne(s => s.User)  // أضف هذا: Student عنده User
+                      .HasForeignKey<Student>(s => s.UserId)  // المفتاح في جدول Student
                       .OnDelete(DeleteBehavior.Restrict);
 
+                // العلاقة مع Teacher (واحد لواحد)
                 entity.HasOne(e => e.Teacher)
-                      .WithOne()
-                      .HasForeignKey<User>(e => e.TeacherOid)
+                      .WithOne(t => t.User)  // أضف هذا: Teacher عنده User
+                      .HasForeignKey<Teacher>(t => t.UserId)  // المفتاح في جدول Teacher
                       .OnDelete(DeleteBehavior.Restrict);
 
+                // العلاقة مع Parent (واحد لواحد)
                 entity.HasOne(e => e.Parent)
-                      .WithOne()
-                      .HasForeignKey<User>(e => e.ParentOid)
+                      .WithOne(p => p.User)  // أضف هذا: Parent عنده User
+                      .HasForeignKey<Parent>(p => p.UserId)  // المفتاح في جدول Parent
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(e => e.Role)
@@ -92,6 +94,10 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasOne(e => e.Parent)
                       .WithMany(p => p.Students)
                       .HasForeignKey(e => e.ParentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(s => s.User)
+                      .WithOne(u => u.Student)
+                      .HasForeignKey<Student>(s => s.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
             // -------------------------
@@ -135,6 +141,10 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<Parent>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+                entity.HasOne(p => p.User)
+                 .WithOne(u => u.Parent)
+                 .HasForeignKey<Parent>(p => p.UserId)
+                 .OnDelete(DeleteBehavior.Restrict);
             });
 
             // -------------------------
@@ -143,6 +153,10 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<Teacher>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+                entity.HasOne(s => s.User)
+                  .WithOne(u => u.Teacher)
+                  .HasForeignKey<Teacher>(s => s.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
             });
 
             // -------------------------

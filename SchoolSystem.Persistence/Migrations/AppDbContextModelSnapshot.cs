@@ -769,7 +769,13 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Oid");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Parents");
                 });
@@ -924,6 +930,9 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Oid");
 
                     b.HasIndex("ClassOid");
@@ -931,6 +940,9 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("ParentOid");
 
                     b.HasIndex("SectionOid");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Students");
                 });
@@ -1158,9 +1170,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("ParentOid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -1177,12 +1186,6 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("StudentOid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("TeacherOid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -1190,18 +1193,6 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("ParentOid")
-                        .IsUnique()
-                        .HasFilter("[ParentOid] IS NOT NULL");
-
-                    b.HasIndex("StudentOid")
-                        .IsUnique()
-                        .HasFilter("[StudentOid] IS NOT NULL");
-
-                    b.HasIndex("TeacherOid")
-                        .IsUnique()
-                        .HasFilter("[TeacherOid] IS NOT NULL");
 
                     b.ToTable("Users");
                 });
@@ -1320,7 +1311,13 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Oid");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Teachers");
                 });
@@ -1454,6 +1451,17 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithOne("Parent")
+                        .HasForeignKey("SchoolSystem.Domain.Entities.Parent", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
@@ -1474,11 +1482,19 @@ namespace SchoolSystem.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithOne("Student")
+                        .HasForeignKey("SchoolSystem.Domain.Entities.Student", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Class");
 
                     b.Navigation("Parent");
 
                     b.Navigation("Section");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.StudentReport", b =>
@@ -1530,30 +1546,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("SchoolSystem.Domain.Entities.User", b =>
-                {
-                    b.HasOne("SchoolSystem.Domain.Entities.Parent", "Parent")
-                        .WithOne()
-                        .HasForeignKey("SchoolSystem.Domain.Entities.User", "ParentOid")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
-                        .WithOne()
-                        .HasForeignKey("SchoolSystem.Domain.Entities.User", "StudentOid")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Teacher", "Teacher")
-                        .WithOne()
-                        .HasForeignKey("SchoolSystem.Domain.Entities.User", "TeacherOid")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Parent");
-
-                    b.Navigation("Student");
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("SchoolSystem.Domain.Entities.UserPreference", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.User", "User")
@@ -1574,6 +1566,17 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
+                });
+
+            modelBuilder.Entity("Teacher", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithOne("Teacher")
+                        .HasForeignKey("Teacher", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TeacherSubject", b =>
@@ -1626,6 +1629,18 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("ExamResults");
 
                     b.Navigation("FeeInvoices");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Parent")
+                        .IsRequired();
+
+                    b.Navigation("Student")
+                        .IsRequired();
+
+                    b.Navigation("Teacher")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Section", b =>

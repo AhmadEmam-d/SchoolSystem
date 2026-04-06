@@ -18,16 +18,28 @@ namespace SchoolSystem.Infrastructure.Services
     public class AuthService : IAuthService
     {
         private readonly IGenericRepository<User> _userRepo;
+        private readonly IGenericRepository<Teacher> _teacherRepo;  // أضف هذا
+        private readonly IGenericRepository<Student> _studentRepo;  // أضف هذا
+        private readonly IGenericRepository<Parent> _parentRepo;    // أضف هذا
         private readonly IConfiguration _configuration;
 
-        public AuthService(IGenericRepository<User> userRepo, IConfiguration configuration)
+        public AuthService(
+            IGenericRepository<User> userRepo,
+            IGenericRepository<Teacher> teacherRepo,  // أضف هذا
+            IGenericRepository<Student> studentRepo,  // أضف هذا
+            IGenericRepository<Parent> parentRepo,    // أضف هذا
+            IConfiguration configuration)
         {
             _userRepo = userRepo;
+            _teacherRepo = teacherRepo;
+            _studentRepo = studentRepo;
+            _parentRepo = parentRepo;
             _configuration = configuration;
         }
 
         public async Task<List<RoleDto>> GetAllRolesAsync()
         {
+            // ... كما هو بدون تغيير
             var roles = new List<RoleDto>
             {
                 new RoleDto
@@ -76,13 +88,16 @@ namespace SchoolSystem.Infrastructure.Services
             // البحث عن المستخدم بالإيميل
             var user = await _userRepo
                 .GetAllQueryable()
+                        .Include(u => u.Teacher)   // أضف هذا
+                        .Include(u => u.Student)   // أضف هذا
+                        .Include(u => u.Parent)    // أضف هذا
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
             if (user == null)
                 throw new Exception("Invalid email or password");
 
-            // التحقق من صحة كلمة المرور (هنا هتستخدمي hashing)
-            if (user.PasswordHash != loginDto.Password) // مؤقت - لازم يكون hashing
+            // التحقق من صحة كلمة المرور (استخدم hashing حقيقياً)
+            if (user.PasswordHash != loginDto.Password) // TODO: استخدم BCrypt.Verify
                 throw new Exception("Invalid email or password");
 
             // التحقق من الدور
@@ -92,6 +107,35 @@ namespace SchoolSystem.Infrastructure.Services
             // التحقق من أن الحساب نشط
             if (!user.IsActive)
                 throw new Exception("Account is deactivated");
+
+            // جلب الـ IDs الخاصة بالـ Role
+            Guid? teacherId = null;
+            Guid? studentId = null;
+            Guid? parentId = null;
+
+            switch (user.Role)
+            {
+                case UserRole.Teacher:
+                    var teacher = await _teacherRepo
+                        .GetAllQueryable()
+                        .FirstOrDefaultAsync(t => t.UserId == user.Oid);
+                    teacherId = teacher?.Oid;
+                    break;
+
+                case UserRole.Student:
+                    var student = await _studentRepo
+                        .GetAllQueryable()
+                        .FirstOrDefaultAsync(s => s.UserId == user.Oid);
+                    studentId = student?.Oid;
+                    break;
+
+                case UserRole.Parent:
+                    var parent = await _parentRepo
+                        .GetAllQueryable()
+                        .FirstOrDefaultAsync(p => p.UserId == user.Oid);
+                    parentId = parent?.Oid;
+                    break;
+            }
 
             // تحديث آخر تسجيل دخول
             user.LastLoginAt = DateTime.UtcNow;
@@ -106,6 +150,9 @@ namespace SchoolSystem.Infrastructure.Services
             return new AuthResponseDto
             {
                 UserId = user.Oid,
+                TeacherId = user.Teacher?.Oid,  // مباشرة من الـ Include
+                StudentId = user.Student?.Oid,
+                ParentId = user.Parent?.Oid,  // أضف هذا
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role,
@@ -131,13 +178,58 @@ namespace SchoolSystem.Infrastructure.Services
                 {
                     FullName = registerDto.FullName,
                     Email = registerDto.Email,
-                    PasswordHash = registerDto.Password, // مؤقت - لازم يكون hashing
+                    PasswordHash = registerDto.Password, // TODO: استخدم BCrypt.HashPassword
                     PhoneNumber = registerDto.PhoneNumber,
                     Role = registerDto.Role,
                     IsActive = true
                 };
 
                 await _userRepo.AddAsync(user);
+
+                // إذا كان الدور Teacher، أنشئ سجل في جدول Teachers
+                Guid? teacherId = null;
+                if (registerDto.Role == UserRole.Teacher)
+                {
+                    var teacher = new Teacher
+                    {
+                        FullName = registerDto.FullName,
+                        Email = registerDto.Email,
+                        Phone = registerDto.PhoneNumber ?? "",
+                        UserId = user.Oid
+                    };
+                    await _teacherRepo.AddAsync(teacher);
+                    teacherId = teacher.Oid;
+                }
+
+                // إذا كان الدور Student، أنشئ سجل في جدول Students
+                Guid? studentId = null;
+                if (registerDto.Role == UserRole.Student)
+                {
+                    var student = new Student
+                    {
+                        FullName = registerDto.FullName,
+                        Email = registerDto.Email,
+                        Phone = registerDto.PhoneNumber ?? "",
+                        UserId = user.Oid
+                    };
+                    await _studentRepo.AddAsync(student);
+                    studentId = student.Oid;
+                }
+
+                // إذا كان الدور Parent، أنشئ سجل في جدول Parents
+                Guid? parentId = null;
+                if (registerDto.Role == UserRole.Parent)
+                {
+                    var parent = new Parent
+                    {
+                        FatherName = registerDto.FullName,
+                        Email = registerDto.Email,
+                        Phone = registerDto.PhoneNumber ?? "",
+                        UserId = user.Oid
+                    };
+                    await _parentRepo.AddAsync(parent);
+                    parentId = parent.Oid;
+                }
 
                 // إنشاء token
                 var token = GenerateJwtToken(user);
@@ -146,6 +238,9 @@ namespace SchoolSystem.Infrastructure.Services
                 return new AuthResponseDto
                 {
                     UserId = user.Oid,
+                    TeacherId = teacherId,
+                    StudentId = studentId,
+                    ParentId = parentId,
                     FullName = user.FullName,
                     Email = user.Email,
                     Role = user.Role,
@@ -155,10 +250,10 @@ namespace SchoolSystem.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                // هذا سيعرض الخطأ الحقيقي
                 throw new Exception($"Registration failed: {ex.Message} - Inner: {ex.InnerException?.Message}");
             }
         }
+
         public async Task<bool> LogoutAsync(string email)
         {
             // يمكن إضافة أي منطق للتسجيل الخروج (مثل إضافة token للـ blacklist)
@@ -194,7 +289,8 @@ namespace SchoolSystem.Infrastructure.Services
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.FullName),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("role", user.Role.ToString())
+                new Claim("role", user.Role.ToString()),
+                new Claim("UserId", user.Oid.ToString())  // أضف هذا لتسهيل الوصول من الـ Frontend
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"] ?? "YourSuperSecretKeyForJWTTokenGeneration"));
