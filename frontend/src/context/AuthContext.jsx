@@ -4,6 +4,7 @@ import axios from "axios";
 const API_BASE_URL = "https://localhost:7179/api";
 
 const AuthContext = createContext(undefined);
+const [role, setRole] = useState(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ export function AuthProvider({ children }) {
       if (token && userId) {
         // Set default axios header
         axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        
+
         setUser({
           id: userId,
           name: userName,
@@ -41,26 +42,21 @@ export function AuthProvider({ children }) {
   const login = async ({ email, password }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-        email: email,
-        password: password,
+        email,
+        password,
       });
 
-      if (!response.data.success) {
-        return {
-          success: false,
-          message: response.data.messages?.EN || "Login failed",
-        };
-      }
-
       const userData = response.data.data;
+      const role = userData.role?.toLowerCase();
 
-      // Store token and user data
+      console.log("role from api:", userData.role);
+      console.log("role saved:", role);
+
       localStorage.setItem("token", userData.token);
       localStorage.setItem("userId", userData.id || userData.oid);
       localStorage.setItem("userName", userData.fullName || userData.name);
       localStorage.setItem("userEmail", userData.email);
-      localStorage.setItem("userRole", userData.role || "admin");
-
+      localStorage.setItem("userRole", role);
       // Set default axios header
       axios.defaults.headers.common["Authorization"] = `Bearer ${userData.token}`;
 
@@ -68,29 +64,15 @@ export function AuthProvider({ children }) {
         id: userData.id || userData.oid,
         name: userData.fullName || userData.name,
         email: userData.email,
-        role: userData.role || "admin",
+        role: role,
       });
 
+      setRole(role);
       setIsAuthenticated(true);
 
-      return {
-        success: true,
-        data: userData,
-      };
+      return { success: true };
     } catch (error) {
-      console.error("Login API error:", error);
-
-      let errorMessage = "Server connection failed";
-      if (error.response?.data?.messages?.EN) {
-        errorMessage = error.response.data.messages.EN;
-      } else if (error.response?.data?.errors?.length) {
-        errorMessage = error.response.data.errors[0];
-      }
-
-      return {
-        success: false,
-        message: errorMessage,
-      };
+      return { success: false };
     }
   };
 

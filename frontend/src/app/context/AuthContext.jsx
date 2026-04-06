@@ -9,44 +9,42 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const token = localStorage.getItem('token');
-      const userName = localStorage.getItem('userName');
-      const userId = localStorage.getItem('userId');
-      const userEmail = localStorage.getItem('userEmail');
-      const userRole = localStorage.getItem('userRole');
-      
-      if (token && userName) {
-        setUser({
-          id: userId,
-          name: userName,
-          email: userEmail,
-          role: userRole
-        });
-        setRole(userRole);
-        setIsAuthenticated(true);
+    const restoreAuth = () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        const userName = localStorage.getItem('userName');
+
+        if (token && userRole) {
+          const normalizedRole = userRole.toLowerCase();
+
+          setRole(normalizedRole);
+          setUser({
+            name: userName,
+            role: normalizedRole,
+            id: localStorage.getItem('userId')
+          });
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('AuthContext error:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('AuthContext error:', error);
-    } finally {
-      setLoading(false);
-    }
+    };
+    restoreAuth();
   }, []);
 
   const login = (userData) => {
-    const role = 'teacher';
+    const userRole = (userData.role || 'teacher').toLowerCase();
 
-    localStorage.setItem('token', 'token');
-    localStorage.setItem('userEmail', userData.email);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userName', 'Teacher');
+    localStorage.setItem('token', userData.token || 'mock-token');
+    localStorage.setItem('userRole', userRole);
+    localStorage.setItem('userName', userData.fullName || 'User');
+    localStorage.setItem('userId', userData.id || '1');
 
-    setUser({
-      ...userData,
-      role
-    });
-
-    setRole(role);
+    setRole(userRole);
+    setUser({ ...userData, role: userRole });
     setIsAuthenticated(true);
 
     return { success: true };
@@ -56,11 +54,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setRole(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
+    localStorage.clear();
     window.location.href = '/login';
   };
 
