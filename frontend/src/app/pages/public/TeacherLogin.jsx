@@ -54,14 +54,17 @@ export function TeacherLogin() {
 
         localStorage.setItem('token', teacherData.token);
         localStorage.setItem('userId', teacherData.userId);
+        localStorage.setItem('teacherId', teacherData.teacherId);
         localStorage.setItem('userName', teacherData.fullName);
         localStorage.setItem('userEmail', teacherData.email);
         localStorage.setItem('userRole', 'teacher');
 
         login({
           id: teacherData.userId,
+          teacherId: teacherData.teacherId,
           name: teacherData.fullName,
           email: teacherData.email,
+          token: teacherData.token,
           role: 'teacher'
         });
 

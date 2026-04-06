@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5073/api';
+const API_BASE_URL = "https://localhost:7179/api";
 
 export const api = {
   // Auth endpoints
@@ -254,13 +254,18 @@ export const api = {
       .then(res => res.json())
       .then(data => data.success ? data.data : []),
     
-    getByTeacher: (teacherOid) =>
-      fetch(`${API_BASE_URL}/Timetable/teacher/${teacherOid}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      })
-      .then(res => res.json())
-      .then(data => data.success ? data.data : null),
-    
+// داخل api.js
+  getByTeacher: (teacherOid) => {
+    const token = localStorage.getItem('token'); // يقرأ التوكن الفعلي حالاً
+    return fetch(`${API_BASE_URL}/Timetable/teacher/${teacherOid}`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    }).then(res => res.json());
+  },
+
+
     getByClass: (classOid) =>
       fetch(`${API_BASE_URL}/Timetable/class/${classOid}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }

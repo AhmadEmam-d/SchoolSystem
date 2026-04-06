@@ -4,12 +4,12 @@ import axios from "axios";
 const API_BASE_URL = "https://localhost:7179/api";
 
 const AuthContext = createContext(undefined);
-const [role, setRole] = useState(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     try {

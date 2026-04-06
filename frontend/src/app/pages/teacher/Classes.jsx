@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  Users, Clock, BookOpen, Calendar, ClipboardCheck, 
-  Eye, FileText, BookOpenCheck, Loader2 
+import {
+  Users, Clock, BookOpen, Calendar, ClipboardCheck,
+  Eye, FileText, BookOpenCheck, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
@@ -15,35 +15,39 @@ import { api } from '../../lib/api';
 export function TeacherClasses() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
   const [schedule, setSchedule] = useState(null);
   const [loading, setLoading] = useState(true);
   const isRTL = i18n.language === 'ar';
 
   useEffect(() => {
     const fetchTimetable = async () => {
+      const effectiveTeacherId = user?.teacherId || localStorage.getItem('teacherId');
+
+      if (!effectiveTeacherId) {
+        console.log("No teacherId found yet...");
+        return;
+      }
+
       try {
-        if (!user?.id) return;
-
         setLoading(true);
-        const result = await api.timetable.getByTeacher(user.id);
+        const result = await api.timetable.getByTeacher(effectiveTeacherId);
+        console.log("API Result in Component:", result);
 
-        if (result) {
-          setSchedule(result.weeklySchedule || []);
+        if (result && result.data && result.data.weeklySchedule) {
+          setSchedule(result.data.weeklySchedule);
         } else {
-          toast.error(t('errorFetchingTimetable') || 'Error loading schedule');
+          setSchedule({}); 
         }
       } catch (error) {
-        console.error('Error fetching timetable:', error);
-        toast.error(t('errorFetchingTimetable') || 'Error loading schedule');
+        toast.error("Failed to load schedule");
       } finally {
         setLoading(false);
       }
     };
 
     fetchTimetable();
-  }, [user?.id, t]);
-
+  }, [user?.teacherId]);
 
   const days = schedule ? Object.keys(schedule) : [];
   const totalClasses = days.reduce((acc, day) => acc + (schedule[day]?.length || 0), 0);
@@ -116,7 +120,7 @@ export function TeacherClasses() {
                               <span className="text-sm text-muted-foreground">{slot.room}</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2 flex-wrap">
                             <Button
                               size="sm"

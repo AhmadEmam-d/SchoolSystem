@@ -19,13 +19,15 @@ export function AuthProvider({ children }) {
 
         if (token && userRole) {
           const normalizedRole = userRole.toLowerCase();
+          const tId = localStorage.getItem('teacherId');
 
           setRole(normalizedRole);
           setUser({
-            name: userName,
+            id: localStorage.getItem('userId'),
+            teacherId: tId,
+            name: localStorage.getItem('userName'),
             role: normalizedRole,
-            email: userEmail,
-            id: localStorage.getItem('userId')
+            email: localStorage.getItem('userEmail'),
           });
           setIsAuthenticated(true);
         }
@@ -41,22 +43,21 @@ export function AuthProvider({ children }) {
   const login = (userData) => {
     const userRole = (userData.role || 'teacher').toLowerCase();
 
-    localStorage.setItem('token', userData.token || 'mock-token');
+    localStorage.setItem('token', userData.token); 
     localStorage.setItem('userRole', userRole);
-    localStorage.setItem('userName', userData.name || 'User');
-    localStorage.setItem('userEmail', userData.email || '');
-    localStorage.setItem('userId', userData.id || '1');
+    localStorage.setItem('userName', userData.name || userData.fullName);
+    localStorage.setItem('userId', userData.id || userData.userId);
+    localStorage.setItem('teacherId', userData.teacherId); 
 
     setRole(userRole);
     setUser({
-      ...userData,
+      id: userData.id || userData.userId,
+      teacherId: userData.teacherId, 
+      name: userData.name || userData.fullName,
       role: userRole,
-      id: userData.id,
-      name: userData.name,
       email: userData.email,
     });
     setIsAuthenticated(true);
-
     return { success: true };
   };
 
