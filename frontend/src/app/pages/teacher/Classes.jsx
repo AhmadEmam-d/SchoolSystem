@@ -1,38 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Users, Clock, BookOpen, Calendar, ClipboardCheck, Eye, FileText, BookOpenCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { 
+  Users, Clock, BookOpen, Calendar, ClipboardCheck, 
+  Eye, FileText, BookOpenCheck, Loader2 
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { api } from '../../lib/api';
 
 export function TeacherClasses() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth(); 
+  const [schedule, setSchedule] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const isRTL = i18n.language === 'ar';
 
-  const weeklySchedule = [
-    { day: 'Sunday', slots: [
-      { time: '08:00 - 09:00', classId: 'c1', class: 'Grade 10-A', subject: 'Mathematics', room: '301' },
-      { time: '10:00 - 11:00', classId: 'c2', class: 'Grade 10-B', subject: 'Mathematics', room: '302' },
-    ]},
-    { day: 'Monday', slots: [
-      { time: '09:00 - 10:00', classId: 'c1', class: 'Grade 10-A', subject: 'Mathematics', room: '301' },
-      { time: '11:00 - 12:00', classId: 'c3', class: 'Grade 11-A', subject: 'Mathematics', room: '303' },
-    ]},
-    { day: 'Tuesday', slots: [
-      { time: '08:00 - 09:00', classId: 'c3', class: 'Grade 11-A', subject: 'Mathematics', room: '303' },
-      { time: '10:00 - 11:00', classId: 'c2', class: 'Grade 10-B', subject: 'Mathematics', room: '302' },
-    ]},
-    { day: 'Wednesday', slots: [
-      { time: '09:00 - 10:00', classId: 'c1', class: 'Grade 10-A', subject: 'Mathematics', room: '301' },
-      { time: '11:00 - 12:00', classId: 'c2', class: 'Grade 10-B', subject: 'Mathematics', room: '302' },
-    ]},
-    { day: 'Thursday', slots: [
-      { time: '08:00 - 09:00', classId: 'c1', class: 'Grade 10-A', subject: 'Mathematics', room: '301' },
-      { time: '10:00 - 11:00', classId: 'c3', class: 'Grade 11-A', subject: 'Mathematics', room: '303' },
-      { time: '01:00 - 02:00', classId: 'c2', class: 'Grade 10-B', subject: 'Mathematics', room: '302' },
-    ]},
-  ];
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      try {
+        if (!user?.id) return;
+
+        setLoading(true);
+        const result = await api.timetable.getByTeacher(user.id);
+
+        if (result) {
+          setSchedule(result.weeklySchedule || []);
+        } else {
+          toast.error(t('errorFetchingTimetable') || 'Error loading schedule');
+        }
+      } catch (error) {
+        console.error('Error fetching timetable:', error);
+        toast.error(t('errorFetchingTimetable') || 'Error loading schedule');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTimetable();
+  }, [user?.id, t]);
+
+
+  const days = schedule ? Object.keys(schedule) : [];
+  const totalClasses = days.reduce((acc, day) => acc + (schedule[day]?.length || 0), 0);
+
+  if (loading) {
+    return (
+      <div className="h-96 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -43,7 +65,6 @@ export function TeacherClasses() {
         </div>
       </div>
 
-      {/* Weekly Schedule */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -55,24 +76,24 @@ export function TeacherClasses() {
               <CardDescription>{t('yourTeachingSchedule')}</CardDescription>
             </div>
             <Badge variant="outline" className="text-sm">
-              {weeklySchedule.reduce((acc, day) => acc + (day?.slots?.length || 0), 0)} {t('classesThisWeek')}
+              {totalClasses} {t('classesThisWeek')}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Array.isArray(weeklySchedule) && weeklySchedule.map((daySchedule, idx) => (
-              <div key={idx} className="border border-border rounded-lg overflow-hidden">
+            {days.map((day) => (
+              <div key={day} className="border border-border rounded-lg overflow-hidden">
                 <div className="bg-indigo-50 dark:bg-indigo-900/20 px-4 py-3 border-b border-border">
-                  <h3 className="font-semibold text-foreground">{t(daySchedule?.day?.toLowerCase() || 'day')}</h3>
+                  <h3 className="font-semibold text-foreground">{t(day.toLowerCase())}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {daySchedule?.slots?.length || 0} {(daySchedule?.slots?.length || 0) === 1 ? t('classScheduled') : t('classesScheduled')}
+                    {schedule[day]?.length || 0} {(schedule[day]?.length || 0) === 1 ? t('classScheduled') : t('classesScheduled')}
                   </p>
                 </div>
                 <div className="p-4 bg-card">
-                  {Array.isArray(daySchedule?.slots) && daySchedule.slots.length > 0 ? (
+                  {schedule[day] && schedule[day].length > 0 ? (
                     <div className="space-y-3">
-                      {daySchedule.slots.map((slot, slotIdx) => (
+                      {schedule[day].map((slot, slotIdx) => (
                         <div
                           key={slotIdx}
                           className="p-4 bg-muted/30 border border-border rounded-lg hover:shadow-md transition-shadow"
@@ -84,55 +105,32 @@ export function TeacherClasses() {
                             </div>
                             <div className="flex items-center gap-2 flex-1">
                               <Users className="h-4 w-4 text-blue-500" />
-                              <span className="text-sm font-semibold text-foreground">{slot.class}</span>
+                              <span className="text-sm font-semibold text-foreground">{slot.className}</span>
                             </div>
                             <div className="flex items-center gap-2 min-w-[140px]">
                               <BookOpen className="h-4 w-4 text-green-500" />
-                              <span className="text-sm text-muted-foreground">{slot.subject}</span>
+                              <span className="text-sm text-muted-foreground">{slot.subjectName}</span>
                             </div>
                             <div className="flex items-center gap-2 min-w-[100px]">
-                              <div className="h-4 w-4 flex items-center justify-center">
-                                <div className="h-3 w-3 bg-purple-500 rounded"></div>
-                              </div>
-                              <span className="text-sm text-muted-foreground">{t('room')} {slot.room}</span>
+                              <div className="h-3 w-3 bg-purple-500 rounded"></div>
+                              <span className="text-sm text-muted-foreground">{slot.room}</span>
                             </div>
                           </div>
+                          
                           <div className="flex gap-2 flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="flex items-center gap-1.5"
-                              onClick={() => navigate(`/teacher/class-details?classId=${slot.classId}`)}
+                              onClick={() => navigate(`/teacher/class-details?className=${slot.className}`)}
                             >
-                              <Eye className="h-3.5 w-3.5" />
-                              {t('viewClassDetails')}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1.5"
-                              onClick={() => navigate(`/teacher/lessons/add?classId=${slot.classId}&className=${encodeURIComponent(slot.class)}`)}
-                            >
-                              <BookOpenCheck className="h-3.5 w-3.5" />
-                              {t('addLesson')}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex items-center gap-1.5"
-                              onClick={() => navigate(`/teacher/homework/add?classId=${slot.classId}&className=${encodeURIComponent(slot.class)}`)}
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              {t('assignHomework')}
+                              <Eye className="h-3.5 w-3.5 mr-1" /> {t('viewClassDetails')}
                             </Button>
                             <Button
                               size="sm"
                               variant="default"
-                              className="flex items-center gap-1.5"
-                              onClick={() => navigate(`/teacher/attendance/method-selection?classId=${slot.classId}&className=${encodeURIComponent(slot.class)}&date=${new Date().toISOString().split('T')[0]}`)}
+                              onClick={() => navigate(`/teacher/attendance/method-selection?className=${slot.className}`)}
                             >
-                              <ClipboardCheck className="h-3.5 w-3.5" />
-                              {t('takeAttendance')}
+                              <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> {t('takeAttendance')}
                             </Button>
                           </div>
                         </div>
