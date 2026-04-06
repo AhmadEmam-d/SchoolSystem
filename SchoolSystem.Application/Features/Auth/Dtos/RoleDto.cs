@@ -53,6 +53,9 @@ namespace SchoolSystem.Application.Features.Auth.DTOs
     public class AuthResponseDto
     {
         public Guid UserId { get; set; }
+        public Guid? TeacherId { get; set; }  // أضف هذا السطر
+        public Guid? StudentId { get; set; }  // أضف هذا للطلاب
+        public Guid? ParentId { get; set; }   // أضف هذا للأولياء
         public string FullName { get; set; }
         public string Email { get; set; }
         public UserRole Role { get; set; }

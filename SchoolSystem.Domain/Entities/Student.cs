@@ -28,7 +28,8 @@ namespace SchoolSystem.Domain.Entities
 
         public Guid ParentOid { get; set; }
         public Parent Parent { get; set; }
-
+        public Guid UserId { get; set; }
+        public User User { get; set; }
         public ICollection<Attendance> AttendanceRecords { get; set; } = new List<Attendance>();
         public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
         public ICollection<FeeInvoice> FeeInvoices { get; set; } = new List<FeeInvoice>();

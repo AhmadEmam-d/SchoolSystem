@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
@@ -16,6 +17,8 @@ namespace SchoolSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Teacher,Admin")]  // تأكد من وجود هذا
+
     public class StudentsController : ControllerBase
     {
         private readonly IMediator _mediator;

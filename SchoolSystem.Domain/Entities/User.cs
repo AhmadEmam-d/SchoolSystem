@@ -18,13 +18,10 @@ namespace SchoolSystem.Domain.Entities
         public string? Position { get; set; }
         public string? EmployeeId { get; set; }
 
-        public Guid? StudentOid { get; set; }
         public Student Student { get; set; }
 
-        public Guid? TeacherOid { get; set; }
         public Teacher Teacher { get; set; }
 
-        public Guid? ParentOid { get; set; }
         public Parent Parent { get; set; }
     }
 }
