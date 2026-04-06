@@ -14,6 +14,8 @@ export function AuthProvider({ children }) {
         const token = localStorage.getItem('token');
         const userRole = localStorage.getItem('userRole');
         const userName = localStorage.getItem('userName');
+        const userEmail = localStorage.getItem('userEmail');
+        const userId = localStorage.getItem('userId');
 
         if (token && userRole) {
           const normalizedRole = userRole.toLowerCase();
@@ -22,6 +24,7 @@ export function AuthProvider({ children }) {
           setUser({
             name: userName,
             role: normalizedRole,
+            email: userEmail,
             id: localStorage.getItem('userId')
           });
           setIsAuthenticated(true);
@@ -40,11 +43,18 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem('token', userData.token || 'mock-token');
     localStorage.setItem('userRole', userRole);
-    localStorage.setItem('userName', userData.fullName || 'User');
+    localStorage.setItem('userName', userData.name || 'User');
+    localStorage.setItem('userEmail', userData.email || '');
     localStorage.setItem('userId', userData.id || '1');
 
     setRole(userRole);
-    setUser({ ...userData, role: userRole });
+    setUser({
+      ...userData,
+      role: userRole,
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+    });
     setIsAuthenticated(true);
 
     return { success: true };
