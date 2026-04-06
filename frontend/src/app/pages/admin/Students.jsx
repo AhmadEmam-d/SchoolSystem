@@ -8,8 +8,8 @@ import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
 import { Plus, Search, MoreVertical, Eye, Edit, Trash2, Filter } from 'lucide-react';
-
-const API_URL = 'http://localhost:5073/api';
+import { api } from '../../lib/api';
+import { toast } from 'sonner';
 
 export function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -20,43 +20,34 @@ export function AdminStudents() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
-  // جلب الطلاب من API عند تحميل الصفحة
   useEffect(() => {
     const fetchStudents = async () => {
-      setLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/Students`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        const data = await response.json();
-        if (data.success) {
-          setStudents(data.data);
-        } else {
-          console.error('Failed to fetch students:', data.errors);
-        }
+        setLoading(true);
+        const res = await api.students.getAll();
+        const studentsArray = Array.isArray(res.data) ? res.data : [];
+        setStudents(studentsArray);
       } catch (error) {
         console.error('Error fetching students:', error);
+        toast.error("Failed to load students");
       } finally {
         setLoading(false);
       }
     };
-
     fetchStudents();
   }, []);
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesGrade = gradeFilter === 'all' || student.class?.level === gradeFilter;
-    return matchesSearch && matchesGrade;
-  });
+  const filteredStudents = Array.isArray(students)
+    ? students.filter(student => {
+      const matchesSearch =
+        student.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesGrade = gradeFilter === 'all' || student.class?.level === gradeFilter;
+      return matchesSearch && matchesGrade;
+    })
+    : [];
 
   const getParentName = (parentOid) => {
-    // يمكن جلب اسم ولي الأمر من API لاحقاً
     return parentOid ? 'Parent ID: ' + parentOid.substring(0, 8) : t('unassigned');
   };
 

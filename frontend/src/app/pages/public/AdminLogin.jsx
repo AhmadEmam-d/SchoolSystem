@@ -48,6 +48,7 @@ export function AdminLogin() {
           id: data.data.userId,
           name: data.data.fullName,
           email: data.data.email,
+          token: data.data.token,
           role: 'admin'
         });
         

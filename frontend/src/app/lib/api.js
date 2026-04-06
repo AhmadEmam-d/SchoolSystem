@@ -75,13 +75,18 @@ export const api = {
   
   // Students endpoints
   students: {
-    getAll: () =>
-      fetch(`${API_BASE_URL}/Students`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      })
-      .then(res => res.json())
-      .then(data => data.success ? data.data : []),
-    
+    getAll: () =>{
+      const token = localStorage.getItem('token');
+console.log(token,'token');
+
+          return fetch(`${API_BASE_URL}/Students`, {
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    }).then(res => res.json());
+  }
+    ,
     getById: (id) =>
       fetch(`${API_BASE_URL}/Students/${id}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -254,17 +259,15 @@ export const api = {
       .then(res => res.json())
       .then(data => data.success ? data.data : []),
     
-// داخل api.js
-  getByTeacher: (teacherOid) => {
-    const token = localStorage.getItem('token'); // يقرأ التوكن الفعلي حالاً
-    return fetch(`${API_BASE_URL}/Timetable/teacher/${teacherOid}`, {
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json'
-      }
-    }).then(res => res.json());
-  },
-
+    getByTeacher: (teacherOid) => {
+      const token = localStorage.getItem('token');
+      return fetch(`${API_BASE_URL}/Timetable/teacher/${teacherOid}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      }).then(res => res.json());
+    },
 
     getByClass: (classOid) =>
       fetch(`${API_BASE_URL}/Timetable/class/${classOid}`, {
