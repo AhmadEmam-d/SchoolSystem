@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export function TeacherLogin() {
   const { login, logout, isAuthenticated } = useAuth();
@@ -28,17 +29,56 @@ export function TeacherLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
-    const result = await login({ email, password });
+    try {
+      const response = await fetch('https://localhost:7179/api/Auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          role: 2
+        })
+      });
 
-    if (result.success) {
-      navigate('/teacher/dashboard');
-    } else {
-      setError(result.message || t('loginFailed'));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.errors?.[0] || 'Login failed');
+      }
+
+      const data = await response.json();
+      console.log('Login response:', data);
+
+      if (data.success && data.data && data.data.token) {
+        const teacherData = data.data;
+
+        localStorage.setItem('token', teacherData.token);
+        localStorage.setItem('userId', teacherData.userId);
+        localStorage.setItem('userName', teacherData.fullName);
+        localStorage.setItem('userEmail', teacherData.email);
+        localStorage.setItem('userRole', 'teacher');
+
+        login({
+          id: teacherData.userId,
+          name: teacherData.fullName,
+          email: teacherData.email,
+          role: 'teacher'
+        });
+
+        toast.success(t('loginSuccess') || 'Login successful!');
+
+        setTimeout(() => {
+          navigate('/teacher/dashboard');
+        }, 100);
+      } else {
+        toast.error(data.errors?.[0] || 'Invalid email or password');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Network error - Make sure backend is running');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleForgotPassword = () => {
