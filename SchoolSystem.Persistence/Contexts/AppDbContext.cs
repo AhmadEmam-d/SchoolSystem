@@ -39,6 +39,10 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<UserPreference> UserPreferences { get; set; }
         public DbSet<EmailConfiguration> EmailConfigurations { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<LessonObjective> LessonObjectives { get; set; }
+        public DbSet<LessonMaterial> LessonMaterials { get; set; }
+        public DbSet<LessonHomework> LessonHomeworks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -413,6 +417,91 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<AuditLog>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+            });
+            // Lesson Configuration
+            modelBuilder.Entity<Lesson>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                      .HasMaxLength(2000);
+
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.Status);
+
+                // Relationships
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithMany(t => t.Lessons)
+                      .HasForeignKey(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // LessonObjective Configuration
+            modelBuilder.Entity<LessonObjective>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Description)
+                      .IsRequired()
+                      .HasMaxLength(500);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Objectives)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // LessonMaterial Configuration
+            modelBuilder.Entity<LessonMaterial>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Name)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.FileUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FileType)
+                      .HasMaxLength(50);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Materials)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // LessonHomework Configuration
+            modelBuilder.Entity<LessonHomework>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                      .HasMaxLength(1000);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Homeworks)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

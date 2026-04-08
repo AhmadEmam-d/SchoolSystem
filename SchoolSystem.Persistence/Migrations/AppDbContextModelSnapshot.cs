@@ -738,6 +738,191 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("FinancialReports");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubjectOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubjectOid");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("Lessons");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonHomework", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Attachments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LessonOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("LessonOid");
+
+                    b.ToTable("LessonHomeworks");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonMaterial", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LessonOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("LessonOid");
+
+                    b.ToTable("LessonMaterials");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonObjective", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LessonOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("LessonOid");
+
+                    b.ToTable("LessonObjectives");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -1451,6 +1636,66 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Teacher", "Teacher")
+                        .WithMany("Lessons")
+                        .HasForeignKey("TeacherOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonHomework", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
+                        .WithMany("Homeworks")
+                        .HasForeignKey("LessonOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonMaterial", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
+                        .WithMany("Materials")
+                        .HasForeignKey("LessonOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonObjective", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
+                        .WithMany("Objectives")
+                        .HasForeignKey("LessonOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.User", "User")
@@ -1617,6 +1862,15 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Timetables");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
+                {
+                    b.Navigation("Homeworks");
+
+                    b.Navigation("Materials");
+
+                    b.Navigation("Objectives");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
                 {
                     b.Navigation("Students");
@@ -1655,6 +1909,8 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("Teacher", b =>
                 {
+                    b.Navigation("Lessons");
+
                     b.Navigation("TeacherSubjects");
 
                     b.Navigation("Timetables");
