@@ -9,7 +9,6 @@ namespace SchoolSystem.Application.Mappings
     {
         public ExamsProfile()
         {
-            // Exam mappings
             CreateMap<Exam, ExamDto>()
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.Name))
                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class.Name))
@@ -30,7 +29,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
-            // ExamResult mappings
             CreateMap<ExamResult, ExamResultDto>()
                 .ForMember(dest => dest.ExamName, opt => opt.MapFrom(src => src.Exam.Name))
                 .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName))

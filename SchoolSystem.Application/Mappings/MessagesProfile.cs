@@ -9,12 +9,10 @@ namespace SchoolSystem.Application.Mappings
     {
         public MessagesProfile()
         {
-            // Entity to DTO
             CreateMap<Message, MessageDto>()
                 .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => GetTimeAgo(src.SentAt)))
-                .ForMember(dest => dest.Replies, opt => opt.Ignore()); // Ignore replies for now
+                .ForMember(dest => dest.Replies, opt => opt.Ignore()); 
 
-            // Create DTO to Entity
             CreateMap<CreateMessageDto, Message>()
                 .ForMember(dest => dest.IsGroupMessage, opt => opt.MapFrom(src => src.IsGroupMessage))
                 .ForMember(dest => dest.TargetRole, opt => opt.MapFrom(src => src.TargetRole))

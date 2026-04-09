@@ -1,14 +1,13 @@
-﻿// Domain/Entities/LessonHomework.cs
-using SchoolSystem.Domain.Common;
+﻿using SchoolSystem.Domain.Common;
 
 namespace SchoolSystem.Domain.Entities
 {
     public class LessonHomework : BaseEntity
     {
-        public string Title { get; set; }                // عنوان الواجب
-        public string Description { get; set; }          // وصف الواجب
-        public DateTime DueDate { get; set; }            // تاريخ التسليم
-        public string Attachments { get; set; }          // المرفقات (JSON)
+        public string Title { get; set; }               
+        public string Description { get; set; }      
+        public DateTime DueDate { get; set; }        
+        public string Attachments { get; set; }        
         public Guid LessonOid { get; set; }
         public Lesson Lesson { get; set; }
     }

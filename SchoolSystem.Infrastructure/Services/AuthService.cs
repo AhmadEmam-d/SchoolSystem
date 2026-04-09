@@ -18,16 +18,16 @@ namespace SchoolSystem.Infrastructure.Services
     public class AuthService : IAuthService
     {
         private readonly IGenericRepository<User> _userRepo;
-        private readonly IGenericRepository<Teacher> _teacherRepo;  // أضف هذا
-        private readonly IGenericRepository<Student> _studentRepo;  // أضف هذا
-        private readonly IGenericRepository<Parent> _parentRepo;    // أضف هذا
+        private readonly IGenericRepository<Teacher> _teacherRepo; 
+        private readonly IGenericRepository<Student> _studentRepo;  
+        private readonly IGenericRepository<Parent> _parentRepo;    
         private readonly IConfiguration _configuration;
 
         public AuthService(
             IGenericRepository<User> userRepo,
-            IGenericRepository<Teacher> teacherRepo,  // أضف هذا
-            IGenericRepository<Student> studentRepo,  // أضف هذا
-            IGenericRepository<Parent> parentRepo,    // أضف هذا
+            IGenericRepository<Teacher> teacherRepo,  
+            IGenericRepository<Student> studentRepo,  
+            IGenericRepository<Parent> parentRepo,    
             IConfiguration configuration)
         {
             _userRepo = userRepo;
@@ -39,7 +39,6 @@ namespace SchoolSystem.Infrastructure.Services
 
         public async Task<List<RoleDto>> GetAllRolesAsync()
         {
-            // ... كما هو بدون تغيير
             var roles = new List<RoleDto>
             {
                 new RoleDto
@@ -85,30 +84,25 @@ namespace SchoolSystem.Infrastructure.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
         {
-            // البحث عن المستخدم بالإيميل
             var user = await _userRepo
                 .GetAllQueryable()
-                        .Include(u => u.Teacher)   // أضف هذا
-                        .Include(u => u.Student)   // أضف هذا
-                        .Include(u => u.Parent)    // أضف هذا
+                        .Include(u => u.Teacher)  
+                        .Include(u => u.Student)   
+                        .Include(u => u.Parent)   
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
             if (user == null)
                 throw new Exception("Invalid email or password");
 
-            // التحقق من صحة كلمة المرور (استخدم hashing حقيقياً)
-            if (user.PasswordHash != loginDto.Password) // TODO: استخدم BCrypt.Verify
+            if (user.PasswordHash != loginDto.Password) 
                 throw new Exception("Invalid email or password");
 
-            // التحقق من الدور
             if (user.Role != loginDto.Role)
                 throw new Exception($"You are not registered as {loginDto.Role}");
 
-            // التحقق من أن الحساب نشط
             if (!user.IsActive)
                 throw new Exception("Account is deactivated");
 
-            // جلب الـ IDs الخاصة بالـ Role
             Guid? teacherId = null;
             Guid? studentId = null;
             Guid? parentId = null;
@@ -137,22 +131,19 @@ namespace SchoolSystem.Infrastructure.Services
                     break;
             }
 
-            // تحديث آخر تسجيل دخول
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepo.UpdateAsync(user);
 
-            // إنشاء token
             var token = GenerateJwtToken(user);
 
-            // تحديد رابط إعادة التوجيه
             var redirectTo = GetRedirectUrl(user.Role);
 
             return new AuthResponseDto
             {
                 UserId = user.Oid,
-                TeacherId = user.Teacher?.Oid,  // مباشرة من الـ Include
+                TeacherId = user.Teacher?.Oid,  
                 StudentId = user.Student?.Oid,
-                ParentId = user.Parent?.Oid,  // أضف هذا
+                ParentId = user.Parent?.Oid,  
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role,
@@ -173,12 +164,11 @@ namespace SchoolSystem.Infrastructure.Services
                 if (existingUser != null)
                     throw new Exception("User already exists");
 
-                // إنشاء مستخدم جديد
                 var user = new User
                 {
                     FullName = registerDto.FullName,
                     Email = registerDto.Email,
-                    PasswordHash = registerDto.Password, // TODO: استخدم BCrypt.HashPassword
+                    PasswordHash = registerDto.Password, 
                     PhoneNumber = registerDto.PhoneNumber,
                     Role = registerDto.Role,
                     IsActive = true
@@ -186,7 +176,6 @@ namespace SchoolSystem.Infrastructure.Services
 
                 await _userRepo.AddAsync(user);
 
-                // إذا كان الدور Teacher، أنشئ سجل في جدول Teachers
                 Guid? teacherId = null;
                 if (registerDto.Role == UserRole.Teacher)
                 {
@@ -201,7 +190,6 @@ namespace SchoolSystem.Infrastructure.Services
                     teacherId = teacher.Oid;
                 }
 
-                // إذا كان الدور Student، أنشئ سجل في جدول Students
                 Guid? studentId = null;
                 if (registerDto.Role == UserRole.Student)
                 {
@@ -216,7 +204,6 @@ namespace SchoolSystem.Infrastructure.Services
                     studentId = student.Oid;
                 }
 
-                // إذا كان الدور Parent، أنشئ سجل في جدول Parents
                 Guid? parentId = null;
                 if (registerDto.Role == UserRole.Parent)
                 {
@@ -231,7 +218,6 @@ namespace SchoolSystem.Infrastructure.Services
                     parentId = parent.Oid;
                 }
 
-                // إنشاء token
                 var token = GenerateJwtToken(user);
                 var redirectTo = GetRedirectUrl(user.Role);
 
@@ -256,7 +242,6 @@ namespace SchoolSystem.Infrastructure.Services
 
         public async Task<bool> LogoutAsync(string email)
         {
-            // يمكن إضافة أي منطق للتسجيل الخروج (مثل إضافة token للـ blacklist)
             return await Task.FromResult(true);
         }
 
@@ -290,7 +275,7 @@ namespace SchoolSystem.Infrastructure.Services
                 new Claim(ClaimTypes.Name, user.FullName),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim("role", user.Role.ToString()),
-                new Claim("UserId", user.Oid.ToString())  // أضف هذا لتسهيل الوصول من الـ Frontend
+                new Claim("UserId", user.Oid.ToString())  
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"] ?? "YourSuperSecretKeyForJWTTokenGeneration"));

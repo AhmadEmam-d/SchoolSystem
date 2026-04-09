@@ -34,22 +34,18 @@ namespace SchoolSystem.Application.Features.Timetable.Commands.Create
 
         public async Task<Guid> Handle(CreateTimetableCommand request, CancellationToken cancellationToken)
         {
-            // Check if class exists
             var classEntity = await _classRepo.GetByOidAsync(request.Dto.ClassOid);
             if (classEntity == null)
                 throw new Exception($"Class with ID {request.Dto.ClassOid} not found");
 
-            // Check if subject exists
             var subject = await _subjectRepo.GetByOidAsync(request.Dto.SubjectOid);
             if (subject == null)
                 throw new Exception($"Subject with ID {request.Dto.SubjectOid} not found");
 
-            // Check if teacher exists
             var teacher = await _teacherRepo.GetByOidAsync(request.Dto.TeacherOid);
             if (teacher == null)
                 throw new Exception($"Teacher with ID {request.Dto.TeacherOid} not found");
 
-            // Check for conflicts (same teacher at same time)
             var existing = await _timetableRepo.GetAllQueryable()
                 .AnyAsync(t => t.TeacherOid == request.Dto.TeacherOid
                     && t.Day.ToString() == request.Dto.Day
@@ -61,10 +57,10 @@ namespace SchoolSystem.Application.Features.Timetable.Commands.Create
             if (existing)
                 throw new Exception("Teacher has a scheduling conflict at this time");
 
-            // Map DTO to Entity
+         
             var timetable = _mapper.Map<SchoolSystem.Domain.Entities.Timetable>(request.Dto);
 
-            // Convert string day to enum
+          
             timetable.Day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), request.Dto.Day);
             timetable.StartTime = TimeSpan.Parse(request.Dto.StartTime);
             timetable.EndTime = TimeSpan.Parse(request.Dto.EndTime);

@@ -1,5 +1,4 @@
-﻿// Domain/Entities/Setting.cs
-using SchoolSystem.Domain.Common;
+﻿using SchoolSystem.Domain.Common;
 using System;
 
 namespace SchoolSystem.Domain.Entities

@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/Handlers/GetUserActivityQueryHandler.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.UserProfile.DTOs;
 using SchoolSystem.Application.Features.UserProfile.Queries;
@@ -42,7 +41,6 @@ namespace SchoolSystem.Application.Features.UserProfile.Queries
 
             var userEmail = _currentUserService.Email;
 
-            // جلب آخر 10 نشاطات للمستخدم
             var allLogs = await _auditLogRepository.GetAllAsync();
             var userActivities = allLogs
                 .Where(l => l.PerformedBy == userEmail)
@@ -60,7 +58,7 @@ namespace SchoolSystem.Application.Features.UserProfile.Queries
             return new QueryResponse<UserActivityDto>
             {
                 Success = true,
-                Data = userActivities,  // Now List<UserActivityDto> matches List<UserActivityDto>
+                Data = userActivities, 
                 TotalItems = userActivities.Count,
                 TotalPages = 1
             };

@@ -1,5 +1,4 @@
-﻿// Infrastructure/Services/EmailService.cs
-using SchoolSystem.Application.Features.Settings.DTOs;
+﻿using SchoolSystem.Application.Features.Settings.DTOs;
 using SchoolSystem.Application.Interfaces.Services;
 using System.Net;
 using System.Net.Mail;
@@ -13,7 +12,6 @@ namespace SchoolSystem.Infrastructure.Services
         {
             try
             {
-                // Implementation
                 await Task.Delay(100);
                 return true;
             }
@@ -27,7 +25,6 @@ namespace SchoolSystem.Infrastructure.Services
         {
             try
             {
-                // Implementation
                 await Task.Delay(100);
                 return true;
             }

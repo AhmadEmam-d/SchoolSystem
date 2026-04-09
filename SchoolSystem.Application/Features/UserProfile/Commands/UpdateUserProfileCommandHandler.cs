@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/Handlers/UpdateUserProfileCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.Profile.Commands;
 using SchoolSystem.Application.Interfaces.Services;
