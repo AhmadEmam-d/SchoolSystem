@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "RKDQICe2g6Y=",
+  "dgSpecHash": "PB/ctj8kWH8=",
   "success": true,
   "projectFilePath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\fagr\\.nuget\\packages\\automapper\\13.0.1\\automapper.13.0.1.nupkg.sha512",
+    "C:\\Users\\fagr\\.nuget\\packages\\automapper\\14.0.0\\automapper.14.0.0.nupkg.sha512",
     "C:\\Users\\fagr\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\fagr\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
     "C:\\Users\\fagr\\.nuget\\packages\\bcrypt.net-next\\4.1.0\\bcrypt.net-next.4.1.0.nupkg.sha512",
@@ -77,18 +77,5 @@
     "C:\\Users\\fagr\\.nuget\\packages\\system.security.permissions\\9.0.0\\system.security.permissions.9.0.0.nupkg.sha512",
     "C:\\Users\\fagr\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Package 'AutoMapper' 13.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-rvv3-g6hj-g44x",
-      "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj",
-      "libraryId": "AutoMapper",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

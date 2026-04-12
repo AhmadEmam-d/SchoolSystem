@@ -1054,6 +1054,121 @@
         }
       }
     },
+    "/api/HelpSupport/faqs": {
+      "get": {
+        "tags": [
+          "HelpSupport"
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HelpSupport/knowledge-base": {
+      "get": {
+        "tags": [
+          "HelpSupport"
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HelpSupport/knowledge-base/{id}": {
+      "get": {
+        "tags": [
+          "HelpSupport"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HelpSupport/tickets": {
+      "post": {
+        "tags": [
+          "HelpSupport"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/HelpSupport/my-tickets": {
+      "get": {
+        "tags": [
+          "HelpSupport"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Lessons": {
       "get": {
         "tags": [
@@ -2793,6 +2908,49 @@
         }
       }
     },
+    "/api/SmartTutor/chat": {
+      "post": {
+        "tags": [
+          "SmartTutor"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartTutorRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartTutorRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmartTutorRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/SmartTutor/conversations": {
+      "get": {
+        "tags": [
+          "SmartTutor"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Students": {
       "get": {
         "tags": [
@@ -4258,6 +4416,24 @@
         },
         "additionalProperties": false
       },
+      "CreateTicketDto": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateTimetableDto": {
         "type": "object",
         "properties": {
@@ -4767,6 +4943,20 @@
           },
           "system": {
             "$ref": "#/components/schemas/SystemSettingsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SmartTutorRequestDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "conversationId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

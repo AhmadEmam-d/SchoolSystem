@@ -244,6 +244,10 @@ C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Azure
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Azure.Identity.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\BCrypt.Net-Next.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\FluentValidation.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.Auth.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.Core.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Google.GenAI.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Humanizer.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\MediatR.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\MediatR.Contracts.dll
@@ -266,6 +270,7 @@ C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Micro
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Design.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.EntityFrameworkCore.SqlServer.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Extensions.AI.Abstractions.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Extensions.DependencyModel.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Identity.Client.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Identity.Client.Extensions.Msal.dll
@@ -294,6 +299,7 @@ C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\Syste
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Formats.Nrbf.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Linq.Dynamic.Core.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Management.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Memory.Data.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Reflection.MetadataLoadContext.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\System.Resources.Extensions.dll
@@ -383,6 +389,7 @@ C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runti
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win\lib\net7.0\System.Management.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win\lib\net9.0\System.Windows.Extensions.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\SchoolSystem.Application.dll
 C:\Users\fagr\source\repos\SchoolSystem\SchoolSystem.Api\bin\Debug\net10.0\SchoolSystem.Domain.dll

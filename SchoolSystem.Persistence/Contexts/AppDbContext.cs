@@ -43,6 +43,10 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<LessonObjective> LessonObjectives { get; set; }
         public DbSet<LessonMaterial> LessonMaterials { get; set; }
         public DbSet<LessonHomework> LessonHomeworks { get; set; }
+        public DbSet<SmartTutorConversation> SmartTutorConversations { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<FAQ> FAQs { get; set; }
+        public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -502,6 +506,84 @@ namespace SchoolSystem.Persistence.Contexts
                       .WithMany(l => l.Homeworks)
                       .HasForeignKey(e => e.LessonOid)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<SmartTutorConversation>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.ConversationId)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(e => e.UserRole)
+                      .IsRequired()
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Question).IsRequired();
+                entity.Property(e => e.Answer).IsRequired();
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ConversationId);
+                entity.HasIndex(e => e.Timestamp);
+
+                entity.HasOne(e => e.User)
+                      .WithMany() 
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            // ===========================
+            // SupportTicket Configuration
+            // ===========================
+            modelBuilder.Entity<SupportTicket>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Message).IsRequired();
+                entity.Property(e => e.UserRole).HasMaxLength(50);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ===========================
+            // FAQ Configuration
+            // ===========================
+            modelBuilder.Entity<FAQ>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Question).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Answer).IsRequired();
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Order);
+                entity.Property(e => e.IsPublished);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.Order);
+                entity.HasIndex(e => e.IsPublished);
+            });
+
+            // ===========================
+            // KnowledgeBaseArticle Configuration
+            // ===========================
+            modelBuilder.Entity<KnowledgeBaseArticle>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Content).IsRequired();
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.VideoUrl).HasMaxLength(500);
+                entity.Property(e => e.DocumentUrl).HasMaxLength(500);
+                entity.Property(e => e.ViewCount);
+                entity.Property(e => e.IsPublished);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.IsPublished);
+                entity.HasIndex(e => e.ViewCount);
             });
         }
     }

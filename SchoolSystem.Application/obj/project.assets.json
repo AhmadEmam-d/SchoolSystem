@@ -2,18 +2,18 @@
   "version": 3,
   "targets": {
     "net10.0": {
-      "AutoMapper/13.0.1": {
+      "AutoMapper/14.0.0": {
         "type": "package",
         "dependencies": {
-          "Microsoft.Extensions.Options": "6.0.0"
+          "Microsoft.Extensions.Options": "8.0.0"
         },
         "compile": {
-          "lib/net6.0/AutoMapper.dll": {
+          "lib/net8.0/AutoMapper.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/AutoMapper.dll": {
+          "lib/net8.0/AutoMapper.dll": {
             "related": ".xml"
           }
         }
@@ -1806,19 +1806,19 @@
     }
   },
   "libraries": {
-    "AutoMapper/13.0.1": {
-      "sha512": "/Fx1SbJ16qS7dU4i604Sle+U9VLX+WSNVJggk6MupKVkYvvBm4XqYaeFuf67diHefHKHs50uQIS2YEDFhPCakQ==",
+    "AutoMapper/14.0.0": {
+      "sha512": "OC+1neAPM4oCCqQj3g2GJ2shziNNhOkxmNB9cVS8jtx4JbgmRzLcUOxB9Tsz6cVPHugdkHgCaCrTjjSI0Z5sCQ==",
       "type": "package",
-      "path": "automapper/13.0.1",
+      "path": "automapper/14.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "automapper.13.0.1.nupkg.sha512",
+        "automapper.14.0.0.nupkg.sha512",
         "automapper.nuspec",
         "icon.png",
-        "lib/net6.0/AutoMapper.dll",
-        "lib/net6.0/AutoMapper.xml"
+        "lib/net8.0/AutoMapper.dll",
+        "lib/net8.0/AutoMapper.xml"
       ]
     },
     "Azure.Core/1.47.1": {
@@ -4624,7 +4624,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "AutoMapper >= 13.0.1",
+      "AutoMapper >= 14.0.0",
       "BCrypt.Net-Next >= 4.1.0",
       "FluentValidation >= 12.1.1",
       "MediatR >= 12.4.1",
@@ -4675,6 +4675,9 @@
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1903"
+        ],
         "warnAsError": [
           "NU1605"
         ]
@@ -4692,7 +4695,7 @@
         "dependencies": {
           "AutoMapper": {
             "target": "Package",
-            "version": "[13.0.1, )"
+            "version": "[14.0.0, )"
           },
           "BCrypt.Net-Next": {
             "target": "Package",
@@ -5024,17 +5027,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'AutoMapper' 13.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-rvv3-g6hj-g44x",
-      "libraryId": "AutoMapper",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }
