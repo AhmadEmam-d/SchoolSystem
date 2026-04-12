@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ValueCloudRestaurants.Application.Extensions;
+using SchoolSystem.Application.Extensions;
 
 namespace SchoolSystem.Application.Features.Classes.Queries.Get
 {

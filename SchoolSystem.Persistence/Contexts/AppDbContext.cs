@@ -39,6 +39,14 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<UserPreference> UserPreferences { get; set; }
         public DbSet<EmailConfiguration> EmailConfigurations { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<LessonObjective> LessonObjectives { get; set; }
+        public DbSet<LessonMaterial> LessonMaterials { get; set; }
+        public DbSet<LessonHomework> LessonHomeworks { get; set; }
+        public DbSet<SmartTutorConversation> SmartTutorConversations { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<FAQ> FAQs { get; set; }
+        public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -47,28 +55,25 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasIndex(e => e.Email).IsUnique();
 
                 entity.Property(e => e.Avatar)
-                      .IsRequired(false); // يسمح بـ NULL
+                      .IsRequired(false); 
 
                 entity.Property(e => e.PasswordHash)
                       .HasMaxLength(500)
                       .IsRequired();
 
-                // العلاقة مع Student (واحد لواحد)
                 entity.HasOne(e => e.Student)
-                      .WithOne(s => s.User)  // أضف هذا: Student عنده User
-                      .HasForeignKey<Student>(s => s.UserId)  // المفتاح في جدول Student
+                      .WithOne(s => s.User) 
+                      .HasForeignKey<Student>(s => s.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // العلاقة مع Teacher (واحد لواحد)
                 entity.HasOne(e => e.Teacher)
-                      .WithOne(t => t.User)  // أضف هذا: Teacher عنده User
-                      .HasForeignKey<Teacher>(t => t.UserId)  // المفتاح في جدول Teacher
+                      .WithOne(t => t.User)  
+                      .HasForeignKey<Teacher>(t => t.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // العلاقة مع Parent (واحد لواحد)
                 entity.HasOne(e => e.Parent)
-                      .WithOne(p => p.User)  // أضف هذا: Parent عنده User
-                      .HasForeignKey<Parent>(p => p.UserId)  // المفتاح في جدول Parent
+                      .WithOne(p => p.User) 
+                      .HasForeignKey<Parent>(p => p.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(e => e.Role)
@@ -413,6 +418,169 @@ namespace SchoolSystem.Persistence.Contexts
             modelBuilder.Entity<AuditLog>(entity =>
             {
                 entity.HasKey(e => e.Oid);
+            });
+            // Lesson Configuration
+            modelBuilder.Entity<Lesson>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                      .HasMaxLength(2000);
+
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.Status);
+
+                // Relationships
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithMany(t => t.Lessons)
+                      .HasForeignKey(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // LessonObjective Configuration
+            modelBuilder.Entity<LessonObjective>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Description)
+                      .IsRequired()
+                      .HasMaxLength(500);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Objectives)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // LessonMaterial Configuration
+            modelBuilder.Entity<LessonMaterial>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Name)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.FileUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FileType)
+                      .HasMaxLength(50);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Materials)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // LessonHomework Configuration
+            modelBuilder.Entity<LessonHomework>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                      .HasMaxLength(1000);
+
+                entity.HasOne(e => e.Lesson)
+                      .WithMany(l => l.Homeworks)
+                      .HasForeignKey(e => e.LessonOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<SmartTutorConversation>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.ConversationId)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(e => e.UserRole)
+                      .IsRequired()
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Question).IsRequired();
+                entity.Property(e => e.Answer).IsRequired();
+
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.ConversationId);
+                entity.HasIndex(e => e.Timestamp);
+
+                entity.HasOne(e => e.User)
+                      .WithMany() 
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            // ===========================
+            // SupportTicket Configuration
+            // ===========================
+            modelBuilder.Entity<SupportTicket>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Message).IsRequired();
+                entity.Property(e => e.UserRole).HasMaxLength(50);
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ===========================
+            // FAQ Configuration
+            // ===========================
+            modelBuilder.Entity<FAQ>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Question).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.Answer).IsRequired();
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Order);
+                entity.Property(e => e.IsPublished);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.Order);
+                entity.HasIndex(e => e.IsPublished);
+            });
+
+            // ===========================
+            // KnowledgeBaseArticle Configuration
+            // ===========================
+            modelBuilder.Entity<KnowledgeBaseArticle>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Content).IsRequired();
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.VideoUrl).HasMaxLength(500);
+                entity.Property(e => e.DocumentUrl).HasMaxLength(500);
+                entity.Property(e => e.ViewCount);
+                entity.Property(e => e.IsPublished);
+                entity.HasIndex(e => e.Category);
+                entity.HasIndex(e => e.IsPublished);
+                entity.HasIndex(e => e.ViewCount);
             });
         }
     }

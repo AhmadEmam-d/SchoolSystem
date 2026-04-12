@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ValueCloudRestaurants.Application.Extensions
+namespace SchoolSystem.Application.Extensions
 {
     public static class ObjectExtensions
     {

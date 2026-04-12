@@ -18,7 +18,6 @@ namespace SchoolSystem.Application.Mappings
             CreateMap<UpdateAnnouncementDto, Announcement>();
         }
 
-        // ✅ جعل الدالة static
         private static string GetTimeAgo(DateTime dateTime)
         {
             var span = DateTime.UtcNow - dateTime;

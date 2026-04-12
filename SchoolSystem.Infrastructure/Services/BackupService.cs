@@ -1,5 +1,4 @@
-﻿// Infrastructure/Services/BackupService.cs
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.IO;
@@ -35,13 +34,10 @@ namespace SchoolSystem.Infrastructure.Services
                 var backupFileName = $"{backupName}.zip";
                 var backupFile = Path.Combine(fullBackupPath, backupFileName);
 
-                // Simulate backup creation (you can add actual database backup logic here)
-                await Task.Delay(1000); // Simulate work
+                await Task.Delay(1000); 
 
-                // Create a sample backup file
                 using (var archive = ZipFile.Open(backupFile, ZipArchiveMode.Create))
                 {
-                    // Add backup info entry
                     var entry = archive.CreateEntry("backup_info.txt");
                     using (var writer = new StreamWriter(entry.Open()))
                     {
@@ -89,7 +85,6 @@ namespace SchoolSystem.Infrastructure.Services
                 if (!File.Exists(backupPath))
                     return Task.FromResult(false);
 
-                // Add actual restore logic here
                 return Task.FromResult(true);
             }
             catch

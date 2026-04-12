@@ -6,22 +6,59 @@ import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 
 export function StudentLogin() {
-  const { login, logout } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
 
-  React.useEffect(() => { logout(); }, [logout]);
+  const API_BASE_URL = 'https://localhost:7179/api';
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login('student');
-    navigate('/student/dashboard');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+        email: email,
+        password: password,
+        role: 3
+      });
+
+      if (response.data.success) {
+        const { token, userId, fullName, role, redirectTo } = response.data.data;
+        
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('userName', fullName);
+        localStorage.setItem('userRole', role);
+        
+        login('student', { userId, fullName, token });
+        navigate('/student/dashboard');
+      } else {
+        setError(response.data.messages?.AR || 'فشل تسجيل الدخول');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        setError(err.response.data.errors[0]);
+      } else {
+        setError('حدث خطأ في الاتصال بالخادم');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -55,24 +92,30 @@ export function StudentLogin() {
           </p>
         </motion.div>
 
+        {error && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-400 rounded-lg text-sm text-center">
+            {error}
+          </motion.div>
+        )}
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <Card className="border-2 border-green-200 dark:border-green-800 shadow-lg">
             <CardContent className="p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="emailOrPhone" className="block text-sm font-medium text-foreground mb-2">
-                    {t('emailOrPhoneLabel')}
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                    {t('emailLabel')}
                   </label>
                   <div className="relative">
                     <div className={`absolute inset-y-0 flex items-center pointer-events-none ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'}`}>
                       <User className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <input
-                      id="emailOrPhone"
-                      type="text"
-                      value={emailOrPhone}
-                      onChange={(e) => setEmailOrPhone(e.target.value)}
-                      placeholder="student@edusmart.com"
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="student@school.com"
                       className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
                         isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
                       }`}
@@ -124,8 +167,8 @@ export function StudentLogin() {
                   </button>
                 </div>
 
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-medium shadow-lg">
-                  {t('signInBtn')}
+                <Button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 text-base font-medium shadow-lg">
+                  {loading ? 'جاري التسجيل...' : t('signInBtn')}
                 </Button>
               </form>
             </CardContent>

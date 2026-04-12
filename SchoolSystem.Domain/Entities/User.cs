@@ -23,5 +23,7 @@ namespace SchoolSystem.Domain.Entities
         public Teacher Teacher { get; set; }
 
         public Parent Parent { get; set; }
+        public ICollection<SmartTutorConversation> SmartTutorConversations { get; set; }
+
     }
 }

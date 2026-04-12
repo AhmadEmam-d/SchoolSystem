@@ -1026,6 +1026,62 @@
   "AvatarUploadFailed": {
     "EN": "Failed to upload avatar",
     "AR": "فشل رفع الصورة الشخصية"
+  },
+  "LessonsFetchedSuccessfully": {
+    "EN": "Lessons fetched successfully",
+    "AR": "تم جلب بيانات الدروس بنجاح"
+  },
+  "LessonsFetchFailed": {
+    "EN": "An error occurred while fetching lessons",
+    "AR": "حدث خطأ أثناء جلب بيانات الدروس"
+  },
+  "LessonFetchedSuccessfully": {
+    "EN": "Lesson fetched successfully",
+    "AR": "تم جلب بيانات الدرس بنجاح"
+  },
+  "LessonFetchFailed": {
+    "EN": "An error occurred while fetching the lesson",
+    "AR": "حدث خطأ أثناء جلب بيانات الدرس"
+  },
+  "LessonNotFound": {
+    "EN": "Lesson does not exist",
+    "AR": "الدرس غير موجود"
+  },
+  "LessonCreatedSuccessfully": {
+    "EN": "Lesson created successfully",
+    "AR": "تم إنشاء الدرس بنجاح"
+  },
+  "LessonCreationFailed": {
+    "EN": "An error occurred while creating the lesson",
+    "AR": "حدث خطأ أثناء إنشاء الدرس"
+  },
+  "LessonUpdatedSuccessfully": {
+    "EN": "Lesson updated successfully",
+    "AR": "تم تحديث بيانات الدرس بنجاح"
+  },
+  "LessonUpdateFailed": {
+    "EN": "An error occurred while updating the lesson",
+    "AR": "حدث خطأ أثناء تحديث بيانات الدرس"
+  },
+  "LessonDeletedSuccessfully": {
+    "EN": "Lesson deleted successfully",
+    "AR": "تم حذف الدرس بنجاح"
+  },
+  "LessonDeletionFailed": {
+    "EN": "An error occurred while deleting the lesson",
+    "AR": "حدث خطأ أثناء حذف الدرس"
+  },
+  "LessonStatsFetchedSuccessfully": {
+    "EN": "Lesson statistics fetched successfully",
+    "AR": "تم جلب إحصائيات الدروس بنجاح"
+  },
+  "LessonStatsFetchFailed": {
+    "EN": "An error occurred while fetching lesson statistics",
+    "AR": "حدث خطأ أثناء جلب إحصائيات الدروس"
+  },
+  "TeacherNotFound": {
+    "EN": "Teacher does not exist",
+    "AR": "المدرس غير موجود"
   }
 
 }

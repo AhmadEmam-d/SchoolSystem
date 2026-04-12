@@ -14,10 +14,8 @@ public class SectionProfile : Profile
                 .ForMember(dest => dest.Class, opt => opt.MapFrom(src => src.Class))
                 .ForMember(dest => dest.Students, opt => opt.MapFrom(src => src.Students));
 
-        // Class → ClassBasicDto
         CreateMap<Class, ClassBasicDto>();
 
-        // Student → StudentBasicDto
         CreateMap<Student, StudentBasicDto>();
     }
 }

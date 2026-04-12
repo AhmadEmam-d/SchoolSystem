@@ -1,5 +1,4 @@
-﻿// Application/Features/Settings/Mappings/SettingsMappingProfile.cs
-using AutoMapper;  // أضف هذا السطر
+﻿using AutoMapper;  
 using SchoolSystem.Application.Features.Settings.DTOs;
 using SchoolSystem.Domain.Entities;
 

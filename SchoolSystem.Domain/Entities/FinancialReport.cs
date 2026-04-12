@@ -13,7 +13,7 @@ namespace SchoolSystem.Domain.Entities
         public decimal TotalIncome { get; set; }
         public decimal TotalExpenses { get; set; }
         public decimal NetProfit { get; set; }
-        public string Details { get; set; } // JSON details
+        public string Details { get; set; } 
         public DateTime GeneratedAt { get; set; }
     }
 }
