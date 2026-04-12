@@ -55,28 +55,25 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasIndex(e => e.Email).IsUnique();
 
                 entity.Property(e => e.Avatar)
-                      .IsRequired(false); // يسمح بـ NULL
+                      .IsRequired(false); 
 
                 entity.Property(e => e.PasswordHash)
                       .HasMaxLength(500)
                       .IsRequired();
 
-                // العلاقة مع Student (واحد لواحد)
                 entity.HasOne(e => e.Student)
-                      .WithOne(s => s.User)  // أضف هذا: Student عنده User
-                      .HasForeignKey<Student>(s => s.UserId)  // المفتاح في جدول Student
+                      .WithOne(s => s.User) 
+                      .HasForeignKey<Student>(s => s.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // العلاقة مع Teacher (واحد لواحد)
                 entity.HasOne(e => e.Teacher)
-                      .WithOne(t => t.User)  // أضف هذا: Teacher عنده User
-                      .HasForeignKey<Teacher>(t => t.UserId)  // المفتاح في جدول Teacher
+                      .WithOne(t => t.User)  
+                      .HasForeignKey<Teacher>(t => t.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // العلاقة مع Parent (واحد لواحد)
                 entity.HasOne(e => e.Parent)
-                      .WithOne(p => p.User)  // أضف هذا: Parent عنده User
-                      .HasForeignKey<Parent>(p => p.UserId)  // المفتاح في جدول Parent
+                      .WithOne(p => p.User) 
+                      .HasForeignKey<Parent>(p => p.UserId)  
                       .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(e => e.Role)
