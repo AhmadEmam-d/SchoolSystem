@@ -5,16 +5,20 @@ using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
 using SchoolSystem.Application.Features.Attendance.Commands.Create;
 using SchoolSystem.Application.Features.Attendance.Commands.Delete;
+using SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceSession;
+using SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendanceSession;
 using SchoolSystem.Application.Features.Attendance.Commands.Update;
 using SchoolSystem.Application.Features.Attendance.DTOs;
 using SchoolSystem.Application.Features.Attendance.Queries.GetAll;
 using SchoolSystem.Application.Features.Attendance.Queries.GetById;
+using SchoolSystem.Application.Features.Attendance.Queries.GetClassStats;
 using SchoolSystem.Application.Features.Attendance.Queries.GetMonthlyReport;
 using SchoolSystem.Application.Features.Attendance.Queries.GetToday;
 using SchoolSystem.Application.Features.Attendance.Queries.GetWeekly;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.Api.Controllers
@@ -178,6 +182,73 @@ namespace SchoolSystem.Api.Controllers
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "AttendanceDeletionFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        [HttpGet("class-stats/{classOid:guid}")]
+        public async Task<IActionResult> GetClassStats(Guid classOid)
+        {
+            try
+            {
+                var result = await _mediator.Send(new GetClassAttendanceStatsQuery { ClassOid = classOid });
+                return Ok(ApiResponseFactory.Success(result, "ClassStatsFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StatsFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+       
+
+        // في AttendanceController.cs أضف:
+
+        [HttpPost("start-session")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> StartAttendanceSession([FromBody] StartAttendanceSessionDto dto)
+        {
+            try
+            {
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                    return Unauthorized();
+
+                var command = new StartAttendanceSessionCommand { Dto = dto, TeacherId = teacherId };
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "SessionStartedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SessionStartFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+
+        [HttpPost("submit-session")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> SubmitAttendanceSession([FromBody] SubmitAttendanceSessionDto dto)
+        {
+            try
+            {
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                    return Unauthorized();
+
+                var command = new SubmitAttendanceSessionCommand { Dto = dto, TeacherId = teacherId };
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "AttendanceSubmittedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "AttendanceSubmitFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }

@@ -47,6 +47,8 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<FAQ> FAQs { get; set; }
         public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
+        public DbSet<AttendanceSession> AttendanceSessions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -581,6 +583,23 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasIndex(e => e.Category);
                 entity.HasIndex(e => e.IsPublished);
                 entity.HasIndex(e => e.ViewCount);
+            });
+            modelBuilder.Entity<AttendanceSession>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Method)
+                      .IsRequired();
+
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithMany()
+                      .HasForeignKey(e => e.TeacherId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

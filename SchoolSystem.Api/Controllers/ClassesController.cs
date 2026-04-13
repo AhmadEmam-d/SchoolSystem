@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
@@ -10,10 +11,13 @@ using SchoolSystem.Application.Features.Classes.DTOs.Update;
 using SchoolSystem.Application.Features.Classes.Queries.Get;
 using SchoolSystem.Application.Features.Classes.Queries.GetAll;
 using SchoolSystem.Application.Features.Classes.Queries.GetByOid;
+using SchoolSystem.Application.Features.Classes.Queries.GetClassStats;
+using SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses;
 using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.Api.Controllers
@@ -168,6 +172,47 @@ namespace SchoolSystem.Api.Controllers
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ClassDeletionFailed", _messageService,
                     new List<string> { "An error occurred while deleting the class." }
+                ));
+            }
+        }
+        [HttpGet("teacher")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> GetTeacherClasses()
+        {
+            try
+            {
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                    return Unauthorized();
+
+                var query = new GetTeacherClassesQuery(teacherId);
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ClassesFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ClassesFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching classes." }
+                ));
+            }
+        }
+        [HttpGet("{id:guid}/stats")]
+        public async Task<IActionResult> GetClassStats(Guid id)
+        {
+            try
+            {
+                var query = new GetClassStatsQuery(id);
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ClassStatsFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ClassStatsFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching class statistics." }
                 ));
             }
         }

@@ -633,6 +633,10 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "QRCoder": {
+              "target": "Package",
+              "version": "[1.8.0, )"
+            },
             "System.Linq.Dynamic.Core": {
               "target": "Package",
               "version": "[1.7.1, )"

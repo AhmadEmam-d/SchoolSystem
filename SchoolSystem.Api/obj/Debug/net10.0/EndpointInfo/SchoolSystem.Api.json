@@ -477,6 +477,91 @@
         }
       }
     },
+    "/api/Attendance/class-stats/{classOid}": {
+      "get": {
+        "tags": [
+          "Attendance"
+        ],
+        "parameters": [
+          {
+            "name": "classOid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Attendance/start-session": {
+      "post": {
+        "tags": [
+          "Attendance"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartAttendanceSessionDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartAttendanceSessionDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartAttendanceSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Attendance/submit-session": {
+      "post": {
+        "tags": [
+          "Attendance"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAttendanceSessionDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAttendanceSessionDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAttendanceSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Auth/roles": {
       "get": {
         "tags": [
@@ -750,6 +835,41 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Classes/teacher": {
+      "get": {
+        "tags": [
+          "Classes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Classes/{id}/stats": {
+      "get": {
+        "tags": [
+          "Classes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3126,6 +3246,80 @@
         }
       }
     },
+    "/api/Students/subjects-countt": {
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "parameters": [
+          {
+            "name": "classId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Students/subjects-count": {
+      "get": {
+        "tags": [
+          "Students"
+        ],
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "classId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/student/timetable/weekly": {
+      "get": {
+        "tags": [
+          "StudentTimetable"
+        ],
+        "parameters": [
+          {
+            "name": "weekStartDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Subjects": {
       "get": {
         "tags": [
@@ -3800,6 +3994,15 @@
         },
         "additionalProperties": false
       },
+      "AttendanceMethod": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
       "BackupSettingsDto": {
         "type": "object",
         "properties": {
@@ -3936,10 +4139,6 @@
       "CreateAttendanceDto": {
         "type": "object",
         "properties": {
-          "studentOid": {
-            "type": "string",
-            "format": "uuid"
-          },
           "classOid": {
             "type": "string",
             "format": "uuid"
@@ -3948,20 +4147,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "status": {
-            "type": "string",
-            "nullable": true
-          },
-          "remarks": {
-            "type": "string",
-            "nullable": true
-          },
-          "checkInTime": {
-            "type": "string",
-            "nullable": true
-          },
-          "checkOutTime": {
-            "type": "string",
+          "attendances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentAttendanceInputDto"
+            },
             "nullable": true
           }
         },
@@ -4970,6 +5160,67 @@
           },
           "sortDirection": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartAttendanceSessionDto": {
+        "type": "object",
+        "properties": {
+          "classOid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lessonOid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "method": {
+            "$ref": "#/components/schemas/AttendanceMethod"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StudentAttendanceInputDto": {
+        "type": "object",
+        "properties": {
+          "studentOid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "remarks": {
+            "type": "string",
+            "nullable": true
+          },
+          "checkInTime": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitAttendanceSessionDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "selectedNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "attendances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentAttendanceInputDto"
+            },
             "nullable": true
           }
         },

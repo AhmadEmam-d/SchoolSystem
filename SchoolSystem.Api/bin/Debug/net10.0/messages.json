@@ -1082,6 +1082,14 @@
   "TeacherNotFound": {
     "EN": "Teacher does not exist",
     "AR": "المدرس غير موجود"
+  },
+  "WeeklyScheduleFetchedSuccessfully": {
+    "EN": "Weekly schedule fetched successfully",
+    "AR": "تم جلب الجدول الأسبوعي بنجاح"
+  },
+  "WeeklyScheduleFetchFailed": {
+    "EN": "Failed to fetch weekly schedule",
+    "AR": "فشل في جلب الجدول الأسبوعي"
   }
 
 }

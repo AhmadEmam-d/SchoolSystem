@@ -248,6 +248,22 @@
   },
   {
     "ContainingType": "SchoolSystem.Api.Controllers.AttendanceController",
+    "Method": "GetClassStats",
+    "RelativePath": "api/Attendance/class-stats/{classOid}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "classOid",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.AttendanceController",
     "Method": "GetMonthlyReport",
     "RelativePath": "api/Attendance/monthly-report",
     "HttpMethod": "GET",
@@ -268,6 +284,38 @@
         "Name": "classOid",
         "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.AttendanceController",
+    "Method": "StartAttendanceSession",
+    "RelativePath": "api/Attendance/start-session",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SchoolSystem.Application.Features.Attendance.DTOs.StartAttendanceSessionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.AttendanceController",
+    "Method": "SubmitAttendanceSession",
+    "RelativePath": "api/Attendance/submit-session",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SchoolSystem.Application.Features.Attendance.DTOs.SubmitAttendanceSessionDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -453,6 +501,22 @@
   },
   {
     "ContainingType": "SchoolSystem.Api.Controllers.ClassesController",
+    "Method": "GetClassStats",
+    "RelativePath": "api/Classes/{id}/stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.ClassesController",
     "Method": "GetRequestModel",
     "RelativePath": "api/Classes/Get",
     "HttpMethod": "POST",
@@ -465,6 +529,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.Api.Controllers.ClassesController",
+    "Method": "GetTeacherClasses",
+    "RelativePath": "api/Classes/teacher",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -1857,6 +1931,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "SchoolSystem.API.Controllers.StudentTimetableController",
+    "Method": "GetWeeklySchedule",
+    "RelativePath": "api/student/timetable/weekly",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "weekStartDate",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "SchoolSystem.API.Controllers.StudentsController",
     "Method": "GetAll",
     "RelativePath": "api/Students",
@@ -1952,6 +2042,43 @@
         "Name": "request",
         "Type": "SchoolSystem.Application.Features.Students.Queries.Get.GetStudentsQuery",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.API.Controllers.StudentsController",
+    "Method": "GetStudentSubjectsCount",
+    "RelativePath": "api/Students/subjects-count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "studentId",
+        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "classId",
+        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SchoolSystem.API.Controllers.StudentsController",
+    "Method": "GetAllStudentsWithSubjectsCount",
+    "RelativePath": "api/Students/subjects-countt",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "classId",
+        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
