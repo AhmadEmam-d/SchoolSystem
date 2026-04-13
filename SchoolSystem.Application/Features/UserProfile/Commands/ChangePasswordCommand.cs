@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/Commands/ChangePasswordCommand.cs
-using Azure;
+﻿using Azure;
 using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.UserProfile.DTOs;

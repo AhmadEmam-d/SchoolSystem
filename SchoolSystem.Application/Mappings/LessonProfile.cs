@@ -10,7 +10,6 @@ namespace SchoolSystem.Application.Mapping
     {
         public LessonProfile()
         {
-            // Create mappings
             CreateMap<CreateLessonDto, Lesson>()
                 .ForMember(dest => dest.Oid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -37,7 +36,6 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
-            // Update mappings
             CreateMap<UpdateLessonDto, Lesson>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
@@ -57,7 +55,6 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            // Response mappings
             CreateMap<Lesson, LessonResponseDto>()
                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class != null ? src.Class.Name : null))
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : null))

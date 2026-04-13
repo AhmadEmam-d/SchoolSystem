@@ -1,5 +1,4 @@
-﻿// Infrastructure/Services/HealthCheckService.cs
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using SchoolSystem.Application.Features.Settings.DTOs;
 using SchoolSystem.Application.Interfaces.Services;

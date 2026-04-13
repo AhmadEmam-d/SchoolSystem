@@ -1,5 +1,4 @@
-﻿// Application/Interfaces/Services/ISettingsServices.cs
-using SchoolSystem.Application.Features.Settings.DTOs;
+﻿using SchoolSystem.Application.Features.Settings.DTOs;
 using System;
 using System.Threading.Tasks;
 

@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/Handlers/GetUserProfileQueryHandler.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.UserProfile.DTOs;
 using SchoolSystem.Application.Features.UserProfile.Queries;

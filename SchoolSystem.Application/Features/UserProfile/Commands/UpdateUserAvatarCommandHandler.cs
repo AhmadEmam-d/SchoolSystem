@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/Handlers/UpdateUserAvatarCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.UserProfile.Commands;
 using SchoolSystem.Application.Interfaces.Services;

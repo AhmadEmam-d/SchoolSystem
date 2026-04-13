@@ -4,10 +4,10 @@ public class Notification : BaseEntity
 {
     public string Title { get; set; }
     public string Message { get; set; }
-    public string Type { get; set; } // Info, Success, Warning, Error
-    public string Priority { get; set; } // Low, Normal, High, Urgent
+    public string Type { get; set; }
+    public string Priority { get; set; } 
     public Guid? UserOid { get; set; }
-    public string TargetRole { get; set; } // Admin, Teacher, Student, Parent, All
+    public string TargetRole { get; set; } 
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime SentAt { get; set; }

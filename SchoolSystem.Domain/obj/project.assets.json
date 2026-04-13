@@ -4372,23 +4372,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\fagr\\.nuget\\packages\\": {},
+    "C:\\Users\\ALI\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
+      "projectUniqueName": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
       "projectName": "SchoolSystem.Domain",
-      "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
-      "packagesPath": "C:\\Users\\fagr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\obj\\",
+      "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
+      "packagesPath": "C:\\Users\\ALI\\.nuget\\packages\\",
+      "outputPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\fagr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ALI\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4406,6 +4406,9 @@
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1903"
+        ],
         "warnAsError": [
           "NU1605"
         ]

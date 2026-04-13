@@ -28,34 +28,51 @@ export function StudentLogin() {
     setError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-        email: email,
-        password: password,
-        role: 3
+      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          role: 3
+        })
       });
 
-      if (response.data.success) {
-        const { token, userId, fullName, role, redirectTo } = response.data.data;
-        
-        localStorage.setItem('token', token);
-        localStorage.setItem('userId', userId);
-        localStorage.setItem('userName', fullName);
-        localStorage.setItem('userRole', role);
-        
-        login('student', { userId, fullName, token });
-        navigate('/student/dashboard');
-      } else {
-        setError(response.data.messages?.AR || 'فشل تسجيل الدخول');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.errors?.[0] || 'Login failed');
       }
-    } catch (err) {
-      console.error('Login error:', err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.data?.errors) {
-        setError(err.response.data.errors[0]);
+
+      const data = await response.json();
+
+      if (data.success && data.data && data.data.token) {
+        const studentData = data.data;
+
+        localStorage.setItem('token', studentData.token);
+        localStorage.setItem('userId', studentData.userId);
+        localStorage.setItem('studentId', studentData.studentId);
+        localStorage.setItem('userName', studentData.fullName);
+        localStorage.setItem('userEmail', studentData.email);
+        localStorage.setItem('userRole', 'student');
+
+        login({
+          id: studentData.userId,
+          studentId: studentData.studentId,
+          name: studentData.fullName,
+          email: studentData.email,
+          token: studentData.token,
+          role: 'student'
+        });
+
+        setTimeout(() => {
+          navigate('/student/dashboard');
+        }, 100);
       } else {
-        setError('حدث خطأ في الاتصال بالخادم');
+        setError(data.errors?.[0] || 'Invalid email or password');
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }

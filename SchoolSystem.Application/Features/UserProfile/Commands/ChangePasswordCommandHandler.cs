@@ -1,5 +1,4 @@
-﻿// Application/Features/UserProfile/Handlers/ChangeUserPasswordCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Common;
 using SchoolSystem.Application.Features.UserProfile.Commands;
 using SchoolSystem.Application.Interfaces.Services;
@@ -62,7 +61,6 @@ namespace SchoolSystem.Application.Features.UserProfile.Handlers
                 };
             }
 
-            // استخدم الـ fully qualified name [citation:2][citation:5]
             bool passwordValid = BCrypt.Net.BCrypt.Verify(request.PasswordData.CurrentPassword, user.PasswordHash);
             if (!passwordValid)
             {

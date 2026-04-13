@@ -2,6 +2,22 @@
   "version": 3,
   "targets": {
     "net10.0": {
+      "AutoMapper/14.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Options": "8.0.0"
+        },
+        "compile": {
+          "lib/net8.0/AutoMapper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/AutoMapper.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Azure.Core/1.47.1": {
         "type": "package",
         "dependencies": {
@@ -1842,6 +1858,21 @@
     }
   },
   "libraries": {
+    "AutoMapper/14.0.0": {
+      "sha512": "OC+1neAPM4oCCqQj3g2GJ2shziNNhOkxmNB9cVS8jtx4JbgmRzLcUOxB9Tsz6cVPHugdkHgCaCrTjjSI0Z5sCQ==",
+      "type": "package",
+      "path": "automapper/14.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "automapper.14.0.0.nupkg.sha512",
+        "automapper.nuspec",
+        "icon.png",
+        "lib/net8.0/AutoMapper.dll",
+        "lib/net8.0/AutoMapper.xml"
+      ]
+    },
     "Azure.Core/1.47.1": {
       "sha512": "oPcncSsDHuxB8SC522z47xbp2+ttkcKv2YZ90KXhRKN0YQd2+7l1UURT9EBzUNEXtkLZUOAB5xbByMTrYRh3yA==",
       "type": "package",
@@ -4681,6 +4712,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "AutoMapper >= 14.0.0",
       "Microsoft.EntityFrameworkCore >= 10.0.0",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.0",
       "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.0",
@@ -4691,23 +4723,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\fagr\\.nuget\\packages\\": {},
+    "C:\\Users\\ALI\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
+      "projectUniqueName": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
       "projectName": "SchoolSystem.Persistence",
-      "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
-      "packagesPath": "C:\\Users\\fagr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\obj\\",
+      "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
+      "packagesPath": "C:\\Users\\ALI\\.nuget\\packages\\",
+      "outputPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\fagr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ALI\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4722,13 +4754,16 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
-              "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
+            "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
+              "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
             }
           }
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1903"
+        ],
         "warnAsError": [
           "NU1605"
         ]
@@ -4744,6 +4779,10 @@
       "net10.0": {
         "targetAlias": "net10.0",
         "dependencies": {
+          "AutoMapper": {
+            "target": "Package",
+            "version": "[14.0.0, )"
+          },
           "Microsoft.EntityFrameworkCore": {
             "target": "Package",
             "version": "[10.0.0, )"

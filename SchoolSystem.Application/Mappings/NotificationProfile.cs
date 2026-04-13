@@ -18,7 +18,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.IsDeleted, opt => opt.MapFrom(src => false));
         }
 
-        // ✅ جعل الدالة static
         private static string GetTimeAgo(DateTime dateTime)
         {
             var span = DateTime.UtcNow - dateTime;

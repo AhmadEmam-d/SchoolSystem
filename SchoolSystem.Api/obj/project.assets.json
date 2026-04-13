@@ -2,15 +2,15 @@
   "version": 3,
   "targets": {
     "net10.0": {
-      "AutoMapper/13.0.1": {
+      "AutoMapper/14.0.0": {
         "type": "package",
         "compile": {
-          "lib/net6.0/AutoMapper.dll": {
+          "lib/net8.0/AutoMapper.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/AutoMapper.dll": {
+          "lib/net8.0/AutoMapper.dll": {
             "related": ".xml"
           }
         }
@@ -73,6 +73,74 @@
         },
         "runtime": {
           "lib/net8.0/FluentValidation.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Google.Apis/1.69.0": {
+        "type": "package",
+        "dependencies": {
+          "Google.Apis.Core": "1.69.0"
+        },
+        "compile": {
+          "lib/net6.0/Google.Apis.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Google.Apis.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Google.Apis.Auth/1.69.0": {
+        "type": "package",
+        "dependencies": {
+          "Google.Apis": "1.69.0",
+          "Google.Apis.Core": "1.69.0",
+          "System.Management": "7.0.2"
+        },
+        "compile": {
+          "lib/net6.0/Google.Apis.Auth.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Google.Apis.Auth.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Google.Apis.Core/1.69.0": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "compile": {
+          "lib/net6.0/Google.Apis.Core.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Google.Apis.Core.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
+      "Google.GenAI/1.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Google.Apis.Auth": "1.69.0",
+          "Microsoft.Extensions.AI.Abstractions": "10.1.1",
+          "MimeTypes": "2.5.2"
+        },
+        "compile": {
+          "lib/net8.0/Google.GenAI.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Google.GenAI.dll": {
             "related": ".xml"
           }
         }
@@ -1032,6 +1100,19 @@
           "Microsoft.EntityFrameworkCore.Design": "10.0.0"
         }
       },
+      "Microsoft.Extensions.AI.Abstractions/10.1.1": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Extensions.ApiDescription.Server/6.0.5": {
         "type": "package",
         "build": {
@@ -1225,6 +1306,16 @@
           }
         }
       },
+      "MimeTypes/2.5.2": {
+        "type": "package",
+        "contentFiles": {
+          "contentFiles/any/any/_._": {
+            "buildAction": "None",
+            "codeLanguage": "any",
+            "copyToOutput": false
+          }
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -1243,7 +1334,7 @@
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
             "related": ".xml"
           }
         },
@@ -1338,7 +1429,7 @@
       "System.CodeDom/9.0.0": {
         "type": "package",
         "compile": {
-          "lib/net9.0/_._": {
+          "lib/net9.0/System.CodeDom.dll": {
             "related": ".xml"
           }
         },
@@ -1526,6 +1617,31 @@
           }
         }
       },
+      "System.Management/7.0.2": {
+        "type": "package",
+        "dependencies": {
+          "System.CodeDom": "7.0.0"
+        },
+        "compile": {
+          "lib/net7.0/System.Management.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net7.0/System.Management.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net7.0/System.Management.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      },
       "System.Memory.Data/8.0.1": {
         "type": "package",
         "compile": {
@@ -1657,7 +1773,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
-          "AutoMapper": "13.0.1",
+          "AutoMapper": "14.0.0",
           "BCrypt.Net-Next": "4.1.0",
           "FluentValidation": "12.1.1",
           "MediatR": "12.4.1",
@@ -1691,7 +1807,8 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
-          "AutoMapper": "13.0.1",
+          "AutoMapper": "14.0.0",
+          "Google.GenAI": "1.0.0",
           "MediatR": "12.4.1",
           "Microsoft.EntityFrameworkCore": "10.0.0",
           "Microsoft.EntityFrameworkCore.SqlServer": "10.0.0",
@@ -1708,6 +1825,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
+          "AutoMapper": "14.0.0",
           "Microsoft.EntityFrameworkCore": "10.0.0",
           "Microsoft.EntityFrameworkCore.SqlServer": "10.0.0",
           "SchoolSystem.Domain": "1.0.0"
@@ -1722,19 +1840,19 @@
     }
   },
   "libraries": {
-    "AutoMapper/13.0.1": {
-      "sha512": "/Fx1SbJ16qS7dU4i604Sle+U9VLX+WSNVJggk6MupKVkYvvBm4XqYaeFuf67diHefHKHs50uQIS2YEDFhPCakQ==",
+    "AutoMapper/14.0.0": {
+      "sha512": "OC+1neAPM4oCCqQj3g2GJ2shziNNhOkxmNB9cVS8jtx4JbgmRzLcUOxB9Tsz6cVPHugdkHgCaCrTjjSI0Z5sCQ==",
       "type": "package",
-      "path": "automapper/13.0.1",
+      "path": "automapper/14.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
-        "automapper.13.0.1.nupkg.sha512",
+        "automapper.14.0.0.nupkg.sha512",
         "automapper.nuspec",
         "icon.png",
-        "lib/net6.0/AutoMapper.dll",
-        "lib/net6.0/AutoMapper.xml"
+        "lib/net8.0/AutoMapper.dll",
+        "lib/net8.0/AutoMapper.xml"
       ]
     },
     "Azure.Core/1.47.1": {
@@ -1819,6 +1937,88 @@
         "fluentvalidation.nuspec",
         "lib/net8.0/FluentValidation.dll",
         "lib/net8.0/FluentValidation.xml"
+      ]
+    },
+    "Google.Apis/1.69.0": {
+      "sha512": "1TfjsXFejwIf7iWaE7A0FbnOEsk8FPlbdFAt1r+I8aSMQfLLdSVWCLdZz6TzuWVwoCGEuJUHTZ/FXdptdU3qWw==",
+      "type": "package",
+      "path": "google.apis/1.69.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "NuGetIcon.png",
+        "google.apis.1.69.0.nupkg.sha512",
+        "google.apis.nuspec",
+        "lib/net462/Google.Apis.dll",
+        "lib/net462/Google.Apis.pdb",
+        "lib/net462/Google.Apis.xml",
+        "lib/net6.0/Google.Apis.dll",
+        "lib/net6.0/Google.Apis.pdb",
+        "lib/net6.0/Google.Apis.xml",
+        "lib/netstandard2.0/Google.Apis.dll",
+        "lib/netstandard2.0/Google.Apis.pdb",
+        "lib/netstandard2.0/Google.Apis.xml"
+      ]
+    },
+    "Google.Apis.Auth/1.69.0": {
+      "sha512": "ar07yxn/s41jdqQ3sMh8EAehiSvXQ9yE1MS4McmZINeSWvolnLHmIZ9Yxj4tHVIYYz0c7H/lpToVqm7C2aYx9g==",
+      "type": "package",
+      "path": "google.apis.auth/1.69.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "NuGetIcon.png",
+        "google.apis.auth.1.69.0.nupkg.sha512",
+        "google.apis.auth.nuspec",
+        "lib/net462/Google.Apis.Auth.dll",
+        "lib/net462/Google.Apis.Auth.pdb",
+        "lib/net462/Google.Apis.Auth.xml",
+        "lib/net6.0/Google.Apis.Auth.dll",
+        "lib/net6.0/Google.Apis.Auth.pdb",
+        "lib/net6.0/Google.Apis.Auth.xml",
+        "lib/netstandard2.0/Google.Apis.Auth.dll",
+        "lib/netstandard2.0/Google.Apis.Auth.pdb",
+        "lib/netstandard2.0/Google.Apis.Auth.xml"
+      ]
+    },
+    "Google.Apis.Core/1.69.0": {
+      "sha512": "SXUcurNUPxYMtOnawvB2Av18VrPBC9W7So9q9ikmXIXLGiv4RX7Zbu4kc+8PbwTdd8wLt54r0PBGOT5RaKoTjQ==",
+      "type": "package",
+      "path": "google.apis.core/1.69.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "NuGetIcon.png",
+        "google.apis.core.1.69.0.nupkg.sha512",
+        "google.apis.core.nuspec",
+        "lib/net462/Google.Apis.Core.dll",
+        "lib/net462/Google.Apis.Core.pdb",
+        "lib/net462/Google.Apis.Core.xml",
+        "lib/net6.0/Google.Apis.Core.dll",
+        "lib/net6.0/Google.Apis.Core.pdb",
+        "lib/net6.0/Google.Apis.Core.xml",
+        "lib/netstandard2.0/Google.Apis.Core.dll",
+        "lib/netstandard2.0/Google.Apis.Core.pdb",
+        "lib/netstandard2.0/Google.Apis.Core.xml"
+      ]
+    },
+    "Google.GenAI/1.0.0": {
+      "sha512": "Vc8fKbaxn0zrr6Pws19R/qW13RTRwBYARA3bK1cSIaILRVuRvzFJXLioWf6BseQL2h4WNyouakf/1XBo+HghCg==",
+      "type": "package",
+      "path": "google.genai/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "google.genai.1.0.0.nupkg.sha512",
+        "google.genai.nuspec",
+        "lib/net8.0/Google.GenAI.dll",
+        "lib/net8.0/Google.GenAI.xml",
+        "lib/netstandard2.0/Google.GenAI.dll",
+        "lib/netstandard2.0/Google.GenAI.xml"
       ]
     },
     "Humanizer.Core/2.14.1": {
@@ -3301,6 +3501,29 @@
         "tools/net472/win-x86/ef.exe"
       ]
     },
+    "Microsoft.Extensions.AI.Abstractions/10.1.1": {
+      "sha512": "cgj8iHv4JwUpcPANZ0oLILz146Y1Oa+l280b1c1a3DjwZflH9nmYcrX952YUuqftz2sheAC2TPCGcEa6unKQgQ==",
+      "type": "package",
+      "path": "microsoft.extensions.ai.abstractions/10.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "README.md",
+        "lib/net10.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net10.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net462/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.AI.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.AI.Abstractions.xml",
+        "microsoft.extensions.ai.abstractions.10.1.1.nupkg.sha512",
+        "microsoft.extensions.ai.abstractions.nuspec"
+      ]
+    },
     "Microsoft.Extensions.ApiDescription.Server/6.0.5": {
       "sha512": "Ckb5EDBUNJdFWyajfXzUIMRkhf52fHZOQuuZg/oiu8y7zDCVwD0iHhew6MnThjHmevanpxL3f5ci2TtHQEN6bw==",
       "type": "package",
@@ -3802,6 +4025,24 @@
         "microsoft.sqlserver.server.nuspec"
       ]
     },
+    "MimeTypes/2.5.2": {
+      "sha512": "vm4xrNt+i6OVRQ8vhfCcmDIUg3qvjyCTkSTNVTDFohsG6CXEpMaVFkidECL6yRYpHDnz4TqXhDoEQAcnHCu/tw==",
+      "type": "package",
+      "path": "mimetypes/2.5.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "contentFiles/cs/net472/MimeTypes.cs.pp",
+        "contentFiles/cs/net5.0/MimeTypes.Nullable.cs.pp",
+        "contentFiles/cs/netcoreapp3.0/MimeTypes.Nullable.cs.pp",
+        "contentFiles/cs/netstandard2.0/MimeTypes.cs.pp",
+        "contentFiles/cs/netstandard2.1/MimeTypes.Nullable.cs.pp",
+        "docs/README.md",
+        "images/nuget-icon.png",
+        "mimetypes.2.5.2.nupkg.sha512",
+        "mimetypes.nuspec"
+      ]
+    },
     "Mono.TextTemplating/3.0.0": {
       "sha512": "YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
       "type": "package",
@@ -4289,6 +4530,34 @@
         "system.linq.dynamic.core.nuspec"
       ]
     },
+    "System.Management/7.0.2": {
+      "sha512": "/qEUN91mP/MUQmJnM5y5BdT7ZoPuVrtxnFlbJ8a3kBJGhe2wCzBfnPFtK2wTtEEcf3DMGR9J00GZZfg6HRI6yA==",
+      "type": "package",
+      "path": "system.management/7.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Management.targets",
+        "lib/net462/_._",
+        "lib/net6.0/System.Management.dll",
+        "lib/net6.0/System.Management.xml",
+        "lib/net7.0/System.Management.dll",
+        "lib/net7.0/System.Management.xml",
+        "lib/netstandard2.0/System.Management.dll",
+        "lib/netstandard2.0/System.Management.xml",
+        "runtimes/win/lib/net6.0/System.Management.dll",
+        "runtimes/win/lib/net6.0/System.Management.xml",
+        "runtimes/win/lib/net7.0/System.Management.dll",
+        "runtimes/win/lib/net7.0/System.Management.xml",
+        "system.management.7.0.2.nupkg.sha512",
+        "system.management.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.Memory.Data/8.0.1": {
       "sha512": "BVYuec3jV23EMRDeR7Dr1/qhx7369dZzJ9IWy2xylvb4YfXsrUxspWc4UWYid/tj4zZK58uGZqn2WQiaDMhmAg==",
       "type": "package",
@@ -4515,6 +4784,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "AutoMapper >= 14.0.0",
       "BCrypt.Net-Next >= 4.1.0",
       "MediatR >= 12.4.1",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 10.0.0-preview.2.25164.1",
@@ -4530,23 +4800,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\fagr\\.nuget\\packages\\": {},
+    "C:\\Users\\ALI\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Api\\SchoolSystem.Api.csproj",
+      "projectUniqueName": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Api\\SchoolSystem.Api.csproj",
       "projectName": "SchoolSystem.Api",
-      "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Api\\SchoolSystem.Api.csproj",
-      "packagesPath": "C:\\Users\\fagr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Api\\obj\\",
+      "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Api\\SchoolSystem.Api.csproj",
+      "packagesPath": "C:\\Users\\ALI\\.nuget\\packages\\",
+      "outputPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\fagr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\ALI\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -4561,22 +4831,25 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj": {
-              "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj"
+            "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj": {
+              "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Application\\SchoolSystem.Application.csproj"
             },
-            "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
-              "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
+            "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
+              "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
             },
-            "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Infrastructure\\SchoolSystem.Infrastructure.csproj": {
-              "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Infrastructure\\SchoolSystem.Infrastructure.csproj"
+            "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Infrastructure\\SchoolSystem.Infrastructure.csproj": {
+              "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Infrastructure\\SchoolSystem.Infrastructure.csproj"
             },
-            "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {
-              "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj"
+            "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {
+              "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj"
             }
           }
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1903"
+        ],
         "warnAsError": [
           "NU1605"
         ]
@@ -4592,6 +4865,10 @@
       "net10.0": {
         "targetAlias": "net10.0",
         "dependencies": {
+          "AutoMapper": {
+            "target": "Package",
+            "version": "[14.0.0, )"
+          },
           "BCrypt.Net-Next": {
             "target": "Package",
             "version": "[4.1.0, )"
@@ -5065,17 +5342,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Package 'AutoMapper' 13.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-rvv3-g6hj-g44x",
-      "libraryId": "AutoMapper",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }

@@ -38,7 +38,6 @@ namespace SchoolSystem.Application.Features.Timetable.Commands.Update
             if (timetable == null)
                 throw new Exception($"Timetable with ID {request.Dto.Oid} not found");
 
-            // Update properties if provided
             if (request.Dto.ClassOid.HasValue)
             {
                 var classEntity = await _classRepo.GetByOidAsync(request.Dto.ClassOid.Value);

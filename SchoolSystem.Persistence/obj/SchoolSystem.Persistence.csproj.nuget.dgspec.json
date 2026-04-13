@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {}
+    "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {}
   },
   "projects": {
-    "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
+    "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
+        "projectUniqueName": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
         "projectName": "SchoolSystem.Domain",
-        "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
-        "packagesPath": "C:\\Users\\fagr\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\obj\\",
+        "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj",
+        "packagesPath": "C:\\Users\\ALI\\.nuget\\packages\\",
+        "outputPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\fagr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\ALI\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -35,6 +35,9 @@
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1903"
+          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -365,20 +368,20 @@
         }
       }
     },
-    "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {
+    "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
+        "projectUniqueName": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
         "projectName": "SchoolSystem.Persistence",
-        "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
-        "packagesPath": "C:\\Users\\fagr\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Persistence\\obj\\",
+        "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\SchoolSystem.Persistence.csproj",
+        "packagesPath": "C:\\Users\\ALI\\.nuget\\packages\\",
+        "outputPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Persistence\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\fagr\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\ALI\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -393,13 +396,16 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
-                "projectPath": "C:\\Users\\fagr\\source\\repos\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
+              "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj": {
+                "projectPath": "D:\\Gradution Project\\SchoolSystem\\SchoolSystem.Domain\\SchoolSystem.Domain.csproj"
               }
             }
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1903"
+          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -415,6 +421,10 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "AutoMapper": {
+              "target": "Package",
+              "version": "[14.0.0, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[10.0.0, )"

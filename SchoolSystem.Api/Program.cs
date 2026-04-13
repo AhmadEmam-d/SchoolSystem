@@ -32,7 +32,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // 🔹 REPOSITORIES
 // ===========================
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
+builder.Services.AddScoped<IGenAIService, OpenRouterAIService>();
 // ===========================
 // 🔹 AUTOMAPPER
 // ===========================

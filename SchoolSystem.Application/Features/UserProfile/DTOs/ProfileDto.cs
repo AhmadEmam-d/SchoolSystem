@@ -1,5 +1,4 @@
-﻿// Application/Features/Profile/DTOs/UserProfileDto.cs (غير اسم الملف)
-namespace SchoolSystem.Application.Features.UserProfile.DTOs
+﻿namespace SchoolSystem.Application.Features.UserProfile.DTOs
 {
     public class UserProfileDto
     {
