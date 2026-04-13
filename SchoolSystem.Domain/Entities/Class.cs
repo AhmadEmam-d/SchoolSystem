@@ -18,6 +18,7 @@ namespace SchoolSystem.Domain.Entities
         public ICollection<Student> Students { get; set; } = new List<Student>();
         public ICollection<Section> Sections { get; set; } = new List<Section>();
         public ICollection<SchoolSystem.Domain.Entities.Timetable> Timetables { get; set; } = new List<SchoolSystem.Domain.Entities.Timetable>();
+        public ICollection<Homework> Homeworks { get; set; } = new List<Homework>();
     }
 
 
