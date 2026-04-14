@@ -23,7 +23,7 @@ public class CreateHomeworkCommandHandler : IRequestHandler<CreateHomeworkComman
         var homework = _mapper.Map<Homework>(request.HomeworkDto);
 
         // TeacherId بيجي من Command مش من DTO
-        homework.TeacherId = request.TeacherId;
+        homework.TeacherOid = request.TeacherId;
 
         await _homeworkRepo.AddAsync(homework);
         return true;

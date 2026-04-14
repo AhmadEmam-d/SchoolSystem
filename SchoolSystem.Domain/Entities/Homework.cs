@@ -1,4 +1,5 @@
 ﻿using SchoolSystem.Domain.Common;
+using SchoolSystem.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,15 +20,17 @@ namespace SchoolSystem.Domain.Entities
         public string SubmissionType { get; set; } = "File";
 
         // العلاقات (Foreign Keys)
-        public Guid TeacherId { get; set; }
+        public HomeworkStatus Status { get; set; } = HomeworkStatus.Active;
+        public Guid TeacherOid { get; set; }
         public Teacher Teacher { get; set; } = null!;
 
-        public Guid ClassId { get; set; }
+        public Guid ClassOid { get; set; }
         public Class Class { get; set; } = null!;
 
-        public Guid SubjectId { get; set; }
+        public Guid SubjectOid { get; set; }
         public Subject Subject { get; set; } = null!;
 
         public ICollection<HomeworkSubmission> Submissions { get; set; } = new List<HomeworkSubmission>();
+        public ICollection<HomeworkAttachment> Attachments { get; set; } = new List<HomeworkAttachment>();
     }
 }

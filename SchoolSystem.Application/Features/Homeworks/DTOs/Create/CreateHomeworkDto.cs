@@ -17,6 +17,6 @@ namespace SchoolSystem.Application.Features.Homeworks.DTOs.Create
         public bool NotifyParents { get; set; }
         public Guid ClassId { get; set; }
         public Guid SubjectId { get; set; }
-    
+        public List<string> AttachmentUrls { get; set; } = new List<string>();
+    }   
 }
-    }

@@ -40,6 +40,9 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<EmailConfiguration> EmailConfigurations { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<Homework> Homeworks { get; set; }
+        public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
+        public DbSet<HomeworkAttachment> HomeworkAttachments { get; set; }
         public DbSet<LessonObjective> LessonObjectives { get; set; }
         public DbSet<LessonMaterial> LessonMaterials { get; set; }
         public DbSet<LessonHomework> LessonHomeworks { get; set; }
@@ -581,6 +584,59 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasIndex(e => e.Category);
                 entity.HasIndex(e => e.IsPublished);
                 entity.HasIndex(e => e.ViewCount);
+            });
+
+
+
+            // Homework
+            modelBuilder.Entity<Homework>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Status).HasConversion<string>();
+                entity.Property(e => e.TotalMarks).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Teacher)
+                      .WithMany()
+                      .HasForeignKey(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // HomeworkSubmission
+            modelBuilder.Entity<HomeworkSubmission>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.Property(e => e.Grade).HasPrecision(18, 2);
+
+                entity.HasOne(e => e.Homework)
+                      .WithMany(h => h.Submissions)
+                      .HasForeignKey(e => e.HomeworkOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Student)
+                      .WithMany()
+                      .HasForeignKey(e => e.StudentOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // HomeworkAttachment
+            modelBuilder.Entity<HomeworkAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.HasOne(e => e.Homework)
+                      .WithMany(h => h.Attachments)
+                      .HasForeignKey(e => e.HomeworkOid)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

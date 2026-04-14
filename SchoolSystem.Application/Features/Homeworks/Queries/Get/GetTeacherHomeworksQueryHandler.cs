@@ -25,11 +25,12 @@ public class GetTeacherHomeworksQueryHandler : IRequestHandler<GetTeacherHomewor
     {
         var homeworks = await _homeworkRepo
         .GetAllQueryable()
-        .Where(h => h.TeacherId == request.TeacherId)
+        .Where(h => h.TeacherOid == request.TeacherId)
         .Include(h => h.Class)
         .ThenInclude(c => c.Students) 
         .Include(h => h.Subject)          
         .Include(h => h.Submissions)
+        .Include(h => h.Attachments)
         .ToListAsync();
 
         var result = _mapper.Map<List<HomeworkListDto>>(homeworks);

@@ -7,10 +7,10 @@ namespace SchoolSystem.Domain.Entities
 {
     public class HomeworkSubmission : BaseEntity
     {
-        public Guid HomeworkId { get; set; }
+        public Guid HomeworkOid { get; set; }
         public Homework Homework { get; set; } = null!;
 
-        public Guid StudentId { get; set; }
+        public Guid StudentOid { get; set; }
         public Student Student { get; set; } = null!;
 
         public string? Content { get; set; }
@@ -18,5 +18,8 @@ namespace SchoolSystem.Domain.Entities
         public decimal? Grade { get; set; }
         public string Status { get; set; } = "Submitted";
         public bool IsGraded { get; set; }
+        public string? Feedback { get; set; }  // Teacher feedback on submission
+        public DateTime? GradedAt { get; set; } // When it was graded
+
     }
 }
