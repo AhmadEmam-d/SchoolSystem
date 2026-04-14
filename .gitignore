@@ -1,8 +1,8 @@
-".vs/" 
-"bin/" 
-.vs/ 
-bin/ 
-obj/ 
-.vs/ 
-bin/ 
-obj/ 
+.vs/
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.user
+*.suo
