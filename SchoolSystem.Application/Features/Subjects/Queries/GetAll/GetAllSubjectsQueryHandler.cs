@@ -6,6 +6,7 @@ using SchoolSystem.Application.Features.Subjects.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +26,8 @@ public class GetAllSubjectsQueryHandler : IRequestHandler<GetAllSubjectsQuery, L
         var subjects = await _repo
             .GetAllQueryable()
             .Include(s => s.TeacherSubjects)
-            .ThenInclude(ts => ts.Teacher)
+                .ThenInclude(ts => ts.Teacher)
+            .Where(s => !s.IsDeleted)
             .ToListAsync(cancellationToken);
 
         return _mapper.Map<List<SubjectResponseDto>>(subjects);

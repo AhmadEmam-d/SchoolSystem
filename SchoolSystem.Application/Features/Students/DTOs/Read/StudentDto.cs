@@ -44,4 +44,12 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
         public string MotherName { get; set; }
         public string Phone { get; set; }
     }
+    public class StudentSubjectsCountDto
+    {
+        public Guid StudentId { get; set; }
+        public string StudentName { get; set; }
+        public string ClassName { get; set; }
+        public int SubjectsCount { get; set; }
+        public List<string> SubjectsNames { get; set; }
+    }
 }

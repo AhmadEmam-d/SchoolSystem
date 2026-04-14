@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Classes.DTOs.Read;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SchoolSystem.Application.Features.Classes.Queries.GetAll
 {
@@ -23,9 +21,13 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetAll
 
         public async Task<IEnumerable<ClassResponseDto>> Handle(GetAllClassesQuery request, CancellationToken cancellationToken)
         {
-            var result = await _repo.GetAllAsync();
-            return _mapper.Map<IEnumerable<ClassResponseDto>>(result);
+            var classes = await _repo.GetAllQueryable()
+                .Include(c => c.Students)
+                .Include(c => c.Sections)
+                .Where(c => !c.IsDeleted)
+                .ToListAsync(cancellationToken);
+
+            return _mapper.Map<IEnumerable<ClassResponseDto>>(classes);
         }
     }
-
 }

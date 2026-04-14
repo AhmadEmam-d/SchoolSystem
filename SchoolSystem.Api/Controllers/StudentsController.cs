@@ -8,6 +8,8 @@ using SchoolSystem.Application.Features.Students.Commands.Update;
 using SchoolSystem.Application.Features.Students.DTOs.Create;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
 using SchoolSystem.Application.Features.Students.Queries.Get;
+using SchoolSystem.Application.Features.Students.Queries.GetAllStudentsWithSubjectsCount;
+using SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsCount;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -162,6 +164,43 @@ namespace SchoolSystem.API.Controllers
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "StudentDeletionFailed", _messageService,
                     new List<string> { "An error occurred while deleting the student." }
+                ));
+            }
+        }
+        [HttpGet("subjects-countt")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> GetAllStudentsWithSubjectsCount([FromQuery] Guid? classId)
+        {
+            try
+            {
+                var query = new GetAllStudentsWithSubjectsCountQuery { ClassId = classId };
+                var result = await _mediator.Send(query);
+                return Ok(ApiResponseFactory.Success(result, "StudentsSubjectsCountFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentsSubjectsCountFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        [HttpGet("subjects-count")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> GetStudentSubjectsCount([FromQuery] Guid? studentId, [FromQuery] Guid? classId)
+        {
+            try
+            {
+                var query = new GetStudentSubjectsCountQuery(studentId, classId);
+                var result = await _mediator.Send(query);
+                return Ok(ApiResponseFactory.Success(result, "StudentSubjectsCountFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentSubjectsCountFetchFailed",
+                    _messageService,
+                    new List<string> { ex.Message }
                 ));
             }
         }

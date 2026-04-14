@@ -11,7 +11,8 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Read
         public string Name { get; set; }
         public string Level { get; set; }
         public DateTime CreatedAt { get; set; }
-       
+        public int StudentsCount { get; set; }     
+        public int SectionsCount { get; set; }
 
     }
 

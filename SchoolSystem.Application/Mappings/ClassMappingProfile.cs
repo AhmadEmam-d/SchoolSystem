@@ -15,7 +15,11 @@ namespace SchoolSystem.Application.Mappings
         {
             CreateMap<CreateClassDto, Class>();
             CreateMap<UpdateClassDto, Class>();
-            CreateMap<Class, ClassResponseDto>();
+            CreateMap<Class, ClassResponseDto>()
+                .ForMember(dest => dest.StudentsCount,
+                    opt => opt.MapFrom(src => src.Students != null ? src.Students.Count(s => !s.IsDeleted) : 0))
+                .ForMember(dest => dest.SectionsCount,
+                    opt => opt.MapFrom(src => src.Sections != null ? src.Sections.Count(s => !s.IsDeleted) : 0));
         }
     }
 
