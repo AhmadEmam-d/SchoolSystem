@@ -176,7 +176,7 @@ namespace SchoolSystem.Api.Controllers
             }
         }
         [HttpGet("teacher")]
-        [Authorize(Roles = "Teacher")]
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetTeacherClasses()
         {
             try
