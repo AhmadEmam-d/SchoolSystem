@@ -12,8 +12,8 @@ using SchoolSystem.Persistence.Contexts;
 namespace SchoolSystem.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260414165159_Async")]
-    partial class Async
+    [Migration("20260415145822_AddAllTables")]
+    partial class AddAllTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -561,6 +561,67 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Attendances");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.AttendanceSession", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ClassOid1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CorrectNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QrCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("ClassOid1");
+
+                    b.HasIndex("TeacherId");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("AttendanceSessions");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -796,10 +857,10 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<bool>("AllowLateSubmissions")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("ClassOid")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime>("AssignedDate")
+                        .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("ClassOid1")
+                    b.Property<Guid>("ClassOid")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -807,13 +868,15 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Instructions")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -821,26 +884,24 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<bool>("NotifyParents")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("SubjectOid")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SubmissionType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<Guid>("TeacherOid")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TeacherOid1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalMarks")
                         .HasPrecision(18, 2)
@@ -853,13 +914,13 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.HasIndex("ClassOid");
 
-                    b.HasIndex("ClassOid1");
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("SubjectOid");
 
                     b.HasIndex("TeacherOid");
-
-                    b.HasIndex("TeacherOid1");
 
                     b.ToTable("Homeworks");
                 });
@@ -875,15 +936,21 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("FileType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid>("HomeworkOid")
                         .HasColumnType("uniqueidentifier");
@@ -907,14 +974,20 @@ namespace SchoolSystem.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Feedback")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<decimal?>("Grade")
                         .HasPrecision(18, 2)
@@ -929,20 +1002,13 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsGraded")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("StudentOid")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("StudentOid1")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("SubmissionDate")
+                    b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -952,9 +1018,11 @@ namespace SchoolSystem.Persistence.Migrations
 
                     b.HasIndex("HomeworkOid");
 
+                    b.HasIndex("Status");
+
                     b.HasIndex("StudentOid");
 
-                    b.HasIndex("StudentOid1");
+                    b.HasIndex("SubmittedAt");
 
                     b.ToTable("HomeworkSubmissions");
                 });
@@ -2017,6 +2085,33 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.AttendanceSession", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", null)
+                        .WithMany("AttendanceSessions")
+                        .HasForeignKey("ClassOid1");
+
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Teacher", null)
+                        .WithMany("AttendanceSessions")
+                        .HasForeignKey("TeacherOid");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
                 {
                     b.HasOne("Teacher", "Teacher")
@@ -2029,14 +2124,10 @@ namespace SchoolSystem.Persistence.Migrations
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
-                        .WithMany()
+                        .WithMany("Homeworks")
                         .HasForeignKey("ClassOid")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("SchoolSystem.Domain.Entities.Class", null)
-                        .WithMany("Homeworks")
-                        .HasForeignKey("ClassOid1");
 
                     b.HasOne("Subject", "Subject")
                         .WithMany()
@@ -2045,14 +2136,10 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("Teacher", "Teacher")
-                        .WithMany()
+                        .WithMany("Homeworks")
                         .HasForeignKey("TeacherOid")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Teacher", null)
-                        .WithMany("Homeworks")
-                        .HasForeignKey("TeacherOid1");
 
                     b.Navigation("Class");
 
@@ -2081,14 +2168,10 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
-                        .WithMany()
+                        .WithMany("Submissions")
                         .HasForeignKey("StudentOid")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("SchoolSystem.Domain.Entities.Student", null)
-                        .WithMany("Submissions")
-                        .HasForeignKey("StudentOid1");
 
                     b.Navigation("Homework");
 
@@ -2340,6 +2423,8 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
                 {
+                    b.Navigation("AttendanceSessions");
+
                     b.Navigation("Homeworks");
 
                     b.Navigation("Sections");
@@ -2407,6 +2492,8 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("Teacher", b =>
                 {
+                    b.Navigation("AttendanceSessions");
+
                     b.Navigation("Homeworks");
 
                     b.Navigation("Lessons");

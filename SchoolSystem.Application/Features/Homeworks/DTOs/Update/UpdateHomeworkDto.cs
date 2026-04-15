@@ -1,4 +1,5 @@
-﻿namespace SchoolSystem.Application.Features.Homeworks.DTOs.Update
+﻿// Application/Features/Homeworks/DTOs/Update/UpdateHomeworkDto.cs
+namespace SchoolSystem.Application.Features.Homeworks.DTOs.Update
 {
     public class UpdateHomeworkDto
     {
@@ -20,8 +21,9 @@
     {
         public Guid? Oid { get; set; }
         public string FileName { get; set; } = string.Empty;
-        public string FilePath { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
         public string FileType { get; set; } = string.Empty;
+        public long FileSize { get; set; }
         public bool IsDeleted { get; set; }
     }
 }

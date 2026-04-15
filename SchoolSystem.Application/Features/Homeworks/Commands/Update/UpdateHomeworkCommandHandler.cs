@@ -1,13 +1,13 @@
-﻿using AutoMapper;
+﻿// Application/Features/Homeworks/Commands/Update/UpdateHomeworkCommandHandler.cs
+using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using SchoolSystem.Application.Features.Homeworks.DTOs.Response;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 
 namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
 {
-    public class UpdateHomeworkCommandHandler : IRequestHandler<UpdateHomeworkCommand, HomeworkDetailResponseDto>
+    public class UpdateHomeworkCommandHandler : IRequestHandler<UpdateHomeworkCommand, bool>
     {
         private readonly IGenericRepository<Homework> _homeworkRepo;
         private readonly IGenericRepository<HomeworkAttachment> _attachmentRepo;
@@ -23,30 +23,31 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
             _mapper = mapper;
         }
 
-        public async Task<HomeworkDetailResponseDto> Handle(UpdateHomeworkCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(UpdateHomeworkCommand request, CancellationToken cancellationToken)
         {
             var homework = await _homeworkRepo
                 .GetAllQueryable()
-                .Include(h => h.Class)
-                .ThenInclude(c => c.Students)
-                .Include(h => h.Subject)
-                .Include(h => h.Teacher)
-                .ThenInclude(t => t.User)
-                .Include(h => h.Submissions)
                 .Include(h => h.Attachments)
-                .FirstOrDefaultAsync(h => h.Oid == request.Oid && !h.IsDeleted, cancellationToken);
+                .FirstOrDefaultAsync(h => h.Oid == request.Id && !h.IsDeleted, cancellationToken);
 
             if (homework == null)
                 throw new Exception("Homework not found");
 
-            // Update basic info
-            _mapper.Map(request.Homework, homework);
+            homework.Title = request.Dto.Title;
+            homework.Description = request.Dto.Description;
+            homework.Instructions = request.Dto.Instructions;
+            homework.DueDate = request.Dto.DueDate;
+            homework.TotalMarks = request.Dto.TotalMarks;
+            homework.SubmissionType = request.Dto.SubmissionType;
+            homework.AllowLateSubmissions = request.Dto.AllowLateSubmissions;
+            homework.NotifyParents = request.Dto.NotifyParents;
+            homework.ClassOid = request.Dto.ClassId;
+            homework.SubjectOid = request.Dto.SubjectId;
             homework.UpdatedAt = DateTime.UtcNow;
 
             await _homeworkRepo.UpdateAsync(homework);
 
-            // Update attachments
-            foreach (var attachmentDto in request.Homework.Attachments)
+            foreach (var attachmentDto in request.Dto.Attachments)
             {
                 if (attachmentDto.IsDeleted && attachmentDto.Oid.HasValue)
                 {
@@ -60,8 +61,9 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
                     if (attachment != null)
                     {
                         attachment.FileName = attachmentDto.FileName;
-                        attachment.FilePath = attachmentDto.FilePath;
+                        attachment.FileUrl = attachmentDto.FileUrl;
                         attachment.FileType = attachmentDto.FileType;
+                        attachment.FileSize = attachmentDto.FileSize;
                         attachment.UpdatedAt = DateTime.UtcNow;
                         await _attachmentRepo.UpdateAsync(attachment);
                     }
@@ -72,8 +74,9 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
                     {
                         Oid = Guid.NewGuid(),
                         FileName = attachmentDto.FileName,
-                        FilePath = attachmentDto.FilePath,
+                        FileUrl = attachmentDto.FileUrl,
                         FileType = attachmentDto.FileType,
+                        FileSize = attachmentDto.FileSize,
                         HomeworkOid = homework.Oid,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -81,7 +84,7 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
                 }
             }
 
-            return _mapper.Map<HomeworkDetailResponseDto>(homework);
+            return true;
         }
     }
 }

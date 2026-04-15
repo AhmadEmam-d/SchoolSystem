@@ -1,6 +1,17 @@
 ﻿using MediatR;
-using SchoolSystem.Application.Features.Homeworks.DTOs.Create;
+using SchoolSystem.Application.Features.Homeworks.DTOs;
 
-namespace SchoolSystem.Application.Features.Homeworks.Commands.Create;
+namespace SchoolSystem.Application.Features.Homeworks.Commands.Create
+{
+    public class CreateHomeworkCommand : IRequest<Guid>
+    {
+        public CreateHomeworkDto Dto { get; set; }
+        public Guid TeacherId { get; set; }
 
-public record CreateHomeworkCommand(CreateHomeworksDto HomeworkDto, Guid TeacherId) : IRequest<bool>;
+        public CreateHomeworkCommand(CreateHomeworkDto dto, Guid teacherId)
+        {
+            Dto = dto;
+            TeacherId = teacherId;
+        }
+    }
+}

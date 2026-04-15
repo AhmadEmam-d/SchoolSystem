@@ -1,15 +1,16 @@
-﻿using MediatR;
-using SchoolSystem.Application.Features.Homeworks.DTOs.Response;
+﻿// Application/Features/Homeworks/Queries/GetById/GetHomeworkByIdQuery.cs
+using MediatR;
+using SchoolSystem.Application.Features.Homeworks.DTOs;
 
-namespace SchoolSystem.Application.Features.Homeworks.Queries.GetByOid
+namespace SchoolSystem.Application.Features.Homeworks.Queries.GetById
 {
-    public class GetHomeworkByOidQuery : IRequest<HomeworkDetailResponseDto>
+    public class GetHomeworkByIdQuery : IRequest<HomeworkDetailResponseDto>
     {
-        public Guid Oid { get; set; }
+        public Guid Id { get; set; }
 
-        public GetHomeworkByOidQuery(Guid oid)
+        public GetHomeworkByIdQuery(Guid id)
         {
-            Oid = oid;
+            Id = id;
         }
     }
 }

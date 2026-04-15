@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SchoolSystem.Application.Features.Homeworks.DTOs.Create
+﻿namespace SchoolSystem.Application.Features.Homeworks.DTOs
 {
-    public class CreateHomeworksDto
+    public class CreateHomeworkDto
     {
-          
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string? Instructions { get; set; }
@@ -17,6 +12,14 @@ namespace SchoolSystem.Application.Features.Homeworks.DTOs.Create
         public bool NotifyParents { get; set; }
         public Guid ClassId { get; set; }
         public Guid SubjectId { get; set; }
-        public List<string> AttachmentUrls { get; set; } = new List<string>();
-    }   
+        public List<HomeworkAttachmentDto> Attachments { get; set; } = new();
+    }
+
+    public class HomeworkAttachmentDto
+    {
+        public string FileName { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty;
+        public long FileSize { get; set; }
+    }
 }

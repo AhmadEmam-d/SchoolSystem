@@ -48,7 +48,9 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<FAQ> FAQs { get; set; }
         public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles { get; set; }
         public DbSet<AttendanceSession> AttendanceSessions { get; set; }
-
+        public DbSet<Homework> Homeworks { get; set; }
+        public DbSet<HomeworkAttachment> HomeworkAttachments { get; set; }
+        public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -599,6 +601,117 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasOne(e => e.Teacher)
                       .WithMany()
                       .HasForeignKey(e => e.TeacherId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            // ===========================
+            // Homework Configuration
+            // ===========================
+            modelBuilder.Entity<Homework>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.Description)
+                      .IsRequired()
+                      .HasMaxLength(2000);
+
+                entity.Property(e => e.Instructions)
+                      .HasMaxLength(2000);
+
+                entity.Property(e => e.TotalMarks)
+                      .HasPrecision(18, 2);
+
+                entity.Property(e => e.SubmissionType)
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Status)
+                      .HasConversion<int>();
+
+                entity.HasIndex(e => e.DueDate);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.TeacherOid);
+                entity.HasIndex(e => e.ClassOid);
+                entity.HasIndex(e => e.SubjectOid);
+
+                // Relationships
+                entity.HasOne(e => e.Teacher)
+                      .WithMany(t => t.Homeworks)
+                      .HasForeignKey(e => e.TeacherOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany(c => c.Homeworks)
+                      .HasForeignKey(e => e.ClassOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Subject)
+                      .WithMany()
+                      .HasForeignKey(e => e.SubjectOid)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ===========================
+            // HomeworkAttachment Configuration
+            // ===========================
+            modelBuilder.Entity<HomeworkAttachment>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.FileName)
+                      .IsRequired()
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.FileUrl)
+                      .IsRequired()
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FileType)
+                      .HasMaxLength(50);
+
+                entity.HasOne(e => e.Homework)
+                      .WithMany(h => h.Attachments)
+                      .HasForeignKey(e => e.HomeworkOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ===========================
+            // HomeworkSubmission Configuration
+            // ===========================
+            modelBuilder.Entity<HomeworkSubmission>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+
+                entity.Property(e => e.Content)
+                      .HasMaxLength(4000);
+
+                entity.Property(e => e.AttachmentUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.Feedback)
+                      .HasMaxLength(1000);
+
+                entity.Property(e => e.Status)
+                      .HasConversion<int>();
+
+                entity.Property(e => e.Grade)
+                      .HasPrecision(18, 2);
+
+                entity.HasIndex(e => e.HomeworkOid);
+                entity.HasIndex(e => e.StudentOid);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.SubmittedAt);
+
+                entity.HasOne(e => e.Homework)
+                      .WithMany(h => h.Submissions)
+                      .HasForeignKey(e => e.HomeworkOid)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Student)
+                      .WithMany(s => s.Submissions)
+                      .HasForeignKey(e => e.StudentOid)
                       .OnDelete(DeleteBehavior.Restrict);
             });
         }

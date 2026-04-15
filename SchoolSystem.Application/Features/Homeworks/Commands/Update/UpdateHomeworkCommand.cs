@@ -1,18 +1,18 @@
-﻿using MediatR;
-using SchoolSystem.Application.Features.Homeworks.DTOs.Response;
+﻿// Application/Features/Homeworks/Commands/Update/UpdateHomeworkCommand.cs
+using MediatR;
 using SchoolSystem.Application.Features.Homeworks.DTOs.Update;
 
 namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
 {
-    public class UpdateHomeworkCommand : IRequest<HomeworkDetailResponseDto>
+    public class UpdateHomeworkCommand : IRequest<bool>
     {
-        public Guid Oid { get; set; }
-        public UpdateHomeworkDto Homework { get; set; }
+        public Guid Id { get; set; }
+        public UpdateHomeworkDto Dto { get; set; }
 
-        public UpdateHomeworkCommand(Guid oid, UpdateHomeworkDto homework)
+        public UpdateHomeworkCommand(Guid id, UpdateHomeworkDto dto)
         {
-            Oid = oid;
-            Homework = homework;
+            Id = id;
+            Dto = dto;
         }
     }
 }

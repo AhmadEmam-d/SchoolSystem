@@ -1,8 +1,15 @@
 ﻿using MediatR;
-using SchoolSystem.Application.Features.Homeworks.DTOs.Get;
+using SchoolSystem.Application.Features.Homeworks.DTOs;
 
-namespace SchoolSystem.Application.Features.Homeworks.Queries.Get
+namespace SchoolSystem.Application.Features.Homeworks.Queries.GetTeacherHomeworks
 {
-    public record GetTeacherHomeworksQuery(Guid TeacherId)
-        : IRequest<List<HomeworkListDto>>;
+    public class GetTeacherHomeworksQuery : IRequest<List<HomeworkListResponseDto>>
+    {
+        public Guid TeacherId { get; set; }
+
+        public GetTeacherHomeworksQuery(Guid teacherId)
+        {
+            TeacherId = teacherId;
+        }
+    }
 }
