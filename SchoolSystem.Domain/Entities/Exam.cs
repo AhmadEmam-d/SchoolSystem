@@ -7,6 +7,8 @@ public class Exam : BaseEntity
     public string Name { get; set; }
     public string Description { get; set; }
     public ExamType Type { get; set; }
+    public Guid TeacherOid { get; set; }  
+    public Teacher Teacher { get; set; }
     public Guid SubjectOid { get; set; }
     public Subject Subject { get; set; }
     public Guid ClassOid { get; set; }

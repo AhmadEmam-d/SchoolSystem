@@ -5,5 +5,6 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
 {
     public class GetExamsSummaryQuery : IRequest<ExamsSummaryDto>
     {
+        public Guid? TeacherId { get; set; }
     }
 }

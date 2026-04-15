@@ -251,7 +251,10 @@ namespace SchoolSystem.Persistence.Contexts
                       .WithMany()
                       .HasForeignKey(e => e.ClassOid)
                       .OnDelete(DeleteBehavior.Restrict);
-
+                entity.HasOne(e => e.Teacher)
+                     .WithMany(t => t.Exams)
+                     .HasForeignKey(e => e.TeacherOid)
+                     .OnDelete(DeleteBehavior.Restrict);
                 entity.Property(e => e.Type).HasConversion<int>();
                 entity.Property(e => e.Status).HasConversion<int>();
             });
