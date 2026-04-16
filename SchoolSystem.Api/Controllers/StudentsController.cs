@@ -8,9 +8,13 @@ using SchoolSystem.Application.Features.Students.Commands.Update;
 using SchoolSystem.Application.Features.Students.DTOs.Create;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
 using SchoolSystem.Application.Features.Students.Queries.Get;
+using SchoolSystem.Application.Features.Students.Queries.GetAllStudentsWithSubjectsCount;
+using SchoolSystem.Application.Features.Students.Queries.GetMySubjects;
+using SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsCount;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.API.Controllers
@@ -165,5 +169,75 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
+        [HttpGet("subjects-countt")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> GetAllStudentsWithSubjectsCount([FromQuery] Guid? classId)
+        {
+            try
+            {
+                var query = new GetAllStudentsWithSubjectsCountQuery { ClassId = classId };
+                var result = await _mediator.Send(query);
+                return Ok(ApiResponseFactory.Success(result, "StudentsSubjectsCountFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentsSubjectsCountFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        [HttpGet("subjects-count")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> GetStudentSubjectsCount([FromQuery] Guid? studentId, [FromQuery] Guid? classId)
+        {
+            try
+            {
+                var query = new GetStudentSubjectsCountQuery(studentId, classId);
+                var result = await _mediator.Send(query);
+                return Ok(ApiResponseFactory.Success(result, "StudentSubjectsCountFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "StudentSubjectsCountFetchFailed",
+                    _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        //[HttpGet("my-subjects")]
+        //[Authorize(Roles = "Student")]  // هذا الـ endpoint للطالب فقط
+        //public async Task<IActionResult> GetMySubjects()
+        //{
+        //    try
+        //    {
+        //        // Get UserId from claim (الطالب مسجل الدخول)
+        //        var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+
+        //        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        //        {
+        //            return Unauthorized(ApiResponseFactory.Failure<object>(
+        //                "Unauthorized", _messageService,
+        //                new List<string> { "User ID not found in token." }
+        //            ));
+        //        }
+
+        //        // هنا تحتاج إلى إضافة IGenericRepository<Student> عن طريق الحقن
+        //        // مؤقتاً سنستخدم الـ Mediator فقط، لكنك ستحتاج إلى تعديل بسيط
+
+        //        var query = new GetMySubjectsQuery(userId);
+        //        var result = await _mediator.Send(query);
+
+        //        return Ok(ApiResponseFactory.Success(result, "MySubjectsFetchedSuccessfully", _messageService));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Failure<object>(
+        //            "MySubjectsFetchFailed", _messageService,
+        //            new List<string> { ex.Message }
+        //        ));
+        //    }
+        //}
     }
 }

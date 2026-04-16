@@ -650,3 +650,16 @@ D:\ProjectColleage\SchoolSystem.Api\obj\Debug\net10.0\refint\SchoolSystem.Api.dl
 D:\ProjectColleage\SchoolSystem.Api\obj\Debug\net10.0\SchoolSystem.Api.pdb
 D:\ProjectColleage\SchoolSystem.Api\obj\Debug\net10.0\SchoolSystem.Api.genruntimeconfig.cache
 D:\ProjectColleage\SchoolSystem.Api\obj\Debug\net10.0\ref\SchoolSystem.Api.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.Auth.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Google.Apis.Core.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Google.GenAI.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Extensions.AI.Abstractions.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\Microsoft.Win32.SystemEvents.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\QRCoder.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\System.Drawing.Common.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\System.Management.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win\lib\net6.0\Microsoft.Win32.SystemEvents.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\runtimes\unix\lib\net6.0\System.Drawing.Common.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win\lib\net6.0\System.Drawing.Common.dll
+D:\ProjectColleage\SchoolSystem.Api\bin\Debug\net10.0\runtimes\win\lib\net7.0\System.Management.dll

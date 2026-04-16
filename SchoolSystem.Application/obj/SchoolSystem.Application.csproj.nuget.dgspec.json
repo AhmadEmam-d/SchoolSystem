@@ -40,6 +40,9 @@
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1903"
+          ],
           "warnAsError": [
             "NU1605"
           ]
@@ -57,7 +60,7 @@
           "dependencies": {
             "AutoMapper": {
               "target": "Package",
-              "version": "[13.0.1, )"
+              "version": "[14.0.0, )"
             },
             "BCrypt.Net-Next": {
               "target": "Package",
@@ -90,6 +93,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[10.0.0, )"
+            },
+            "QRCoder": {
+              "target": "Package",
+              "version": "[1.8.0, )"
             },
             "System.Linq.Dynamic.Core": {
               "target": "Package",
@@ -422,6 +429,9 @@
           }
         },
         "warningProperties": {
+          "noWarn": [
+            "NU1903"
+          ],
           "warnAsError": [
             "NU1605"
           ]

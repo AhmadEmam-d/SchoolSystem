@@ -2,6 +2,7 @@
 using AutoMapper;
 using SchoolSystem.Application.Features.Lessons.DTOs;
 using SchoolSystem.Application.Features.Lessons.DTOs.Create;
+
 using SchoolSystem.Domain.Entities;
 
 namespace SchoolSystem.Application.Mapping
@@ -29,7 +30,7 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
-            CreateMap<CreateHomeworkDto, LessonHomework>()
+            CreateMap<LessonHomeworkDto, LessonHomework>()
                 .ForMember(dest => dest.Oid, opt => opt.Ignore())
                 .ForMember(dest => dest.LessonOid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -50,7 +51,7 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            CreateMap<UpdateHomeworkDto, LessonHomework>()
+            CreateMap<UpdateLessonHomeworkDto, LessonHomework>()
                 .ForMember(dest => dest.LessonOid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());

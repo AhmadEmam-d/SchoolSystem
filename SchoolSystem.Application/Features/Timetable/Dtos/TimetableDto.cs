@@ -73,4 +73,34 @@ namespace SchoolSystem.Application.Features.Timetable.DTOs
         public string EndTime { get; set; }     // وقت الانتهاء
         public int Period { get; set; }
     }
+    public class StudentWeeklyScheduleDto
+    {
+        public string Title { get; set; } = "myScheduleTitle";
+        public string ViewText { get; set; } = "viewWeeklyTimetable";
+        public string Description { get; set; } = "completeScheduleDesc";
+        public List<CalendarDayDto> Calendar { get; set; }
+        public List<WeeklyDayScheduleDto> WeeklyTimetable { get; set; }
+    }
+    public class CalendarDayDto
+    {
+        public string DayName { get; set; } // Mon, Tue, Wed, Thu, Fri
+        public int DayNumber { get; set; } // 13, 14, 15, 16, 17
+        public int ClassesCount { get; set; }
+    }
+
+    public class WeeklyDayScheduleDto
+    {
+        public string DayName { get; set; } // Monday, Tuesday, etc.
+        public string Date { get; set; } // Apr 13
+        public List<StudentLessonDto> Lessons { get; set; }
+    }
+    public class StudentLessonDto
+    {
+        public string Time { get; set; } // "12:00 PM"
+        public string SubjectName { get; set; } // "English"
+        public string TeacherName { get; set; } // "Shakespeare"
+        public string Room { get; set; } // "Room 205"
+        public string? ExtraInfo { get; set; } // Optional extra info
+    }
+
 }

@@ -9,6 +9,9 @@ namespace SchoolSystem.Application.Features.Subjects.DTOs
     {
         public Guid Oid { get; set; }
         public string Name { get; set; }
+        public string Code { get; set; }           // ✅ كود المادة (اختياري)
+        public int TeachersCount { get; set; }     // ✅ عدد المعلمين
+        public int ActiveClassesCount { get; set; }
         public List<TeacherBasicDto> Teachers { get; set; } = new List<TeacherBasicDto>();
         public class TeacherBasicDto
         {

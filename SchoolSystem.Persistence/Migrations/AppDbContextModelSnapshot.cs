@@ -141,6 +141,9 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<Guid>("SubjectOid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
@@ -152,6 +155,8 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("ClassOid");
 
                     b.HasIndex("SubjectOid");
+
+                    b.HasIndex("TeacherOid");
 
                     b.ToTable("Exams");
                 });
@@ -558,6 +563,67 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Attendances");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.AttendanceSession", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ClassOid1")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CorrectNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("QrCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("ClassOid1");
+
+                    b.HasIndex("TeacherId");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("AttendanceSessions");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -688,6 +754,52 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("EmailConfigurations");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.FAQ", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("Order");
+
+                    b.ToTable("FAQs");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.FinancialReport", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -736,6 +848,239 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("Period");
 
                     b.ToTable("FinancialReports");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllowLateSubmissions")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("AssignedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ClassOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotifyParents")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubjectOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubmissionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("TeacherOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("TotalMarks")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ClassOid");
+
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubjectOid");
+
+                    b.HasIndex("TeacherOid");
+
+                    b.ToTable("Homeworks");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.HomeworkAttachment", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("HomeworkOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("HomeworkOid");
+
+                    b.ToTable("HomeworkAttachments");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.HomeworkSubmission", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttachmentUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal?>("Grade")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HomeworkOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("HomeworkOid");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StudentOid");
+
+                    b.HasIndex("SubmittedAt");
+
+                    b.ToTable("HomeworkSubmissions");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.KnowledgeBaseArticle", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DocumentUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VideoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("ViewCount");
+
+                    b.ToTable("KnowledgeBaseArticles");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
@@ -988,9 +1333,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime>("GeneratedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("GeneratedBy")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
@@ -1066,6 +1408,64 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Settings");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.SmartTutorConversation", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Attachments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConversationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UserOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserOid");
+
+                    b.ToTable("SmartTutorConversations");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>
@@ -1181,6 +1581,66 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("StudentOid");
 
                     b.ToTable("StudentReports");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.SupportTicket", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RespondedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Response")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SupportTickets");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.SystemBackup", b =>
@@ -1562,9 +2022,17 @@ namespace SchoolSystem.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Teacher", "Teacher")
+                        .WithMany("Exams")
+                        .HasForeignKey("TeacherOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Class");
 
                     b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("ExamResult", b =>
@@ -1627,6 +2095,33 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.AttendanceSession", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", null)
+                        .WithMany("AttendanceSessions")
+                        .HasForeignKey("ClassOid1");
+
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Teacher", null)
+                        .WithMany("AttendanceSessions")
+                        .HasForeignKey("TeacherOid");
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
                 {
                     b.HasOne("Teacher", "Teacher")
@@ -1634,6 +2129,63 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasForeignKey("TeacherOid");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
+                        .WithMany("Homeworks")
+                        .HasForeignKey("ClassOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Subject", "Subject")
+                        .WithMany()
+                        .HasForeignKey("SubjectOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Teacher", "Teacher")
+                        .WithMany("Homeworks")
+                        .HasForeignKey("TeacherOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.HomeworkAttachment", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Homework", "Homework")
+                        .WithMany("Attachments")
+                        .HasForeignKey("HomeworkOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Homework");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.HomeworkSubmission", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Homework", "Homework")
+                        .WithMany("Submissions")
+                        .HasForeignKey("HomeworkOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
+                        .WithMany("Submissions")
+                        .HasForeignKey("StudentOid")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Homework");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
@@ -1707,6 +2259,21 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.SmartTutorConversation", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.User", null)
+                        .WithMany("SmartTutorConversations")
+                        .HasForeignKey("UserOid");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Student", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
@@ -1751,6 +2318,17 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.SupportTicket", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.TeacherReport", b =>
@@ -1855,11 +2433,22 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
                 {
+                    b.Navigation("AttendanceSessions");
+
+                    b.Navigation("Homeworks");
+
                     b.Navigation("Sections");
 
                     b.Navigation("Students");
 
                     b.Navigation("Timetables");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Lesson", b =>
@@ -1883,12 +2472,16 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("ExamResults");
 
                     b.Navigation("FeeInvoices");
+
+                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.User", b =>
                 {
                     b.Navigation("Parent")
                         .IsRequired();
+
+                    b.Navigation("SmartTutorConversations");
 
                     b.Navigation("Student")
                         .IsRequired();
@@ -1909,6 +2502,12 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("Teacher", b =>
                 {
+                    b.Navigation("AttendanceSessions");
+
+                    b.Navigation("Exams");
+
+                    b.Navigation("Homeworks");
+
                     b.Navigation("Lessons");
 
                     b.Navigation("TeacherSubjects");

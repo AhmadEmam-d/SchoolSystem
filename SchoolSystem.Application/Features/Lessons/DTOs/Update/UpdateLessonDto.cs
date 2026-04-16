@@ -18,7 +18,7 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
         public List<UpdateObjectiveDto> Objectives { get; set; } = new List<UpdateObjectiveDto>();
         public List<UpdateMaterialDto> Materials { get; set; } = new List<UpdateMaterialDto>();
         public List<string> ResourceLinks { get; set; } = new List<string>();
-        public UpdateHomeworkDto? Homework { get; set; }
+        public UpdateLessonHomeworkDto? Homework { get; set; }
         public string TeacherNotes { get; set; }
     }
 
@@ -40,7 +40,7 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
         public bool IsDeleted { get; set; }
     }
 
-    public class UpdateHomeworkDto
+    public class UpdateLessonHomeworkDto
     {
         public Guid? Oid { get; set; }
         public string Title { get; set; }
