@@ -352,4 +352,52 @@ console.log(token,'token');
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       }).then(res => res.json())
   }
+  ,
+  // Exams endpoints
+// Exams endpoints
+exams: {
+  getAll: () =>
+    fetch(`${API_BASE_URL}/Exams`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => data.success ? data.data : []),
+
+  getSummary: () =>
+    fetch(`${API_BASE_URL}/Exams/summary`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => data.success ? data.data : null),
+
+  getById: (oid) =>
+    fetch(`${API_BASE_URL}/Exams/${oid}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => res.json())
+    .then(data => data.success ? data.data : null),
+
+  create: (data) =>
+    fetch(`${API_BASE_URL}/Exams`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+
+  delete: (oid) =>
+    fetch(`${API_BASE_URL}/Exams/${oid}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => res.json()),
+
+  getResults: (examOid) =>
+    fetch(`${API_BASE_URL}/Exams/${examOid}/results`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.json())
+      .then(data => data.success ? data.data : [])
+}
 };

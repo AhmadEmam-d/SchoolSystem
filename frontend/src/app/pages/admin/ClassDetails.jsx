@@ -1,198 +1,185 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Users, BookOpen, Edit, Calendar } from 'lucide-react';
-import { useMockData } from "@/context/MockDataContext";
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
+import { 
+  ArrowLeft, 
+  Users, 
+  BookOpen, 
+  Edit, 
+  Calendar, 
+  Loader2, 
+  Clock,
+  LayoutDashboard
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { api } from '@/app/lib/api';
+import { toast } from "sonner";
 
 export function ClassDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { classes, students, teachers } = useMockData();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
 
-  const classData = classes.find(c => c.id === id);
+  const [classData, setClassData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!classData) {
+  useEffect(() => {
+    const fetchClassDetails = async () => {
+      setLoading(true);
+      try {
+        const response = await api.classes.getById(id);
+        
+        // معالجة البيانات بناءً على هيكلية الـ API الخاص بك
+        if (response && response.success && response.data) {
+          setClassData(response.data);
+        } else if (response && response.oid) {
+          // في حال كانت البيانات تأتي مباشرة بدون غلاف success
+          setClassData(response);
+        } else {
+          toast.error(t('classNotFound'));
+        }
+      } catch (error) {
+        console.error('Error fetching class details:', error);
+        toast.error(t('errorFetchingData'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchClassDetails();
+  }, [id, t]);
+
+  if (loading) {
     return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900">Class not found</h2>
-          <Button className="mt-4" onClick={() => navigate('/admin/classes')}>
-            Back to Classes
-          </Button>
-        </div>
+      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-purple-600" />
+        <p className="text-muted-foreground animate-pulse">{t('loading')}</p>
       </div>
     );
   }
 
-  const classStudents = students?.filter(s => classData.studentIds?.includes(s.id)) || [];
-  const classTeachers = teachers?.filter(t => classData.teacherIds?.includes(t.id)) || [];
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/admin/classes')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-              {classData.name}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Class Details and Information
-            </p>
-          </div>
+  if (!classData) {
+    return (
+      <div className="p-6 text-center space-y-4">
+        <div className="bg-red-50 dark:bg-red-900/10 p-8 rounded-xl inline-block">
+          <LayoutDashboard className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground">{t('classNotFound')}</h2>
+          <p className="text-muted-foreground">{t('classNotFoundDesc') || 'The requested class record could not be found.'}</p>
         </div>
-        <Button
-          className="gap-2"
-          onClick={() => navigate(`/admin/classes/edit/${id}`)}
-        >
-          <Edit className="h-4 w-4" />
-          Edit Class
+        <br />
+        <Button onClick={() => navigate('/admin/classes')} variant="outline">
+          <ArrowLeft className={`h-4 w-4 ${isRTL ? 'ml-2 rotate-180' : 'mr-2'}`} />
+          {t('backToClasses')}
         </Button>
       </div>
+    );
+  }
 
-      {/* Class Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Class Information</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  return (
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* Navigation & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate('/admin/classes')}
+            className="hover:bg-purple-50 dark:hover:bg-purple-900/20"
+          >
+            <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+          </Button>
           <div>
-            <p className="text-sm text-gray-500 mb-1">Class Name</p>
-            <p className="font-semibold text-gray-900">{classData.name}</p>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              {classData.name}
+              <span className="text-sm font-normal bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full">
+                {t('grade')} {classData.level}
+              </span>
+            </h1>
+            <p className="text-muted-foreground mt-1">{t('classDetailsDesc')}</p>
           </div>
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Grade Level</p>
-            <p className="font-semibold text-gray-900">Grade {classData.gradeLevel}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Total Students</p>
-            <p className="font-semibold text-gray-900">{classData.studentIds.length} Students</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 mb-1">Assigned Teachers</p>
-            <p className="font-semibold text-gray-900">{classData.teacherIds.length} Teachers</p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate(`/admin/classes/edit/${classData.oid}`)}>
+            <Edit className="h-4 w-4 mr-2" /> {t('editClassBtn')}
+          </Button>
+          <Button onClick={() => navigate('/admin/timetable')}>
+            <Calendar className="h-4 w-4 mr-2" /> {t('timetableBtn')}
+          </Button>
+        </div>
+      </div>
 
-      {/* Students List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Students ({classStudents.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {classStudents.length > 0 ? (
-            <div className="space-y-3">
-              {classStudents.map((student) => (
-                <div
-                  key={student.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{student.name}</p>
-                    <p className="text-sm text-gray-500">{student.email}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/admin/students/${student.id}`)}
-                  >
-                    View Profile
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No students enrolled in this class
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Basic Info */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <LayoutDashboard className="h-5 w-5 text-purple-500" />
+                {t('classInformation')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">{t('className')}</span>
+                <span className="font-medium">{classData.name}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">{t('level')}</span>
+                <span className="font-medium">{classData.level}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-muted-foreground">{t('oid')}</span>
+                <span className="text-xs font-mono bg-gray-100 dark:bg-gray-800 p-1 rounded">
+                  {classData.oid}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                <Clock className="h-4 w-4" />
+                <span>{t('createdAt')}: {new Date(classData.createdAt).toLocaleDateString(i18n.language)}</span>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Teachers List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Teachers ({classTeachers.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {classTeachers.length > 0 ? (
-            <div className="space-y-3">
-              {classTeachers.map((teacher) => (
-                <div
-                  key={teacher.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{teacher.name}</p>
-                    <p className="text-sm text-gray-500">{teacher.email}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/admin/teachers/${teacher.id}`)}
-                  >
-                    View Profile
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No teachers assigned to this class
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => navigate('/admin/timetable')}
-            >
-              <Calendar className="h-4 w-4" />
-              View Timetable
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => navigate('/admin/attendance')}
-            >
-              <Users className="h-4 w-4" />
-              Take Attendance
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full gap-2"
-              onClick={() => navigate(`/admin/classes/edit/${id}`)}
-            >
-              <Edit className="h-4 w-4" />
-              Edit Class
-            </Button>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <Users className="h-6 w-6 text-blue-500 mb-2" />
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                  {classData.students?.length || 0}
+                </p>
+                <p className="text-xs text-blue-600/70 dark:text-blue-400/70 uppercase tracking-wider">
+                  {t('studentsNum')}
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20">
+              <CardContent className="p-4 flex flex-col items-center justify-center text-center">
+                <BookOpen className="h-6 w-6 text-emerald-500 mb-2" />
+                <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                  {classData.sections?.length || 0}
+                </p>
+                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-wider">
+                  {t('sectionsNum')}
+                </p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Right Column: Placeholder for future lists (Students/Teachers) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="h-full min-h-[400px] flex flex-col items-center justify-center border-dashed">
+            <Users className="h-12 w-12 text-muted-foreground/20 mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground">{t('noAdditionalData')}</h3>
+            <p className="text-sm text-muted-foreground/60">{t('studentListSoon')}</p>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

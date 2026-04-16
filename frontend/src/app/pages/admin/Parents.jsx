@@ -11,235 +11,291 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../../components/ui/dialog";
-import { Search, Plus, MoreHorizontal, Mail, Phone, Users } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { 
+  Search, 
+  Plus, 
+  Mail, 
+  Phone, 
+  Users, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  User,
+  Info
+} from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '../../components/ui/table';
 import { toast } from "sonner";
 import { api } from '../../../app/lib/api';
 
 export function AdminParents() {
   const [parents, setParents] = useState([]);
-  const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedParent, setSelectedParent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
-  // جلب البيانات من API
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [parentsResponse, studentsResponse] = await Promise.all([
-          api.parents.getAll(),
-          api.students.getAll()
-        ]);
-        
-        const parentsList = parentsResponse.success ? parentsResponse.data : (Array.isArray(parentsResponse) ? parentsResponse : []);
-        const studentsList = studentsResponse.success ? studentsResponse.data : (Array.isArray(studentsResponse) ? studentsResponse : []);
-        
-        setParents(parentsList);
-        setStudents(studentsList);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error(t('errorFetchingData'));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const filteredParents = parents.filter(parent =>
-    parent.fatherName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    parent.motherName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    parent.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getChildrenNames = (parentOid) => {
-    const children = students.filter(student => student.parentOid === parentOid);
-    return children.map(child => child.fullName).join(', ');
+  // ================= جلب البيانات من الـ API =================
+  const fetchParents = async () => {
+    setLoading(true);
+    try {
+      // بناءً على ملف api.js الخاص بك، البيانات تعود مباشرة من التابع
+      const data = await api.parents.getAll();
+      setParents(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Fetch Error:", error);
+      toast.error(t('errorFetchingData'));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getChildrenList = (parentOid) => {
-    return students.filter(student => student.parentOid === parentOid);
+  useEffect(() => {
+    fetchParents();
+  }, []);
+
+  // ================= منطق الحذف =================
+  const handleDeleteClick = async (parent) => {
+    if (window.confirm(t('confirmDeleteParent'))) {
+      try {
+        const response = await api.parents.delete(parent.oid);
+        if (response.success) {
+          toast.success(t('parentDeletedSuccess'));
+          fetchParents(); // تحديث القائمة بعد الحذف
+        } else {
+          toast.error(response.message || t('deleteFailed'));
+        }
+      } catch (error) {
+        toast.error(t('errorDuringDelete'));
+      }
+    }
+  };
+
+  // ================= منطق العرض (Details) =================
+  const handleOpenDetails = (parent) => {
+    setSelectedParent(parent);
+    setIsDetailsOpen(true);
+  };
+
+  // ================= منطق البحث =================
+  const filteredParents = parents.filter(parent => {
+    const search = searchTerm.toLowerCase();
+    return (
+      parent.fatherName?.toLowerCase().includes(search) ||
+      parent.motherName?.toLowerCase().includes(search) ||
+      parent.email?.toLowerCase().includes(search) ||
+      parent.phone?.includes(search)
+    );
+  });
+
+  const getChildrenNames = (parent) => {
+    if (!parent?.students || parent.students.length === 0) return t('noChildren');
+    return parent.students.map(s => s.fullName).join(', ');
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">{t('loading')}</div>
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground">{t('loading')}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-4">
+      {/* الهيدر */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('parentsPage')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('parentsPageDesc')}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('parentsPage')}</h1>
+          <p className="text-muted-foreground">{t('parentsPageDesc')}</p>
         </div>
-        <Button onClick={() => navigate('/admin/parents/add')}>
-          <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+
+        <Button onClick={() => navigate('/admin/parents/add')} className="gap-2">
+          <Plus className="h-4 w-4" />
           {t('addParentBtnLabel')}
         </Button>
       </div>
 
-      <Card className="dark:border-gray-700 dark:bg-gray-800">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="dark:text-white">{t('allParentsTitle')} ({filteredParents.length})</CardTitle>
-            <div className="relative w-64">
-              <Search className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-2.5 h-4 w-4 text-gray-500`} />
+      {/* الجدول والبحث */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              {t('allParentsTitle')} ({filteredParents.length})
+            </CardTitle>
+
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('searchParentsPlaceholder')}
-                className={`${isRTL ? 'pr-8' : 'pl-8'} dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
               />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="dark:border-gray-700">
-                <TableHead className="dark:text-gray-400">{t('fatherName')}</TableHead>
-                <TableHead className="dark:text-gray-400">{t('motherName')}</TableHead>
-                <TableHead className="dark:text-gray-400">{t('contactInfoCol')}</TableHead>
-                <TableHead className="dark:text-gray-400">{t('childrenCol')}</TableHead>
-                <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-400`}>{t('actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredParents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-gray-500 dark:text-gray-400">
-                    {t('noParentsFound')}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredParents.map((parent) => (
-                  <TableRow key={parent.oid} className="dark:border-gray-700">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback className="dark:bg-gray-600 dark:text-white">
-                            {parent.fatherName?.substring(0, 2).toUpperCase() || 'P'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="font-medium text-gray-900 dark:text-white">{parent.fatherName}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-gray-700 dark:text-gray-300">{parent.motherName}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1 text-sm text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3" />
-                          {parent.email}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-3 w-3" />
-                          {parent.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          {getChildrenNames(parent.oid)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => setSelectedParent(parent)}>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] dark:bg-gray-800 dark:border-gray-700">
-                          <DialogHeader>
-                            <DialogTitle className="dark:text-white">{t('parentProfileTitle')}</DialogTitle>
-                            <DialogDescription className="dark:text-gray-400">
-                              {t('contactDetailsFor')} {selectedParent?.fatherName}
-                            </DialogDescription>
-                          </DialogHeader>
-                          {selectedParent && (
-                            <div className="grid gap-4 py-4">
-                              <div className="flex items-center gap-4 mb-4">
-                                <Avatar className="h-16 w-16">
-                                  <AvatarFallback className="text-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-                                    {selectedParent.fatherName?.substring(0, 2).toUpperCase() || 'P'}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <h3 className="font-bold text-lg dark:text-white">{selectedParent.fatherName}</h3>
-                                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {selectedParent.motherName && <div>Mother: {selectedParent.motherName}</div>}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    <Phone className="h-4 w-4" />
-                                    {selectedParent.phone}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                    <Mail className="h-4 w-4" />
-                                    {selectedParent.email}
-                                  </div>
-                                </div>
-                              </div>
 
-                              <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('childrenCol')}</h4>
-                                {getChildrenList(selectedParent.oid).length === 0 ? (
-                                  <div className="text-sm text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    {t('noChildrenFound')}
-                                  </div>
-                                ) : (
-                                  getChildrenList(selectedParent.oid).map((student) => (
-                                    <div key={student.oid} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                      <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
-                                          <AvatarFallback className="text-xs dark:bg-gray-600 dark:text-white">
-                                            {student.fullName?.substring(0, 2).toUpperCase() || 'S'}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                          <p className="font-medium text-sm dark:text-white">{student.fullName}</p>
-                                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {student.class?.name || student.grade || 'N/A'}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="dark:border-gray-600 dark:text-gray-300" 
-                                        onClick={() => navigate(`/admin/students/${student.oid}`)}
-                                      >
-                                        {t('viewProfileBtn')}
-                                      </Button>
-                                    </div>
-                                  ))
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
+        <CardContent>
+          <div className="rounded-md border overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>{t('fatherName')}</TableHead>
+                  <TableHead>{t('motherName')}</TableHead>
+                  <TableHead>{t('contactInfoCol')}</TableHead>
+                  <TableHead>{t('childrenCol')}</TableHead>
+                  <TableHead className="text-center w-[150px]">{t('actions')}</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {filteredParents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      {t('noParentsFound')}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredParents.map((parent) => (
+                    <TableRow key={parent.oid} className="hover:bg-muted/30 transition-colors">
+                      {/* الأب */}
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8 border">
+                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                              {parent.fatherName?.slice(0, 2).toUpperCase() || <User size={14}/>}
+                            </AvatarFallback>
+                          </Avatar>
+                          {parent.fatherName}
+                        </div>
+                      </TableCell>
+
+                      {/* الأم */}
+                      <TableCell>{parent.motherName || '—'}</TableCell>
+
+                      {/* بيانات الاتصال */}
+                      <TableCell>
+                        <div className="flex flex-col text-xs gap-1">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Mail size={12}/> {parent.email}
+                          </span>
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Phone size={12}/> {parent.phone}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* الأبناء */}
+                      <TableCell>
+                        <div className="max-w-[150px] truncate text-sm" title={getChildrenNames(parent)}>
+                          {getChildrenNames(parent)}
+                        </div>
+                      </TableCell>
+
+                      {/* أزرار العمليات (Actions) */}
+                      <TableCell>
+                        <div className="flex justify-center gap-1">
+                          <button 
+                            onClick={() => handleOpenDetails(parent)} 
+                            className="p-2 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                            title={t('view')}
+                          >
+                            <Eye size={18} />
+                          </button>
+
+                          <button 
+                            onClick={() => navigate(`/admin/parents/edit/${parent.oid}`)} 
+                            className="p-2 hover:bg-orange-50 text-orange-600 rounded transition-colors"
+                            title={t('edit')}
+                          >
+                            <Edit size={18} />
+                          </button>
+
+                          <button 
+                            onClick={() => handleDeleteClick(parent)} 
+                            className="p-2 hover:bg-red-50 text-red-600 rounded transition-colors"
+                            title={t('delete')}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
+
+      {/* مودال التفاصيل (Details Dialog) */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              {t('parentProfileTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedParent?.fatherName} & {selectedParent?.motherName}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedParent && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4 text-sm bg-muted/50 p-4 rounded-lg">
+                <div>
+                  <p className="text-muted-foreground">{t('email')}</p>
+                  <p className="font-medium break-all">{selectedParent.email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">{t('phone')}</p>
+                  <p className="font-medium">{selectedParent.phone}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold mb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4" /> {t('childrenCol')}
+                </h4>
+                <div className="space-y-2">
+                  {selectedParent.students?.length > 0 ? (
+                    selectedParent.students.map((student) => (
+                      <div key={student.oid} className="p-3 border rounded-md flex justify-between items-center bg-card">
+                        <span className="text-sm">{student.fullName}</span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => navigate(`/admin/students/${student.oid}`)}
+                        >
+                          {t('viewProfile')}
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">{t('noChildrenAssigned')}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

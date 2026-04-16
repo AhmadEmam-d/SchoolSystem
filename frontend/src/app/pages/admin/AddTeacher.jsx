@@ -2,313 +2,265 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { 
+  ArrowLeft, 
+  Save, 
+  Loader2, 
+  User, 
+  Mail, 
+  Phone, 
+  BookOpen,
+  CheckCircle2
+} from 'lucide-react';
 import { toast } from 'sonner';
-
-const API_BASE_URL = 'http://localhost:5073/api';
+import { api } from '../../lib/api';
 
 export function AddTeacher() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+
   const [subjects, setSubjects] = useState([]);
-  
+  const [submitting, setSubmitting] = useState(false);
+  const [fetching, setFetching] = useState(true);
+
   const [formData, setFormData] = useState({
     fullName: '',
-    arabicName: '',
     email: '',
     phone: '',
     subjectOids: []
   });
 
-  // Fetch subjects from API
+  // جلب المواد الدراسية عند تحميل الصفحة
   useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error(t('pleaseLogin'));
-          return;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/Subjects`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-          setSubjects(data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching subjects:', error);
-        toast.error(t('errorFetchingSubjects'));
-      }
-    };
-    
-    fetchSubjects();
-  }, [t]);
-
-  const validateForm = () => {
-    const errors = [];
-    
-    if (!formData.fullName?.trim()) errors.push('Full name is required');
-    if (!formData.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.push('Invalid email format');
-    if (!formData.phone?.match(/^[0-9]{10,15}$/)) errors.push('Phone must be 10-15 digits');
-    if (!formData.subjectOids || formData.subjectOids.length === 0) errors.push('Please select at least one subject');
-    
-    if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
-      return false;
-    }
-    return true;
-  };
+    api.subjects.getAll()
+      .then(res => {
+        setSubjects(Array.isArray(res) ? res : (res?.data || []));
+      })
+      .catch(err => {
+        console.error("Error fetching subjects:", err);
+        toast.error(isRTL ? "فشل تحميل المواد" : "Failed to load subjects");
+      })
+      .finally(() => setFetching(false));
+  }, [isRTL]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-    
-    setLoading(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login again');
-        setLoading(false);
-        return;
-      }
+    if (formData.subjectOids.length === 0) {
+      toast.error(isRTL ? 'يرجى اختيار مادة واحدة على الأقل' : 'Please select a subject');
+      return;
+    }
 
-      // Wrap the data in a "teacher" object as expected by the API
-      const teacherData = {
+    setSubmitting(true);
+
+    try {
+      // ✅ الهيكلة الصحيحة بناءً على الـ Validation Error: { Teacher: [...] }
+      const payload = {
         teacher: {
           fullName: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
-          subjectOids: formData.subjectOids
+          subjectOids: formData.subjectOids 
         }
       };
-      
-      console.log('Sending teacher data:', JSON.stringify(teacherData, null, 2));
-      
-      const response = await fetch(`${API_BASE_URL}/Teachers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(teacherData)
-      });
-      
-      const data = await response.json();
-      console.log('Response:', data);
-      
-      if (response.ok && data.success) {
-        toast.success('Teacher added successfully!');
+
+      console.log('🚀 Final Payload:', payload);
+
+      const res = await api.teachers.create(payload);
+
+      if (res && res.success) {
+        toast.success(t('TeacherCreatedSuccessfully') || (isRTL ? "تمت إضافة المدرس بنجاح" : "Teacher added successfully"));
         navigate('/admin/teachers');
       } else {
-        // Display error messages from server
-        if (data.errors) {
-          // Handle nested errors
-          if (data.errors.Teacher && Array.isArray(data.errors.Teacher)) {
-            data.errors.Teacher.forEach(error => toast.error(error));
-          } else if (typeof data.errors === 'object') {
-            Object.values(data.errors).forEach(error => {
-              if (Array.isArray(error)) {
-                error.forEach(msg => toast.error(msg));
-              } else if (typeof error === 'string') {
-                toast.error(error);
-              }
-            });
-          }
-        } else if (data.message) {
-          toast.error(data.message);
-        } else if (data.messages?.EN) {
-          toast.error(data.messages.EN);
-        } else if (data.title) {
-          toast.error(data.title);
-        } else {
-          toast.error(`Failed to add teacher: ${response.status}`);
-        }
+        // التعامل مع أخطاء الـ Validation الراجعة من السيرفر
+        const errorMsg = res?.messages?.EN || res?.message || (isRTL ? "فشلت العملية" : "Submission failed");
+        toast.error(errorMsg);
+        if (res?.errors) console.table(res.errors);
       }
+
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Network error. Please try again.');
+      console.error('❌ Error:', error);
+      toast.error(isRTL ? "حدث خطأ في الاتصال بالسيرفر" : "Connection error");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubjectChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-    setFormData(prev => ({ ...prev, subjectOids: selectedOptions }));
-  };
-
-  if (loading && subjects.length === 0) {
+  if (fetching) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
+        <p className="text-lg font-medium text-gray-500 animate-pulse">
+          {isRTL ? "جاري تحميل البيانات..." : "Loading data..."}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
-          <button
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full hover:bg-purple-50"
             onClick={() => navigate('/admin/teachers')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-          </button>
+            <ArrowLeft className={`h-5 w-5 ${isRTL ? 'rotate-180' : ''}`} />
+          </Button>
           <div>
-            <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">Add New Teacher</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Fill in the teacher information below</p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+              {isRTL ? "إضافة مدرس جديد" : "Add New Teacher"}
+            </h1>
+            <p className="text-muted-foreground">
+              {isRTL ? "أدخل بيانات المدرس والمواد الموكلة إليه" : "Enter teacher details and assigned subjects"}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Personal Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Enter full name"
-                  disabled={loading}
-                />
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Form Fields */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-t-4 border-t-purple-600 shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-purple-600" />
+                {isRTL ? "المعلومات الشخصية" : "Personal Information"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{t('fullName')} *</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input 
+                    className={`${isRTL ? 'pr-3' : 'pl-10'} h-11`}
+                    placeholder={isRTL ? "مثال: محمد علي" : "Ex: John Doe"} 
+                    required
+                    value={formData.fullName}
+                    onChange={e => setFormData({...formData, fullName: e.target.value})}
+                    disabled={submitting}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Arabic Name
-                </label>
-                <input
-                  type="text"
-                  name="arabicName"
-                  value={formData.arabicName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="الاسم بالعربية"
-                  dir="rtl"
-                  disabled={loading}
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">{t('email')} *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input 
+                      type="email"
+                      className={`${isRTL ? 'pr-3' : 'pl-10'} h-11`}
+                      placeholder="email@example.com" 
+                      required
+                      value={formData.email}
+                      onChange={e => setFormData({...formData, email: e.target.value})}
+                      disabled={submitting}
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="teacher@school.com"
-                  disabled={loading}
-                />
+                {/* Phone */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">{t('phone')} *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input 
+                      className={`${isRTL ? 'pr-3' : 'pl-10'} h-11`}
+                      placeholder="01xxxxxxxxx" 
+                      required
+                      value={formData.phone}
+                      onChange={e => setFormData({...formData, phone: e.target.value})}
+                      disabled={submitting}
+                    />
+                  </div>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="01234567890"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Professional Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Professional Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Teaching Subjects *
+        {/* Right Column: Subject Selection & Actions */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BookOpen className="h-5 w-5 text-purple-600" />
+                {isRTL ? "المواد الدراسية" : "Subjects"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  {isRTL ? "اختر المواد (اضغط Ctrl للتعدد)" : "Select Subjects (Hold Ctrl)"}
                 </label>
                 <select
-                  name="subjectOids"
                   multiple
-                  value={formData.subjectOids}
-                  onChange={handleSubjectChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                  size={6}
-                  disabled={loading}
+                  className="w-full p-2 border rounded-lg h-48 bg-background focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
+                  value={formData.subjectOids}
+                  onChange={e => setFormData({...formData, subjectOids: Array.from(e.target.selectedOptions, i => i.value)})}
+                  disabled={submitting}
                 >
-                  {subjects.map(subject => (
-                    <option key={subject.oid} value={subject.oid}>
-                      {subject.name}
+                  {subjects.map(s => (
+                    <option key={s.oid} value={s.oid} className="p-2 border-b last:border-0">
+                      {s.name}
                     </option>
                   ))}
                 </select>
-                <p className="text-sm text-gray-500 mt-1">
-                  Hold Ctrl (or Cmd on Mac) to select multiple subjects
-                </p>
-                {formData.subjectOids.length > 0 && (
-                  <p className="text-sm text-green-600 mt-1">
-                    Selected: {formData.subjectOids.length} subject(s)
-                  </p>
-                )}
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Submit Buttons */}
-        <div className="flex items-center justify-end gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/admin/teachers')}
-            className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="h-5 w-5" />
-            {loading ? 'Saving...' : 'Save Teacher'}
-          </button>
+              <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg">
+                <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 mb-2 font-medium">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>{isRTL ? "المواد المختارة" : "Selected"}</span>
+                </div>
+                <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                  {formData.subjectOids.length}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <div className="flex flex-col gap-3">
+            <Button 
+              type="submit" 
+              className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-200 dark:shadow-none transition-all active:scale-95"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              ) : (
+                <Save className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              )}
+              {submitting ? t('saving') : (isRTL ? "حفظ المدرس" : "Save Teacher")}
+            </Button>
+            
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full h-12 text-gray-500"
+              onClick={() => navigate('/admin/teachers')}
+              disabled={submitting}
+            >
+              {isRTL ? "إلغاء" : "Cancel"}
+            </Button>
+          </div>
         </div>
+
       </form>
     </div>
   );
