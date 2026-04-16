@@ -5,6 +5,7 @@ using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
 using SchoolSystem.Application.Features.Homeworks.Commands.Create;
 using SchoolSystem.Application.Features.Homeworks.Commands.Delete;
+using SchoolSystem.Application.Features.Homeworks.Commands.Grade;
 using SchoolSystem.Application.Features.Homeworks.Commands.Update;
 using SchoolSystem.Application.Features.Homeworks.DTOs;
 using SchoolSystem.Application.Features.Homeworks.DTOs.Update;
@@ -151,6 +152,48 @@ namespace SchoolSystem.API.Controllers
                     new List<string> { ex.Message }
                 ));
             }
+        }
+        // POST: api/Homeworks/{id}/grade
+        [HttpPost("{id}/grade")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GradeSubmission(Guid id, [FromBody] GradeSubmissionDto dto)
+        {
+            try
+            {
+                // Verify homework exists
+                var homework = await _mediator.Send(new GetHomeworkByIdQuery(id));
+                if (homework == null)
+                    return NotFound(ApiResponseFactory.Failure<object>(
+                        "HomeworkNotFound", _messageService,
+                        new List<string> { "Homework not found" }
+                    ));
+
+                var command = new GradeSubmissionCommand
+                {
+                    SubmissionId = dto.SubmissionId,
+                    Grade = dto.Grade,
+                    Feedback = dto.Feedback
+                };
+
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "GradeSavedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "GradeSaveFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+
+        // DTO for grade submission
+        public class GradeSubmissionDto
+        {
+            public Guid SubmissionId { get; set; }
+            public decimal Grade { get; set; }
+            public string? Feedback { get; set; }
         }
     }
 }

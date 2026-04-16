@@ -9,10 +9,12 @@ using SchoolSystem.Application.Features.Students.DTOs.Create;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
 using SchoolSystem.Application.Features.Students.Queries.Get;
 using SchoolSystem.Application.Features.Students.Queries.GetAllStudentsWithSubjectsCount;
+using SchoolSystem.Application.Features.Students.Queries.GetMySubjects;
 using SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsCount;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.API.Controllers
@@ -204,5 +206,38 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
+        //[HttpGet("my-subjects")]
+        //[Authorize(Roles = "Student")]  // هذا الـ endpoint للطالب فقط
+        //public async Task<IActionResult> GetMySubjects()
+        //{
+        //    try
+        //    {
+        //        // Get UserId from claim (الطالب مسجل الدخول)
+        //        var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+
+        //        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        //        {
+        //            return Unauthorized(ApiResponseFactory.Failure<object>(
+        //                "Unauthorized", _messageService,
+        //                new List<string> { "User ID not found in token." }
+        //            ));
+        //        }
+
+        //        // هنا تحتاج إلى إضافة IGenericRepository<Student> عن طريق الحقن
+        //        // مؤقتاً سنستخدم الـ Mediator فقط، لكنك ستحتاج إلى تعديل بسيط
+
+        //        var query = new GetMySubjectsQuery(userId);
+        //        var result = await _mediator.Send(query);
+
+        //        return Ok(ApiResponseFactory.Success(result, "MySubjectsFetchedSuccessfully", _messageService));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ApiResponseFactory.Failure<object>(
+        //            "MySubjectsFetchFailed", _messageService,
+        //            new List<string> { ex.Message }
+        //        ));
+        //    }
+        //}
     }
 }
