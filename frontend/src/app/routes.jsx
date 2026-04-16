@@ -104,6 +104,12 @@ import { NewPassword } from "./pages/shared/NewPassword.jsx";
 import { PasswordResetSuccess } from "./pages/shared/PasswordResetSuccess.jsx";
 import { ResetPassword } from "./pages/shared/ResetPassword.jsx";
 import { PlaceholderPage } from "./components/PlaceholderPage";
+import {StudentDetails} from "./pages/admin/StudentDetails.jsx";
+import {EditStudent} from "./pages/admin/EditStudent.jsx";
+import {TeacherDetails} from "./pages/admin/TeacherDetails.jsx";
+import {EditTeacher} from "./pages/admin/EditTeacher.jsx";
+import {EditParent} from "./pages/admin/EditParent.jsx";
+
 
 export const router = createBrowserRouter([
   {
@@ -171,12 +177,23 @@ export const router = createBrowserRouter([
       
       { path: "admin/students", Component: AdminStudents },
       { path: "admin/students/add", Component: AddStudent },
+      {path : "admin/students/:id" , Component : StudentDetails},
+      {path : "admin/students/edit/:id" , Component : EditStudent},
+
+
       
       { path: "admin/teachers", Component: AdminTeachers },
       { path: "admin/teachers/add", Component: AddTeacher },
+      { path: "admin/teachers/:id", Component: TeacherDetails },
+      { path: "admin/teachers/edit/:id", Component: EditTeacher },
+
+
+
       
       { path: "admin/parents", Component: AdminParents },
       { path: "admin/parents/add", Component: AddParent },
+      {  path: "admin/parents/edit/:id", Component: EditParent },
+
       
       { path: "admin/classes", Component: AdminClasses },
       { path: "admin/classes/add", Component: AddClass },
