@@ -61,7 +61,16 @@ namespace SchoolSystem.Application.Features.UserProfile.Handlers
                 };
             }
 
+            // ✅ أضف هذه الأسطر للتحقق
+            var testVerify = BCrypt.Net.BCrypt.Verify("Admin@123", user.PasswordHash);
+            System.Diagnostics.Debug.WriteLine($"PasswordHash from DB: {user.PasswordHash}");
+            System.Diagnostics.Debug.WriteLine($"Verify result for 'Admin@123': {testVerify}");
+            System.Diagnostics.Debug.WriteLine($"Request current password: {request.PasswordData.CurrentPassword}");
+
             bool passwordValid = BCrypt.Net.BCrypt.Verify(request.PasswordData.CurrentPassword, user.PasswordHash);
+
+            System.Diagnostics.Debug.WriteLine($"Final verify result: {passwordValid}");
+
             if (!passwordValid)
             {
                 return new QueryResponse<bool>
@@ -73,6 +82,7 @@ namespace SchoolSystem.Application.Features.UserProfile.Handlers
                     TotalPages = 0
                 };
             }
+
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.PasswordData.NewPassword);
             user.UpdatedAt = System.DateTime.UtcNow;
