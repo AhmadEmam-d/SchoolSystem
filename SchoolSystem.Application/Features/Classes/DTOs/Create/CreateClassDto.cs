@@ -10,5 +10,10 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Create
         public string Level { get; set; }
 
     }
+    public class AssignTeacherToClassDto
+    {
+            public Guid ClassId { get; set; }
+            public Guid TeacherId { get; set; }
+    }
 
 }
