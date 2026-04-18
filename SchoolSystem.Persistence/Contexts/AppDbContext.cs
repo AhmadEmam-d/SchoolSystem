@@ -51,6 +51,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<Homework> Homeworks { get; set; }
         public DbSet<HomeworkAttachment> HomeworkAttachments { get; set; }
         public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -716,6 +717,14 @@ namespace SchoolSystem.Persistence.Contexts
                       .WithMany(s => s.Submissions)
                       .HasForeignKey(e => e.StudentOid)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasIndex(e => e.Email);
+                entity.HasIndex(e => e.Token);
+                entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(10);
             });
         }
     }

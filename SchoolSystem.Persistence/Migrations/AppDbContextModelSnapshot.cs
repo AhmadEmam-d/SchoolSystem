@@ -1310,6 +1310,46 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("Parents");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("Token");
+
+                    b.ToTable("PasswordResetTokens");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Report", b =>
                 {
                     b.Property<Guid>("Oid")
