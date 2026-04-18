@@ -1222,6 +1222,27 @@
   "ClassStatsFetchFailed": {
     "EN": "An error occurred while fetching class statistics",
     "AR": "حدث خطأ أثناء جلب إحصائيات الفصل"
+  },
+  "ChatResponseSuccess": {
+    "EN": "SmartTutor response generated successfully",
+    "AR": "تم إنشاء رد المساعد الذكي بنجاح"
+  },
+  "ChatResponseFailed": {
+    "EN": "An error occurred while generating SmartTutor response",
+    "AR": "حدث خطأ أثناء إنشاء رد المساعد الذكي"
+  },
+  "ConversationsFetchedSuccessfully": {
+    "EN": "Conversations fetched successfully",
+    "AR": "تم جلب المحادثات بنجاح"
+  },
+  "ConversationsFetchFailed": {
+    "EN": "An error occurred while fetching conversations",
+    "AR": "حدث خطأ أثناء جلب المحادثات"
+  },
+  "UserNotFound": {
+    "EN": "User not authenticated",
+    "AR": "المستخدم غير مصرح له"
   }
+
 
 }

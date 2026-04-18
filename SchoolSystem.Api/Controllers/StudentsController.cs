@@ -187,7 +187,7 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
-        [HttpGet("subjects-count")]
+        [HttpGet("subjects-count-id")]
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> GetStudentSubjectsCount([FromQuery] Guid? studentId, [FromQuery] Guid? classId)
         {

@@ -6,7 +6,10 @@ using SchoolSystem.Application.Features.SmartTutor.Commands.Chat;
 using SchoolSystem.Application.Features.SmartTutor.DTOs;
 using SchoolSystem.Application.Features.SmartTutor.Queries.GetConversations;
 using SchoolSystem.Application.Interfaces.Services;
+using System;
+using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.API.Controllers
 {
@@ -34,18 +37,24 @@ namespace SchoolSystem.API.Controllers
 
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
-                    return Unauthorized();
+                    return Unauthorized(ApiResponseFactory.Failure<object>(
+                        "UserNotFound", _messageService,
+                        new List<string> { "User not authenticated." }
+                    ));
                 }
 
                 var userRole = userRoleClaim?.Value ?? "Student";
                 var command = new SmartTutorChatCommand(request, userId, userRole);
                 var result = await _mediator.Send(command);
 
-                return Ok(new { success = true, data = result });
+                return Ok(ApiResponseFactory.Success(result, "ChatResponseSuccess", _messageService));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, error = ex.Message });
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ChatResponseFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
             }
         }
 
@@ -57,17 +66,23 @@ namespace SchoolSystem.API.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
-                    return Unauthorized();
+                    return Unauthorized(ApiResponseFactory.Failure<object>(
+                        "UserNotFound", _messageService,
+                        new List<string> { "User not authenticated." }
+                    ));
                 }
 
                 var query = new GetConversationsQuery { UserId = userId };
                 var result = await _mediator.Send(query);
 
-                return Ok(new { success = true, data = result });
+                return Ok(ApiResponseFactory.Success(result, "ConversationsFetchedSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, error = ex.Message });
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ConversationsFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
             }
         }
     }
