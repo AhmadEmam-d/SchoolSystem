@@ -1090,6 +1090,138 @@
   "WeeklyScheduleFetchFailed": {
     "EN": "Failed to fetch weekly schedule",
     "AR": "فشل في جلب الجدول الأسبوعي"
+  },
+  "HomeworksFetchedSuccessfully": {
+    "EN": "Homeworks fetched successfully",
+    "AR": "تم جلب الواجبات بنجاح"
+  },
+  "HomeworkFetchedSuccessfully": {
+    "EN": "Homework details fetched successfully",
+    "AR": "تم جلب بيانات الواجب بنجاح"
+  },
+  "SubmissionsFetchedSuccessfully": {
+    "EN": "Submissions fetched successfully",
+    "AR": "تم جلب التسليمات بنجاح"
+  },
+  "GradeReportFetchedSuccessfully": {
+    "EN": "Grade report fetched successfully",
+    "AR": "تم جلب تقرير الدرجات بنجاح"
+  },
+  "HomeworkCreatedSuccessfully": {
+    "EN": "Homework created successfully",
+    "AR": "تم إنشاء الواجب بنجاح"
+  },
+  "HomeworkUpdatedSuccessfully": {
+    "EN": "Homework updated successfully",
+    "AR": "تم تحديث الواجب بنجاح"
+  },
+  "HomeworkDeletedSuccessfully": {
+    "EN": "Homework deleted successfully",
+    "AR": "تم حذف الواجب بنجاح"
+  },
+  "GradeSavedSuccessfully": {
+    "EN": "Grade saved successfully",
+    "AR": "تم حفظ الدرجة بنجاح"
+  },
+  "HomeworkNotFound": {
+    "EN": "Homework not found",
+    "AR": "الواجب غير موجود"
+  },
+  "HomeworkUpdateFailed": {
+    "EN": "An error occurred while updating the homework",
+    "AR": "حدث خطأ أثناء تحديث الواجب"
+  },
+  "HomeworkDeletionFailed": {
+    "EN": "An error occurred while deleting the homework",
+    "AR": "حدث خطأ أثناء حذف الواجب"
+  },
+  "GradeSaveFailed": {
+    "EN": "An error occurred while saving the grade",
+    "AR": "حدث خطأ أثناء حفظ الدرجة"
+  },
+  "BackupCreatedSuccessfully": {
+    "EN": "Backup created successfully",
+    "AR": "تم إنشاء النسخة الاحتياطية بنجاح"
+  },
+  "BackupCreationFailed": {
+    "EN": "An error occurred while creating backup",
+    "AR": "حدث خطأ أثناء إنشاء النسخة الاحتياطية"
+  },
+  "TeacherExamsFetchedSuccessfully": {
+    "EN": "Teacher exams fetched successfully",
+    "AR": "تم جلب امتحانات المعلم بنجاح"
+  },
+  "TeacherExamsFetchFailed": {
+    "EN": "An error occurred while fetching teacher exams",
+    "AR": "حدث خطأ أثناء جلب امتحانات المعلم"
+  },
+  "FAQsFetchedSuccessfully": {
+    "EN": "Frequently Asked Questions fetched successfully",
+    "AR": "تم جلب الأسئلة الشائعة بنجاح"
+  },
+  "KnowledgeBaseFetchedSuccessfully": {
+    "EN": "Knowledge base articles fetched successfully",
+    "AR": "تم جلب مقالات قاعدة المعرفة بنجاح"
+  },
+  "ArticleFetchedSuccessfully": {
+    "EN": "Article details fetched successfully",
+    "AR": "تم جلب تفاصيل المقال بنجاح"
+  },
+  "TicketCreatedSuccessfully": {
+    "EN": "Support ticket created successfully. Our team will contact you soon.",
+    "AR": "تم إنشاء تذكرة الدعم بنجاح. سيتواصل معك فريقنا قريباً."
+  },
+  "TicketsFetchedSuccessfully": {
+    "EN": "Your support tickets fetched successfully",
+    "AR": "تم جلب تذاكر الدعم الخاصة بك بنجاح"
+  },
+  "RolesFetchedSuccessfully": {
+    "EN": "User roles fetched successfully",
+    "AR": "تم جلب أدوار المستخدمين بنجاح"
+  },
+  "RolesFetchFailed": {
+    "EN": "Failed to fetch user roles",
+    "AR": "فشل جلب أدوار المستخدمين"
+  },
+  "LoginSuccessful": {
+    "EN": "Login successful. Welcome back!",
+    "AR": "تم تسجيل الدخول بنجاح. مرحباً بك مجدداً!"
+  },
+  "LoginFailed": {
+    "EN": "Login failed. Please check your credentials",
+    "AR": "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك"
+  },
+  "RegistrationSuccessful": {
+    "EN": "Registration successful. You can now login",
+    "AR": "تم التسجيل بنجاح. يمكنك الآن تسجيل الدخول"
+  },
+  "RegistrationFailed": {
+    "EN": "Registration failed. Please try again",
+    "AR": "فشل عملية التسجيل. يرجى المحاولة مرة أخرى"
+  },
+  "LogoutSuccessful": {
+    "EN": "Logged out successfully",
+    "AR": "تم تسجيل الخروج بنجاح"
+  },
+  "LogoutFailed": {
+    "EN": "An error occurred during logout",
+    "AR": "حدث خطأ أثناء تسجيل الخروج"
+  },
+  "StudentsSubjectsCountFetchedSuccessfully": {
+    "EN": "All students with their subjects count fetched successfully",
+    "AR": "تم جلب بيانات الطلاب مع عدد موادهم بنجاح"
+  },
+  "StudentsSubjectsCountFetchFailed": {
+    "EN": "An error occurred while fetching students subjects count",
+    "AR": "حدث خطأ أثناء جلب عدد مواد الطلاب"
+  },
+  "ClassStatsFetchedSuccessfully": {
+    "EN": "Class statistics fetched successfully",
+    "AR": "تم جلب إحصائيات الفصل بنجاح"
+  },
+  "ClassStatsFetchFailed": {
+    "EN": "An error occurred while fetching class statistics",
+    "AR": "حدث خطأ أثناء جلب إحصائيات الفصل"
   }
 
 }
