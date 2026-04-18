@@ -94,7 +94,7 @@ namespace SchoolSystem.Infrastructure.Services
             if (user == null)
                 throw new Exception("Invalid email or password");
 
-            if (user.PasswordHash != loginDto.Password) 
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
                 throw new Exception("Invalid email or password");
 
             if (user.Role != loginDto.Role)
@@ -168,7 +168,7 @@ namespace SchoolSystem.Infrastructure.Services
                 {
                     FullName = registerDto.FullName,
                     Email = registerDto.Email,
-                    PasswordHash = registerDto.Password, 
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
                     PhoneNumber = registerDto.PhoneNumber,
                     Role = registerDto.Role,
                     IsActive = true

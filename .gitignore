@@ -6,3 +6,17 @@ obj/
 *.pdb
 *.user
 *.suo
+echo "**/bin/" >> .gitignore
+echo "**/obj/" >> .gitignore
+echo "**/Debug/" >> .gitignore
+echo "**/Release/" >> .gitignore
+echo "*.cache" >> .gitignore
+echo "*.tmp" >> .gitignore
+echo "*.user" >> .gitignore
+echo ".vs/" >> .gitignore
+echo ".vscode/" >> .gitignore
+
+echo "*.Backup.tmp" >> .gitignore
+echo "*.cache.json" >> .gitignore
+echo "rpswa.*.cache.json" >> .gitignore
+echo "*.GeneratedMSBuildEditorConfig.editorconfig" >> .gitignore
