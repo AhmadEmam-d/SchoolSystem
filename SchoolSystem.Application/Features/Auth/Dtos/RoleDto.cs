@@ -73,4 +73,34 @@ namespace SchoolSystem.Application.Features.Auth.DTOs
         public bool IsActive { get; set; }
         public DateTime? LastLoginAt { get; set; }
     }
+    public class ForgotPasswordDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+    }
+
+    public class VerifyOtpDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        public string OtpCode { get; set; }
+
+        [Required]
+        [MinLength(6)]
+        public string NewPassword { get; set; }
+
+        [Required]
+        [Compare("NewPassword")]
+        public string ConfirmPassword { get; set; }
+    }
+
+    public class ResetPasswordByAdminDto
+    {
+        [Required]
+        public Guid UserId { get; set; }
+    }
 }

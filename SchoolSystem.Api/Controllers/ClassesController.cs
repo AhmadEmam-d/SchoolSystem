@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
+using SchoolSystem.Application.Features.Classes.Commands.AssignTeacher;
 using SchoolSystem.Application.Features.Classes.Commands.Create;
 using SchoolSystem.Application.Features.Classes.Commands.Delete;
 using SchoolSystem.Application.Features.Classes.Commands.Update;
@@ -213,6 +214,26 @@ namespace SchoolSystem.Api.Controllers
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ClassStatsFetchFailed", _messageService,
                     new List<string> { "An error occurred while fetching class statistics." }
+                ));
+            }
+        }
+        // POST: api/Classes/assign-teacher
+        [HttpPost("assign-teacher")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignTeacherToClass([FromBody] AssignTeacherToClassDto dto)
+        {
+            try
+            {
+                var command = new AssignTeacherToClassCommand(dto.ClassId, dto.TeacherId);
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "TeacherAssignedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "TeacherAssignFailed", _messageService,
+                    new List<string> { ex.Message }
                 ));
             }
         }
