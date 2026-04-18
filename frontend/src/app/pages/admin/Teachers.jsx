@@ -10,134 +10,149 @@ import { api } from '../../../app/lib/api';
 
 export function AdminTeachers() {
   const [teachers, setTeachers] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
+  // ✅ تحميل المدرسين
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTeachers = async () => {
       setLoading(true);
       try {
-        const teachersResponse = await api.teachers.getAll();
-        const subjectsResponse = await api.subjects.getAll();
-        
-        // استخراج البيانات من الاستجابة
-        const teachersList = teachersResponse.success ? teachersResponse.data : (Array.isArray(teachersResponse) ? teachersResponse : []);
-        const subjectsList = subjectsResponse.success ? subjectsResponse.data : (Array.isArray(subjectsResponse) ? subjectsResponse : []);
-        
-        setTeachers(teachersList);
-        setSubjects(subjectsList);
+        const data = await api.teachers.getAll();
+        setTeachers(data || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error(t('errorFetchingData'));
+        console.error(error);
+        toast.error("فشل تحميل المدرسين");
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    fetchTeachers();
   }, []);
 
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    teacher.email?.toLowerCase().includes(search.toLowerCase())
+  // ✅ فلترة
+  const filteredTeachers = teachers.filter(t =>
+    t.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    t.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ✅ DELETE (المهم)
   const handleDelete = async (id) => {
-    if (confirm(t('confirmDeleteTeacherMsg'))) {
-      try {
-        const result = await api.teachers.delete(id);
-        if (result.success) {
-          setTeachers(teachers.filter(t => t.oid !== id));
-          toast.success(t('teacherDeletedMsg'));
-        } else {
-          toast.error(result.errors?.[0] || t('errorDeletingTeacher'));
-        }
-      } catch (error) {
-        console.error('Error deleting teacher:', error);
-        toast.error(t('errorDeletingTeacher'));
+    const confirmDelete = window.confirm("متأكد عايز تمسح المدرس؟");
+    if (!confirmDelete) return;
+
+    try {
+      console.log("Deleting:", id);
+
+      const result = await api.teachers.delete(id);
+
+      console.log("Response:", result);
+
+      if (result.success) {
+        // حذف من UI
+        setTeachers(prev => prev.filter(t => t.oid !== id));
+        toast.success("تم حذف المدرس بنجاح");
+      } else {
+        toast.error(result.errors?.[0] || "فشل الحذف");
       }
+
+    } catch (error) {
+      console.error(error);
+      toast.error("خطأ في الحذف");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500 dark:text-gray-400">{t('loading')}</div>
+      <div className="flex justify-center items-center h-64">
+        جاري التحميل...
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{t('teachersPage')}</h1>
-          <p className="text-gray-500 dark:text-gray-400">{t('teachersPageDesc')}</p>
+          <h1 className="text-3xl font-bold">Teachers</h1>
+          <p className="text-gray-500">Manage all teachers</p>
         </div>
-        <Button className="gap-2" onClick={() => navigate('/admin/teachers/add')}>
-          <Plus className="h-4 w-4" /> {t('addTeacherBtnLabel')}
+
+        <Button onClick={() => navigate('/admin/teachers/add')}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Teacher
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className={`absolute ${isRTL ? 'right-2.5' : 'left-2.5'} top-2.5 h-4 w-4 text-gray-400`} />
-          <Input
-            placeholder={t('searchTeachersPlaceholder')}
-            className={`${isRTL ? 'pr-8' : 'pl-8'} dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-2.5 h-4 w-4 text-gray-400`} />
+        <Input
+          placeholder="Search..."
+          className={`${isRTL ? 'pr-8' : 'pl-8'}`}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
-      <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+      {/* Table */}
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow className="dark:border-gray-700">
-              <TableHead className="dark:text-gray-400">{t('nameCol')}</TableHead>
-              <TableHead className="dark:text-gray-400">{t('emailCol')}</TableHead>
-              <TableHead className="dark:text-gray-400">{t('phoneCol')}</TableHead>
-              <TableHead className="dark:text-gray-400">{t('subjectCol')}</TableHead>
-              <TableHead className={`${isRTL ? 'text-left' : 'text-right'} dark:text-gray-400`}>{t('actions')}</TableHead>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {filteredTeachers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-gray-500 dark:text-gray-400">
-                  {t('noTeachersFound')}
+                <TableCell colSpan={4} className="text-center">
+                  No teachers found
                 </TableCell>
               </TableRow>
             ) : (
               filteredTeachers.map((teacher) => (
-                <TableRow key={teacher.oid} className="dark:border-gray-700">
-                  <TableCell className="font-medium text-gray-900 dark:text-white">{teacher.fullName}</TableCell>
-                  <TableCell className="text-gray-600 dark:text-gray-300">{teacher.email}</TableCell>
-                  <TableCell className="text-gray-600 dark:text-gray-300">{teacher.phone || '-'}</TableCell>
-                  <TableCell className="text-gray-600 dark:text-gray-300">
-                    {teacher.subjects?.map(s => s.name).join(', ') || t('unassigned')}
-                  </TableCell>
-                  <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                    <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} gap-2`}>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/teachers/${teacher.oid}`)}>
+                <TableRow key={teacher.oid}>
+                  <TableCell>{teacher.fullName}</TableCell>
+                  <TableCell>{teacher.email}</TableCell>
+                  <TableCell>{teacher.phone || "-"}</TableCell>
+
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+
+                      <Button size="icon" variant="ghost"
+                        onClick={() => navigate(`/admin/teachers/${teacher.oid}`)}>
                         <Eye className="h-4 w-4 text-blue-500" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/teachers/edit/${teacher.oid}`)}>
+
+                      <Button size="icon" variant="ghost"
+                        onClick={() => navigate(`/admin/teachers/edit/${teacher.oid}`)}>
                         <Edit className="h-4 w-4 text-yellow-500" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(teacher.oid)}>
+
+                      <Button size="icon" variant="ghost"
+                        onClick={() => handleDelete(teacher.oid)}>
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
+
                     </div>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
+
         </Table>
       </div>
     </div>
