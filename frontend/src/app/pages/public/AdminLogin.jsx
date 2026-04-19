@@ -7,6 +7,7 @@ import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
+import apiConfig from '../../../../public/assets/links/api.json';
 
 export function AdminLogin() {
   const { login } = useAuth();
@@ -16,13 +17,14 @@ export function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const isRTL = i18n.language === 'ar';
+  const API_URL = apiConfig.API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5073/api/Auth/login', {
+      const response = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

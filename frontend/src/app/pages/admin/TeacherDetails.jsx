@@ -13,8 +13,9 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { toast } from 'sonner';
+import apiConfig from '../../../../public/assets/links/api.json';
 
-const API_BASE_URL = 'http://localhost:5073/api';
+const API_URL = apiConfig.API_URL;
 
 export function TeacherDetails() {
   const { id } = useParams();
@@ -31,7 +32,7 @@ export function TeacherDetails() {
       try {
         const token = localStorage.getItem('token');
 
-        const res = await fetch(`${API_BASE_URL}/Teachers/${id}`, {
+        const res = await fetch(`${API_URL}/Teachers/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

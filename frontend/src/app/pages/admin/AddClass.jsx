@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import apiConfig from '../../../../public/assets/links/api.json';
 
-const API_BASE_URL = "https://localhost:7179/api";
+const API_URL = apiConfig.API_URL;
 
 export function AddClass() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export function AddClass() {
 
       console.log("🚀 Sending:", payload);
 
-      const res = await fetch(`${API_BASE_URL}/Classes`, {
+      const res = await fetch(`${API_URL}/Classes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

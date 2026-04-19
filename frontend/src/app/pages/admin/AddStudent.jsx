@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
+import apiConfig from '../../../../public/assets/links/api.json';
 
 export function AddStudent() {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [parents, setParents] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
+  
+  const API_URL = apiConfig.API_URL;
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -24,7 +26,7 @@ export function AddStudent() {
     parentOid: ''
   });
 
-  // ✅ تحميل البيانات
+  // fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -32,7 +34,7 @@ export function AddStudent() {
 
         const [clsRes, secRes, parRes] = await Promise.all([
           api.classes.getAll(),
-          fetch(`https://localhost:7179/api/Sections`, {
+          fetch(`${API_URL}/Sections`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
             }

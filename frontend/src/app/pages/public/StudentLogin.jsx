@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import apiConfig from '../../../../public/assets/links/api.json';
 
 export function StudentLogin() {
   const { login } = useAuth();
@@ -19,8 +20,7 @@ export function StudentLogin() {
   const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
 
-  const API_BASE_URL = 'https://localhost:7179/api';
-
+  const API_URL = apiConfig.API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +28,7 @@ export function StudentLogin() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+      const response = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

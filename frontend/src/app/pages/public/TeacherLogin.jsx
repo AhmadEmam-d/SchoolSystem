@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import apiConfig from '../../../../public/assets/links/api.json';
 
 export function TeacherLogin() {
   const { login, logout, isAuthenticated } = useAuth();
@@ -18,6 +19,7 @@ export function TeacherLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
+  const API_URL = apiConfig.API_URL;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -31,7 +33,7 @@ export function TeacherLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://localhost:7179/api/Auth/login', {
+      const response = await fetch(`${API_URL}/Auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
