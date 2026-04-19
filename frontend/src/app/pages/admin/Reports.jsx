@@ -1,3 +1,240 @@
+// import React, { useEffect, useState } from 'react';
+// import { useTranslation } from 'react-i18next';
+// import { api } from '../../lib/api';
+
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+// import { Button } from '../../components/ui/button';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+
+// import { Download, FileText, TrendingUp, Users } from 'lucide-react';
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   Legend,
+//   ResponsiveContainer,
+//   PieChart,
+//   Pie,
+//   Cell
+// } from 'recharts';
+
+// export function AdminReports() {
+//   const { t, i18n } = useTranslation();
+//   const isRTL = i18n.language === 'ar';
+
+//   // 🔥 State بدل الداتا الثابتة
+//   const [academicData, setAcademicData] = useState([]);
+//   const [attendanceData, setAttendanceData] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   // 🔥 Fetch من API
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         // Academic
+//         const academicRes = await api.reports.getAcademicPerformance();
+
+//         if (academicRes) {
+//           const formatted = academicRes.map(item => ({
+//             subject: item.subjectName,
+//             avg: item.averageScore,
+//             pass: item.passRate
+//           }));
+//           setAcademicData(formatted);
+//         }
+
+//         // Attendance
+//         const attendanceRes = await api.reports.getAttendanceDistribution();
+
+//         if (attendanceRes) {
+//           setAttendanceData([
+//             {
+//               name: t('present'),
+//               value: attendanceRes.presentPercentage,
+//               color: '#22c55e'
+//             },
+//             {
+//               name: t('absent'),
+//               value: attendanceRes.absentPercentage,
+//               color: '#ef4444'
+//             },
+//             {
+//               name: t('late'),
+//               value: attendanceRes.latePercentage,
+//               color: '#eab308'
+//             }
+//           ]);
+//         }
+
+//       } catch (err) {
+//         console.error('Error fetching reports:', err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, [t]);
+
+//   // 🔥 Export CSV
+//   const handleExportAll = () => {
+//     const academicHeaders = [t('subjectCol'), t('averageScore'), `${t('passRate')} (%)`];
+//     const academicRows = academicData.map(item =>
+//       [item.subject, item.avg, item.pass].join(',')
+//     );
+
+//     const attendanceHeaders = [t('status'), t('percentage')];
+//     const attendanceRows = attendanceData.map(item =>
+//       [item.name, item.value].join(',')
+//     );
+
+//     const csvContent = [
+//       t('academicPerformanceBySubject'),
+//       academicHeaders.join(','),
+//       ...academicRows,
+//       '',
+//       t('attendanceDistributionTitle'),
+//       attendanceHeaders.join(','),
+//       ...attendanceRows
+//     ].join('\n');
+
+//     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+//     const link = document.createElement('a');
+//     link.setAttribute('href', URL.createObjectURL(blob));
+//     link.setAttribute('download', `reports_${new Date().toISOString().split('T')[0]}.csv`);
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   };
+
+//   if (loading) {
+//     return <div className="text-center py-10">Loading...</div>;
+//   }
+
+//   return (
+//     <div className="space-y-6">
+
+//       {/* Header */}
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold text-foreground">{t('reportsPage')}</h1>
+//           <p className="text-muted-foreground mt-1">{t('reportsPageDesc')}</p>
+//         </div>
+
+//         <div className="flex gap-2">
+//           <Select defaultValue="current">
+//             <SelectTrigger className="w-[200px]">
+//               <SelectValue placeholder={t('academicYear')} />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectItem value="current">{t('currentYear')}</SelectItem>
+//               <SelectItem value="prev">{t('previousYear')}</SelectItem>
+//             </SelectContent>
+//           </Select>
+
+//           <Button variant="outline" onClick={handleExportAll}>
+//             <Download className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+//             {t('exportAll')}
+//           </Button>
+//         </div>
+//       </div>
+
+//       {/* Charts */}
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+//         {/* Academic */}
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>{t('academicPerformanceBySubject')}</CardTitle>
+//             <CardDescription>{t('averageScoresAndPassRates')}</CardDescription>
+//           </CardHeader>
+
+//           <CardContent className="h-[300px]">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <BarChart data={academicData}>
+//                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+//                 <XAxis dataKey="subject" />
+//                 <YAxis />
+//                 <Tooltip />
+//                 <Legend />
+//                 <Bar dataKey="avg" name={t('averageScore')} fill="#8884d8" />
+//                 <Bar dataKey="pass" name={`${t('passRate')} (%)`} fill="#82ca9d" />
+//               </BarChart>
+//             </ResponsiveContainer>
+//           </CardContent>
+//         </Card>
+
+//         {/* Attendance */}
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>{t('attendanceDistributionTitle')}</CardTitle>
+//             <CardDescription>{t('overallAttendanceStatus')}</CardDescription>
+//           </CardHeader>
+
+//           <CardContent className="h-[300px] flex items-center justify-center">
+//             <ResponsiveContainer width="100%" height="100%">
+//               <PieChart>
+//                 <Pie
+//                   data={attendanceData}
+//                   cx="50%"
+//                   cy="50%"
+//                   innerRadius={60}
+//                   outerRadius={80}
+//                   dataKey="value"
+//                 >
+//                   {attendanceData.map((entry, index) => (
+//                     <Cell key={index} fill={entry.color} />
+//                   ))}
+//                 </Pie>
+//                 <Tooltip />
+//                 <Legend />
+//               </PieChart>
+//             </ResponsiveContainer>
+//           </CardContent>
+//         </Card>
+
+//       </div>
+
+//       {/* Reports Cards */}
+//       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+//         <Card className="cursor-pointer border-l-4 border-blue-500">
+//           <CardContent className="p-6 flex gap-4">
+//             <FileText />
+//             <div>
+//               <h3>{t('studentProgressReport')}</h3>
+//               <p>{t('generatePDFForAllStudents')}</p>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         <Card className="cursor-pointer border-l-4 border-green-500">
+//           <CardContent className="p-6 flex gap-4">
+//             <TrendingUp />
+//             <div>
+//               <h3>{t('financialSummaryTitle')}</h3>
+//               <p>{t('incomeExpensesAndFees')}</p>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         <Card className="cursor-pointer border-l-4 border-purple-500">
+//           <CardContent className="p-6 flex gap-4">
+//             <Users />
+//             <div>
+//               <h3>{t('teacherActivityLog')}</h3>
+//               <p>{t('loginHistoryAndActions')}</p>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//       </div>
+//     </div>
+//   );
+// }
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';

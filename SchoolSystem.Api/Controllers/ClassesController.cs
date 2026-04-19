@@ -1,7 +1,9 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
+using SchoolSystem.Application.Features.Classes.Commands.AssignTeacher;
 using SchoolSystem.Application.Features.Classes.Commands.Create;
 using SchoolSystem.Application.Features.Classes.Commands.Delete;
 using SchoolSystem.Application.Features.Classes.Commands.Update;
@@ -10,10 +12,13 @@ using SchoolSystem.Application.Features.Classes.DTOs.Update;
 using SchoolSystem.Application.Features.Classes.Queries.Get;
 using SchoolSystem.Application.Features.Classes.Queries.GetAll;
 using SchoolSystem.Application.Features.Classes.Queries.GetByOid;
+using SchoolSystem.Application.Features.Classes.Queries.GetClassStats;
+using SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses;
 using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.Api.Controllers
@@ -168,6 +173,67 @@ namespace SchoolSystem.Api.Controllers
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ClassDeletionFailed", _messageService,
                     new List<string> { "An error occurred while deleting the class." }
+                ));
+            }
+        }
+        [HttpGet("teacher")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> GetTeacherClasses()
+        {
+            try
+            {
+                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                    return Unauthorized();
+
+                var query = new GetTeacherClassesQuery(teacherId);
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ClassesFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ClassesFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching classes." }
+                ));
+            }
+        }
+        [HttpGet("{id:guid}/stats")]
+        public async Task<IActionResult> GetClassStats(Guid id)
+        {
+            try
+            {
+                var query = new GetClassStatsQuery(id);
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ClassStatsFetchedSuccessfully", _messageService));
+            }
+            catch
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ClassStatsFetchFailed", _messageService,
+                    new List<string> { "An error occurred while fetching class statistics." }
+                ));
+            }
+        }
+        // POST: api/Classes/assign-teacher
+        [HttpPost("assign-teacher")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignTeacherToClass([FromBody] AssignTeacherToClassDto dto)
+        {
+            try
+            {
+                var command = new AssignTeacherToClassCommand(dto.ClassId, dto.TeacherId);
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "TeacherAssignedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "TeacherAssignFailed", _messageService,
+                    new List<string> { ex.Message }
                 ));
             }
         }

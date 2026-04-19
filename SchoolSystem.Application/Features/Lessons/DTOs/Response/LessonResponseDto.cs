@@ -18,10 +18,10 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
         public int MaterialsCount { get; set; }
         public int ObjectivesCount { get; set; }
         public bool HasHomework { get; set; }
+        public HomeworkResponseDto? Homework { get; set; }
         public List<ObjectiveResponseDto> Objectives { get; set; }
         public List<MaterialResponseDto> Materials { get; set; }
         public List<string> ResourceLinks { get; set; }
-        public HomeworkResponseDto? Homework { get; set; }
         public string TeacherNotes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -33,7 +33,13 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
         public string Description { get; set; }
         public int Order { get; set; }
     }
-
+    public class HomeworkResponseDto
+    {
+        public Guid Oid { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime DueDate { get; set; }
+    }
     public class MaterialResponseDto
     {
         public Guid Oid { get; set; }
@@ -43,13 +49,7 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
         public long FileSize { get; set; }
     }
 
-    public class HomeworkResponseDto
-    {
-        public Guid Oid { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public DateTime DueDate { get; set; }
-    }
+ 
 
     public class LessonStatsDto
     {

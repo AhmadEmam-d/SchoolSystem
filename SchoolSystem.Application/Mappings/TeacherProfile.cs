@@ -16,10 +16,14 @@ namespace SchoolSystem.Application.Mappings
             CreateMap<UpdateTeacherDto, Teacher>();
 
             CreateMap<Teacher, TeacherResponseDto>()
-                .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src =>
-                    src.TeacherSubjects.Select(ts => ts.Subject)))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null));
+                .ForMember(dest => dest.Subjects, opt => opt.MapFrom(src => src.TeacherSubjects.Select(ts => new TeacherResponseDto.SubjectBasicDto
+                {
+                    Oid = ts.Subject.Oid,
+                    Name = ts.Subject.Name
+                })))
+                .ForMember(dest => dest.AcademicSummary, opt => opt.Ignore());
 
             CreateMap<Subject, SubjectBasicDto>();
         }

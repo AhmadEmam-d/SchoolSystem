@@ -36,11 +36,20 @@ namespace SchoolSystem.Application.Features.Notifications.Queries.GetUser
             var userRole = _currentUser.Role;
 
             var query = _notificationRepo.GetAllQueryable()
-                .Where(n => !n.IsDeleted)
-                .Where(n => n.UserOid == userId ||
-                           (n.TargetRole == "All") ||
-                           (n.TargetRole == userRole) ||
-                           (string.IsNullOrEmpty(n.TargetRole)));
+                .Where(n => !n.IsDeleted);
+
+            if (userRole == "Admin")
+            {
+            }
+            else
+            {
+
+                query = query.Where(n =>
+                    n.UserOid == userId ||                           
+                    (n.TargetRole == "All") ||                  
+                    (n.TargetRole == userRole) ||               
+                    (string.IsNullOrEmpty(n.TargetRole)));          
+            }
 
             if (request.IsRead.HasValue)
                 query = query.Where(n => n.IsRead == request.IsRead.Value);

@@ -14,9 +14,11 @@ using SchoolSystem.Application.Features.Exams.Queries.GetAll;
 using SchoolSystem.Application.Features.Exams.Queries.GetById;
 using SchoolSystem.Application.Features.Exams.Queries.GetResults;
 using SchoolSystem.Application.Features.Exams.Queries.GetSummary;
+using SchoolSystem.Application.Features.Exams.Queries.GetTeacherExams;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.Api.Controllers
@@ -35,85 +37,57 @@ namespace SchoolSystem.Api.Controllers
             _messageService = messageService;
         }
 
+        // GET: api/Exams/teacher
+        [HttpGet("teacher")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GetTeacherExams()
+        {
+            var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                return Unauthorized();
+
+            var result = await _mediator.Send(new GetTeacherExamsQuery(teacherId));
+            return Ok(ApiResponseFactory.Success(result, "TeacherExamsFetchedSuccessfully", _messageService));
+        }
+
         // GET: api/Exams/summary
         [HttpGet("summary")]
         public async Task<IActionResult> GetSummary()
         {
-            try
-            {
-                var result = await _mediator.Send(new GetExamsSummaryQuery());
-                return Ok(ApiResponseFactory.Success(result, "ExamsSummaryFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamsSummaryFetchFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new GetExamsSummaryQuery());
+            return Ok(ApiResponseFactory.Success(result, "ExamsSummaryFetchedSuccessfully", _messageService));
         }
 
         // GET: api/Exams
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] Guid? subjectOid, [FromQuery] Guid? classOid, [FromQuery] int? status, [FromQuery] int? type)
         {
-            try
+            var result = await _mediator.Send(new GetExamsQuery
             {
-                var result = await _mediator.Send(new GetExamsQuery
-                {
-                    SubjectOid = subjectOid,
-                    ClassOid = classOid,
-                    Status = status,
-                    Type = type
-                });
-                return Ok(ApiResponseFactory.Success(result, "ExamsFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamsFetchFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+                SubjectOid = subjectOid,
+                ClassOid = classOid,
+                Status = status,
+                Type = type
+            });
+            return Ok(ApiResponseFactory.Success(result, "ExamsFetchedSuccessfully", _messageService));
         }
 
         // GET: api/Exams/{oid}
         [HttpGet("{oid}")]
         public async Task<IActionResult> GetById(Guid oid)
         {
-            try
-            {
-                var result = await _mediator.Send(new GetExamByIdQuery(oid));
-                if (result == null)
-                    return NotFound();
-
-                return Ok(ApiResponseFactory.Success(result, "ExamFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamFetchFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new GetExamByIdQuery(oid));
+            if (result == null)
+                return NotFound();
+            return Ok(ApiResponseFactory.Success(result, "ExamFetchedSuccessfully", _messageService));
         }
 
         // GET: api/Exams/{oid}/results
         [HttpGet("{oid}/results")]
         public async Task<IActionResult> GetResults(Guid oid)
         {
-            try
-            {
-                var result = await _mediator.Send(new GetExamResultsQuery(oid));
-                return Ok(ApiResponseFactory.Success(result, "ExamResultsFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamResultsFetchFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new GetExamResultsQuery(oid));
+            return Ok(ApiResponseFactory.Success(result, "ExamResultsFetchedSuccessfully", _messageService));
         }
 
         // POST: api/Exams
@@ -121,18 +95,12 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create([FromBody] CreateExamDto dto)
         {
-            try
-            {
-                var result = await _mediator.Send(new CreateExamCommand(dto));
-                return Ok(ApiResponseFactory.Success(result, "ExamCreatedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamCreationFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                return Unauthorized();
+
+            var result = await _mediator.Send(new CreateExamCommand(dto, teacherId));
+            return Ok(ApiResponseFactory.Success(result, "ExamCreatedSuccessfully", _messageService));
         }
 
         // PUT: api/Exams/{oid}
@@ -140,26 +108,11 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Update(Guid oid, [FromBody] UpdateExamDto dto)
         {
-            try
-            {
-                if (oid != dto.Oid)
-                {
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "IDMismatch", _messageService,
-                        new List<string> { "ID mismatch between URL and body." }
-                    ));
-                }
+            if (oid != dto.Oid)
+                return BadRequest(new ApiResponse<bool> { Success = false, Errors = new List<string> { "ID mismatch" } });
 
-                var result = await _mediator.Send(new UpdateExamCommand(dto));
-                return Ok(ApiResponseFactory.Success(result, "ExamUpdatedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamUpdateFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new UpdateExamCommand(dto));
+            return Ok(ApiResponseFactory.Success(result, "ExamUpdatedSuccessfully", _messageService));
         }
 
         // DELETE: api/Exams/{oid}
@@ -167,18 +120,8 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Delete(Guid oid)
         {
-            try
-            {
-                var result = await _mediator.Send(new DeleteExamCommand(oid));
-                return Ok(ApiResponseFactory.Success(result, "ExamDeletedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamDeletionFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new DeleteExamCommand(oid));
+            return Ok(ApiResponseFactory.Success(result, "ExamDeletedSuccessfully", _messageService));
         }
 
         // POST: api/Exams/{oid}/results
@@ -186,26 +129,11 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> AddResult(Guid oid, [FromBody] CreateExamResultDto dto)
         {
-            try
-            {
-                if (oid != dto.ExamOid)
-                {
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "IDMismatch", _messageService,
-                        new List<string> { "Exam ID mismatch" }
-                    ));
-                }
+            if (oid != dto.ExamOid)
+                return BadRequest(new ApiResponse<bool> { Success = false, Errors = new List<string> { "Exam ID mismatch" } });
 
-                var result = await _mediator.Send(new CreateExamResultCommand(dto));
-                return Ok(ApiResponseFactory.Success(result, "ExamResultAddedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamResultAddFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new CreateExamResultCommand(dto));
+            return Ok(ApiResponseFactory.Success(result, "ExamResultAddedSuccessfully", _messageService));
         }
 
         // PUT: api/Exams/results/{oid}
@@ -213,26 +141,11 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> UpdateResult(Guid oid, [FromBody] UpdateExamResultDto dto)
         {
-            try
-            {
-                if (oid != dto.Oid)
-                {
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "IDMismatch", _messageService,
-                        new List<string> { "Result ID mismatch" }
-                    ));
-                }
+            if (oid != dto.Oid)
+                return BadRequest(new ApiResponse<bool> { Success = false, Errors = new List<string> { "Result ID mismatch" } });
 
-                var result = await _mediator.Send(new UpdateExamResultCommand(dto));
-                return Ok(ApiResponseFactory.Success(result, "ExamResultUpdatedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamResultUpdateFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new UpdateExamResultCommand(dto));
+            return Ok(ApiResponseFactory.Success(result, "ExamResultUpdatedSuccessfully", _messageService));
         }
 
         // DELETE: api/Exams/results/{oid}
@@ -240,18 +153,8 @@ namespace SchoolSystem.Api.Controllers
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> DeleteResult(Guid oid)
         {
-            try
-            {
-                var result = await _mediator.Send(new DeleteExamResultCommand(oid));
-                return Ok(ApiResponseFactory.Success(result, "ExamResultDeletedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ExamResultDeletionFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            var result = await _mediator.Send(new DeleteExamResultCommand(oid));
+            return Ok(ApiResponseFactory.Success(result, "ExamResultDeletedSuccessfully", _messageService));
         }
     }
 }

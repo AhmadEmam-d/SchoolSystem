@@ -29,33 +29,44 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.Create
             _mapper = mapper;
         }
 
+        // Application/Features/Attendance/Commands/Create/CreateAttendanceCommandHandler.cs
+        // Application/Features/Attendance/Commands/Create/CreateAttendanceCommandHandler.cs
         public async Task<Guid> Handle(CreateAttendanceCommand request, CancellationToken cancellationToken)
         {
-            var student = await _studentRepo.GetByOidAsync(request.Dto.StudentOid);
-            if (student == null)
-                throw new Exception("Student not found");
-
             var classEntity = await _classRepo.GetByOidAsync(request.Dto.ClassOid);
             if (classEntity == null)
                 throw new Exception("Class not found");
 
-            var attendance = new SchoolSystem.Domain.Entities.Attendance
+            var attendanceRecords = new List<SchoolSystem.Domain.Entities.Attendance>();
+
+            foreach (var studentAttendance in request.Dto.Attendances)
             {
-                StudentOid = request.Dto.StudentOid,
-                ClassOid = request.Dto.ClassOid,
-                Date = request.Dto.Date,
-                Status = (AttendanceStatus)Enum.Parse(typeof(AttendanceStatus), request.Dto.Status),
-                Remarks = request.Dto.Remarks
-            };
+                var student = await _studentRepo.GetByOidAsync(studentAttendance.StudentOid);
+                if (student == null) continue;
 
-            if (!string.IsNullOrEmpty(request.Dto.CheckInTime))
-                attendance.CheckInTime = TimeSpan.Parse(request.Dto.CheckInTime);
+                var attendance = new SchoolSystem.Domain.Entities.Attendance
+                {
+                    Oid = Guid.NewGuid(),
+                    StudentOid = studentAttendance.StudentOid,
+                    ClassOid = request.Dto.ClassOid,
+                    Date = request.Dto.Date,
+                    Status = (AttendanceStatus)Enum.Parse(typeof(AttendanceStatus), studentAttendance.Status),
+                    Remarks = studentAttendance.Remarks,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            if (!string.IsNullOrEmpty(request.Dto.CheckOutTime))
-                attendance.CheckOutTime = TimeSpan.Parse(request.Dto.CheckOutTime);
+                if (!string.IsNullOrEmpty(studentAttendance.CheckInTime))
+                    attendance.CheckInTime = TimeSpan.Parse(studentAttendance.CheckInTime);
 
-            await _attendanceRepo.AddAsync(attendance);
-            return attendance.Oid;
+                attendanceRecords.Add(attendance);
+            }
+
+            foreach (var attendance in attendanceRecords)
+            {
+                await _attendanceRepo.AddAsync(attendance);
+            }
+
+            return request.Dto.ClassOid;
         }
     }
 }

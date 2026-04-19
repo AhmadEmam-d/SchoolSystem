@@ -16,7 +16,7 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs.Create
         public List<string> Objectives { get; set; } = new List<string>();
         public List<CreateMaterialDto> Materials { get; set; } = new List<CreateMaterialDto>();
         public List<string> ResourceLinks { get; set; } = new List<string>();
-        public CreateHomeworkDto? Homework { get; set; }
+        public LessonHomeworkDto? Homework { get; set; }
         public string TeacherNotes { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs.Create
         public long FileSize { get; set; }
     }
 
-    public class CreateHomeworkDto
+    public class LessonHomeworkDto
     {
         public string Title { get; set; }
         public string Description { get; set; }

@@ -9,43 +9,38 @@ namespace SchoolSystem.Application.Mappings
     {
         public ExamsProfile()
         {
-            CreateMap<Exam, ExamDto>()
-                .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject.Name))
-                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class.Name))
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString(@"hh\:mm")))
-                .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.Duration.ToString(@"hh\:mm")))
-                .ForMember(dest => dest.Statistics, opt => opt.Ignore());
-
+            // Create mapping
             CreateMap<CreateExamDto, Exam>()
-                .ForMember(dest => dest.Type, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => ExamStatus.Pending))
-                .ForMember(dest => dest.StartTime, opt => opt.Ignore())
-                .ForMember(dest => dest.Duration, opt => opt.Ignore());
+               .ForMember(dest => dest.Oid, opt => opt.Ignore())
+               .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
+               .ForMember(dest => dest.Status, opt => opt.Ignore())
+               .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+               .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+               .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+               .ForMember(dest => dest.Results, opt => opt.Ignore())
+               .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse(typeof(ExamType), src.Type)))
+               .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => TimeSpan.Parse(src.StartTime)))
+               .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => TimeSpan.Parse(src.Duration)));
 
+            // Update mapping
             CreateMap<UpdateExamDto, Exam>()
-                .ForMember(dest => dest.Type, opt => opt.Ignore())
-                .ForMember(dest => dest.Status, opt => opt.Ignore())
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
+            // Response mapping
+            CreateMap<Exam, ExamDto>()
+                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : string.Empty))
+                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class != null ? src.Class.Name : string.Empty))
+                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()))
+                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                 .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString(@"hh\:mm")))
+                 .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.Duration.ToString(@"hh\:mm")));
+
+            // Result mapping
             CreateMap<ExamResult, ExamResultDto>()
-                .ForMember(dest => dest.ExamName, opt => opt.MapFrom(src => src.Exam.Name))
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName))
-                .ForMember(dest => dest.Grade, opt => opt.MapFrom(src => src.Grade ?? "-"));
-
-            CreateMap<CreateExamResultDto, ExamResult>()
-                .ForMember(dest => dest.Percentage, opt => opt.Ignore())
-                .ForMember(dest => dest.Grade, opt => opt.Ignore())
-                .ForMember(dest => dest.IsPassed, opt => opt.Ignore())
-                .ForMember(dest => dest.SubmittedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
-
-            CreateMap<UpdateExamResultDto, ExamResult>()
-                .ForMember(dest => dest.Percentage, opt => opt.Ignore())
-                .ForMember(dest => dest.Grade, opt => opt.Ignore())
-                .ForMember(dest => dest.IsPassed, opt => opt.Ignore())
-                .ForMember(dest => dest.GradedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName : string.Empty))
+                .ForMember(dest => dest.ExamName, opt => opt.MapFrom(src => src.Exam != null ? src.Exam.Name : string.Empty));
         }
     }
 }

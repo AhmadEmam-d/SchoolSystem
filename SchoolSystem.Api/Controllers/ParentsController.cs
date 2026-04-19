@@ -94,7 +94,6 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
-
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateParentDto dto)
         {
@@ -105,11 +104,11 @@ namespace SchoolSystem.Api.Controllers
 
                 return Ok(ApiResponseFactory.Success(parentOid, "ParentCreatedSuccessfully", _messageService));
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ParentCreationFailed", _messageService,
-                    new List<string> { "An error occurred while creating the parent." }
+                    new List<string> { ex.Message }
                 ));
             }
         }

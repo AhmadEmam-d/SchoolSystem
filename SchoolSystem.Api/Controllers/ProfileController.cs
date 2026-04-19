@@ -77,31 +77,53 @@ namespace SchoolSystem.Api.Controllers
                 }
             }
 
-            // POST: api/Profile/change-password
-            [HttpPost("change-password")]
-            public async Task<IActionResult> ChangePassword([FromBody] ChangeUserPasswordCommand command)
+        // POST: api/Profile/change-password
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangeUserPasswordDto passwordData)
+        {
+            try
             {
-                try
+                var command = new ChangeUserPasswordCommand(passwordData);
+                var result = await _mediator.Send(command);
+                if (result.Success)
                 {
-                    var result = await _mediator.Send(command);
-                    if (result.Success)
-                    {
-                        return Ok(ApiResponseFactory.Success(true, "PasswordChangedSuccessfully", _messageService));
-                    }
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "PasswordChangeFailed", _messageService,
-                        new List<string> { result.Message ?? "Failed to change password" }
-                    ));
+                    return Ok(ApiResponseFactory.Success(true, "PasswordChangedSuccessfully", _messageService));
                 }
-                catch (Exception ex)
-                {
-                    return BadRequest(ApiResponseFactory.Failure<object>(
-                        "PasswordChangeFailed", _messageService,
-                        new List<string> { ex.Message }
-                    ));
-                }
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "PasswordChangeFailed", _messageService,
+                    new List<string> { result.Message ?? "Failed to change password" }
+                ));
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "PasswordChangeFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        [HttpGet("test-bcrypt")]
+        public IActionResult TestBcrypt()
+        {
+            var hash = "$2a$11$q5M3ZBJkQ3QZ5QZ5QZ5QZuVGQnQ3ZQ5QZ5QZ5QZ5QZ5QZ5QZ5QZu";
+            var password = "Admin@123";
+            var isValid = BCrypt.Net.BCrypt.Verify(password, hash);
 
+            return Ok(new { hash, password, isValid });
+        }
+        [HttpGet("generate-hashes")]
+        [AllowAnonymous]
+        public IActionResult GenerateHashes()
+        {
+            return Ok(new
+            {
+                TempPassword123 = BCrypt.Net.BCrypt.HashPassword("TempPassword123!"),
+                Admin123 = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                Parent123 = BCrypt.Net.BCrypt.HashPassword("Parent@123"),
+                Student123 = BCrypt.Net.BCrypt.HashPassword("Student@123"),
+                Teacher123 = BCrypt.Net.BCrypt.HashPassword("Teacher@123"),
+            });
+        }
         //// POST: api/Profile/upload-avatar
         //[HttpPost("upload-avatar")]
         //[Consumes("multipart/form-data")]  // أضف هذا

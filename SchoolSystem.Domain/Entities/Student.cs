@@ -33,6 +33,7 @@ namespace SchoolSystem.Domain.Entities
         public ICollection<Attendance> AttendanceRecords { get; set; } = new List<Attendance>();
         public ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
         public ICollection<FeeInvoice> FeeInvoices { get; set; } = new List<FeeInvoice>();
+        public ICollection<HomeworkSubmission> Submissions { get; set; } = new List<HomeworkSubmission>();
     }
 
 

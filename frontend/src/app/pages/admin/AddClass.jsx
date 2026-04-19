@@ -4,23 +4,64 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
+const API_BASE_URL = "https://localhost:7179/api";
+
 export function AddClass() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
   const [formData, setFormData] = useState({
     className: '',
-    classNameAr: '',
     grade: '',
-    section: '',
-    academicYear: '2024-2025',
-    capacity: '',
-    room: '',
   });
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success(t('classAddedSuccess'));
-    navigate('/admin/classes');
+
+    if (!formData.className || !formData.grade) {
+      toast.error("All fields required");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // ✅ IMPORTANT: mapping للـ API
+      const payload = {
+        name: formData.className,
+        level: formData.grade
+      };
+
+      console.log("🚀 Sending:", payload);
+
+      const res = await fetch(`${API_BASE_URL}/Classes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      console.log("📥 Response:", data);
+
+      if (data.success) {
+        toast.success("Class added successfully");
+        navigate('/admin/classes');
+      } else {
+        toast.error(data.errors?.[0] || "Failed");
+      }
+
+    } catch (error) {
+      console.error("❌ Error:", error);
+      toast.error("Server error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -28,165 +69,88 @@ export function AddClass() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-3xl mx-auto">
+
+      {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <button
           onClick={() => navigate('/admin/classes')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="p-2 hover:bg-gray-100 rounded-lg"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          <ArrowLeft className="h-5 w-5" />
         </button>
+
         <div>
-          <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('addNewClass')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">{t('addNewClassDesc')}</p>
+          <h1 className="text-2xl font-bold text-purple-600">
+            Add New Class
+          </h1>
+          <p className="text-gray-500">
+            Create a new class
+          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('classInformation')}</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('className')} *
-              </label>
-              <input
-                type="text"
-                name="className"
-                value={formData.className}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                placeholder={t('classNamePlaceholder')}
-              />
-            </div>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow">
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('classNameAr')} *
-              </label>
-              <input
-                type="text"
-                name="classNameAr"
-                value={formData.classNameAr}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                placeholder={t('classNamePlaceholder')}
-                dir="rtl"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('grade')} *
-              </label>
-              <select
-                name="grade"
-                value={formData.grade}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">{t('selectClass')}</option>
-                <option value="1">{t('grade1')}</option>
-                <option value="2">{t('grade2')}</option>
-                <option value="3">{t('grade3')}</option>
-                <option value="4">{t('grade4')}</option>
-                <option value="5">{t('grade5')}</option>
-                <option value="6">{t('grade6')}</option>
-                <option value="7">{t('grade7')}</option>
-                <option value="8">{t('grade8')}</option>
-                <option value="9">{t('grade9')}</option>
-                <option value="10">{t('grade10')}</option>
-                <option value="11">{t('grade11')}</option>
-                <option value="12">{t('grade12')}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('section')} *
-              </label>
-              <select
-                name="section"
-                value={formData.section}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="">{t('selectClass')}</option>
-                <option value="A">{t('sectionA')}</option>
-                <option value="B">{t('sectionB')}</option>
-                <option value="C">{t('sectionC')}</option>
-                <option value="D">{t('sectionD')}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('academicYear')} *
-              </label>
-              <input
-                type="text"
-                name="academicYear"
-                value={formData.academicYear}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                placeholder={t('placeholderAcademicYear')}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('capacity')} *
-              </label>
-              <input
-                type="number"
-                name="capacity"
-                value={formData.capacity}
-                onChange={handleChange}
-                required
-                min="1"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                placeholder={t('placeholderCapacity')}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('room')}
-              </label>
-              <input
-                type="text"
-                name="room"
-                value={formData.room}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-                placeholder={t('placeholderRoom')}
-              />
-            </div>
-          </div>
+        {/* Class Name */}
+        <div>
+          <label className="block mb-2 font-medium">
+            Class Name *
+          </label>
+          <input
+            type="text"
+            name="className"
+            value={formData.className}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border rounded-lg"
+            placeholder="Ex: Class A"
+          />
         </div>
 
-        <div className="flex items-center justify-end gap-4">
+        {/* Grade */}
+        <div>
+          <label className="block mb-2 font-medium">
+            Grade *
+          </label>
+          <select
+            name="grade"
+            value={formData.grade}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border rounded-lg"
+          >
+            <option value="">Select Grade</option>
+            <option value="1">Grade 1</option>
+            <option value="2">Grade 2</option>
+            <option value="3">Grade 3</option>
+            <option value="4">Grade 4</option>
+            <option value="5">Grade 5</option>
+            <option value="6">Grade 6</option>
+          </select>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3">
           <button
             type="button"
             onClick={() => navigate('/admin/classes')}
-            className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-4 py-2 border rounded-lg"
           >
-            {t('cancel')}
+            Cancel
           </button>
+
           <button
             type="submit"
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            disabled={loading}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center gap-2"
           >
-            <Save className="h-5 w-5" />
-            {t('saveClass')}
+            <Save className="h-4 w-4" />
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
+
       </form>
     </div>
   );
