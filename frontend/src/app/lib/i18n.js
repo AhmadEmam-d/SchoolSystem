@@ -228,6 +228,7 @@ const resources = {
       loginBtn: 'Sign In',
       signUpBtn: 'Sign Up',
       signInBtn: 'Sign In',
+      Loading: 'Loading...',
       needHelp: 'Need help? Visit our Help Center',
 
       // Admin Dashboard
@@ -1057,6 +1058,7 @@ const resources = {
       loginBtn: 'تسجيل الدخول',
       signUpBtn: 'إنشاء حساب',
       signInBtn: 'تسجيل الدخول',
+      Loading: 'جاري التسجيل...',
       needHelp: 'تحتاج مساعدة؟ زر مركز المساعدة',
 
       // Admin Dashboard

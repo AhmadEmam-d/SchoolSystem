@@ -185,31 +185,12 @@ export function ParentLogin() {
                 </div>
 
                 <Button type="submit" disabled={loading} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 text-base font-medium shadow-lg">
-                  {loading ? 'جاري التسجيل...' : t('signInBtn')}
+                  {loading ? t('Loading') : t('signInBtn')}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </motion.div>
-
-        {/* حسابات تجريبية لولي الأمر */}
-        <div className="mt-6 text-center text-xs text-muted-foreground">
-          <p>حسابات تجريبية لأولياء الأمور:</p>
-          <div className="flex justify-center gap-4 mt-2">
-            <button
-              onClick={() => { setEmail('ahmed.mahmoud@school.com'); setPassword('Parent@123'); }}
-              className="text-orange-600 hover:underline"
-            >
-              أحمد محمود
-            </button>
-            <button
-              onClick={() => { setEmail('khaled.abdullah@school.com'); setPassword('Parent@123'); }}
-              className="text-orange-600 hover:underline"
-            >
-              خالد عبدالله
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
