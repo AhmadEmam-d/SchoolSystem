@@ -176,26 +176,26 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
-        [HttpGet("teacher")]
-        [Authorize(Roles = "Admin,Teacher")]
-        public async Task<IActionResult> GetTeacherClasses()
+        [HttpGet("my-classes")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GetMyClasses()
         {
             try
             {
-                var teacherIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (teacherIdClaim == null || !Guid.TryParse(teacherIdClaim.Value, out var teacherId))
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                     return Unauthorized();
 
-                var query = new GetTeacherClassesQuery(teacherId);
+                var query = new GetTeacherClassesQuery(userId);
                 var result = await _mediator.Send(query);
 
                 return Ok(ApiResponseFactory.Success(result, "ClassesFetchedSuccessfully", _messageService));
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ClassesFetchFailed", _messageService,
-                    new List<string> { "An error occurred while fetching classes." }
+                    new List<string> { ex.Message }
                 ));
             }
         }
