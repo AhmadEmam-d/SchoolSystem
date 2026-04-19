@@ -8,6 +8,7 @@ import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
+
 export function ParentLogin() {
   const { login } = useAuth();
   const navigate = useNavigate();
