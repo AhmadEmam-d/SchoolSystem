@@ -1,0 +1,174 @@
+﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
+using SchoolSystem.Application.Features.Classes.DTOs.Read;
+using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Enums;
+using SchoolSystem.Domain.Interfaces.Common;
+
+namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
+{
+    public class GetTeacherClassesQueryHandler : IRequestHandler<GetTeacherClassesQuery, List<ClassResponseDto>>
+    {
+        private readonly IGenericRepository<Class> _classRepo;
+        private readonly IGenericRepository<Teacher> _teacherRepo;
+        private readonly IGenericRepository<Lesson> _lessonRepo;
+        private readonly IGenericRepository<Homework> _homeworkRepo;
+        private readonly IGenericRepository<HomeworkSubmission> _homeworkSubmissionRepo;
+        private readonly IGenericRepository<Exam> _examRepo;
+        private readonly IGenericRepository<ExamResult> _examResultRepo;
+        private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
+
+        public GetTeacherClassesQueryHandler(
+            IGenericRepository<Class> classRepo,
+            IGenericRepository<Teacher> teacherRepo,
+            IGenericRepository<Lesson> lessonRepo,
+            IGenericRepository<Homework> homeworkRepo,
+            IGenericRepository<HomeworkSubmission> homeworkSubmissionRepo,
+            IGenericRepository<Exam> examRepo,
+            IGenericRepository<ExamResult> examResultRepo,
+            IGenericRepository<Domain.Entities.Attendance> attendanceRepo)
+        {
+            _classRepo = classRepo;
+            _teacherRepo = teacherRepo;
+            _lessonRepo = lessonRepo;
+            _homeworkRepo = homeworkRepo;
+            _homeworkSubmissionRepo = homeworkSubmissionRepo;
+            _examRepo = examRepo;
+            _examResultRepo = examResultRepo;
+            _attendanceRepo = attendanceRepo;
+        }
+
+        public async Task<List<ClassResponseDto>> Handle(GetTeacherClassesQuery request, CancellationToken cancellationToken)
+        {
+            var teacher = await _teacherRepo
+                .GetAllQueryable()
+                .FirstOrDefaultAsync(t => t.UserId == request.TeacherId, cancellationToken);
+
+            if (teacher == null)
+                return new List<ClassResponseDto>();
+
+            var classes = await _classRepo
+                .GetAllQueryable()
+                .Include(c => c.Students)
+                .Include(c => c.Sections)
+                .Where(c => c.TeacherOid == teacher.Oid && !c.IsDeleted)
+                .ToListAsync(cancellationToken);
+
+            var result = new List<ClassResponseDto>();
+
+            foreach (var classEntity in classes)
+            {
+                var classDto = new ClassResponseDto
+                {
+                    Oid = classEntity.Oid,
+                    Name = classEntity.Name,
+                    Level = classEntity.Level,
+                    CreatedAt = classEntity.CreatedAt,
+                    StudentsCount = classEntity.Students?.Count(s => !s.IsDeleted) ?? 0,
+                    SectionsCount = classEntity.Sections?.Count(s => !s.IsDeleted) ?? 0,
+                    Students = new List<StudentBasicInfoDto>()
+                };
+
+                foreach (var student in classEntity.Students.Where(s => !s.IsDeleted))
+                {
+                    var studentDto = new StudentBasicInfoDto
+                    {
+                        Oid = student.Oid,
+                        FullName = student.FullName,
+                        Email = student.Email,
+                        Phone = student.Phone,
+                        Details = new StudentDetailsDto()
+                    };
+
+                    // جلب الدروس
+                    var lessons = await _lessonRepo
+                        .GetAllQueryable()
+                        .Where(l => l.ClassOid == classEntity.Oid && !l.IsDeleted)
+                        .Select(l => new LessonInfoDto
+                        {
+                            Oid = l.Oid,
+                            Title = l.Title,
+                            Date = l.Date,
+                            Status = l.Status.ToString()
+                        })
+                        .ToListAsync(cancellationToken);
+                    studentDto.Details.Lessons = lessons;
+
+                    // جلب الواجبات
+                    var homeworks = await _homeworkRepo
+                        .GetAllQueryable()
+                        .Where(h => h.ClassOid == classEntity.Oid && !h.IsDeleted)
+                        .Select(h => new HomeworkInfoDto
+                        {
+                            Oid = h.Oid,
+                            Title = h.Title,
+                            DueDate = h.DueDate,
+                            Status = h.Status.ToString(),
+                            Grade = _homeworkSubmissionRepo.GetAllQueryable()
+                                .FirstOrDefault(s => s.HomeworkOid == h.Oid && s.StudentOid == student.Oid) != null ?
+                                _homeworkSubmissionRepo.GetAllQueryable()
+                                    .First(s => s.HomeworkOid == h.Oid && s.StudentOid == student.Oid).Grade : null
+                        })
+                        .ToListAsync(cancellationToken);
+                    studentDto.Details.Homeworks = homeworks;
+
+                    // جلب الامتحانات
+                    var exams = await _examRepo
+                        .GetAllQueryable()
+                        .Where(e => e.ClassOid == classEntity.Oid && !e.IsDeleted)
+                        .Select(e => new ExamInfoDto
+                        {
+                            Oid = e.Oid,
+                            Name = e.Name,
+                            Date = e.Date,
+                            Score = _examResultRepo.GetAllQueryable()
+                                .FirstOrDefault(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid) != null ?
+                                _examResultRepo.GetAllQueryable()
+                                    .First(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid).Score : (int?)null,
+                            Grade = _examResultRepo.GetAllQueryable()
+                                .FirstOrDefault(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid) != null ?
+                                _examResultRepo.GetAllQueryable()
+                                    .First(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid).Grade : null
+                        })
+                        .ToListAsync(cancellationToken);
+                    studentDto.Details.Exams = exams;
+
+                    // جلب الحضور
+                    var attendances = await _attendanceRepo
+                        .GetAllQueryable()
+                        .Where(a => a.StudentOid == student.Oid && a.ClassOid == classEntity.Oid && !a.IsDeleted)
+                        .ToListAsync(cancellationToken);
+
+                    var presentCount = attendances.Count(a => a.Status == AttendanceStatus.Present);
+                    var absentCount = attendances.Count(a => a.Status == AttendanceStatus.Absent);
+                    var lateCount = attendances.Count(a => a.Status == AttendanceStatus.Late);
+                    var totalDays = attendances.Count;
+
+                    studentDto.Details.Attendance = new AttendanceInfoDto
+                    {
+                        PresentCount = presentCount,
+                        AbsentCount = absentCount,
+                        LateCount = lateCount,
+                        AttendancePercentage = totalDays > 0 ? (double)presentCount / totalDays * 100 : 0,
+                        RecentRecords = attendances
+                            .OrderByDescending(a => a.Date)
+                            .Take(5)
+                            .Select(a => new AttendanceRecordDto
+                            {
+                                Date = a.Date,
+                                Status = a.Status.ToString(),
+                                Remarks = a.Remarks ?? ""
+                            })
+                            .ToList()
+                    };
+
+                    classDto.Students.Add(studentDto);
+                }
+
+                result.Add(classDto);
+            }
+
+            return result;
+        }
+    }
+}
