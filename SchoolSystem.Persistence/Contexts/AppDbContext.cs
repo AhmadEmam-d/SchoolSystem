@@ -223,6 +223,23 @@ namespace SchoolSystem.Persistence.Contexts
             {
                 entity.HasKey(e => e.Oid);
 
+                // ✅ إضافة تحويل الـ Enum إلى int
+                entity.Property(e => e.Status)
+                      .HasConversion<int>()
+                      .IsRequired();
+
+                // ✅ تعيين طول أقصى للـ Remarks
+                entity.Property(e => e.Remarks)
+                      .HasMaxLength(500);
+
+                // ✅ تعيين دقة للـ TimeSpan
+                entity.Property(e => e.CheckInTime)
+                      .HasPrecision(0);
+
+                entity.Property(e => e.CheckOutTime)
+                      .HasPrecision(0);
+
+                // العلاقات
                 entity.HasOne(e => e.Student)
                       .WithMany(s => s.AttendanceRecords)
                       .HasForeignKey(e => e.StudentOid)
@@ -233,7 +250,13 @@ namespace SchoolSystem.Persistence.Contexts
                       .HasForeignKey(e => e.ClassOid)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(e => new { e.StudentOid, e.Date }).IsUnique();
+                // ✅ Index فريد لمنع تكرار الحضور لنفس الطالب في نفس اليوم
+                entity.HasIndex(e => new { e.StudentOid, e.Date })
+                      .IsUnique();
+
+                // ✅ Indexes إضافية للتحسين
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.Status);
             });
 
             // -------------------------
@@ -346,10 +369,20 @@ namespace SchoolSystem.Persistence.Contexts
             {
                 entity.HasKey(e => e.Oid);
 
-                entity.HasOne(f => f.Student)
-                      .WithMany(s => s.FeeInvoices)
-                      .HasForeignKey(f => f.StudentOid)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+                entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
+            });
+
+            modelBuilder.Entity<FeePayment>(entity =>
+            {
+                entity.Property(e => e.Amount).HasPrecision(18, 2);
+            });
+
+            modelBuilder.Entity<FinancialReport>(entity =>
+            {
+                entity.Property(e => e.NetProfit).HasPrecision(18, 2);
+                entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
+                entity.Property(e => e.TotalIncome).HasPrecision(18, 2);
             });
 
             // -------------------------
