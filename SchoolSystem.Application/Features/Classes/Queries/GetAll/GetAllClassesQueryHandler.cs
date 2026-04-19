@@ -21,13 +21,25 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetAll
 
         public async Task<IEnumerable<ClassResponseDto>> Handle(GetAllClassesQuery request, CancellationToken cancellationToken)
         {
-            var classes = await _repo.GetAllQueryable()
+            var classes = await _repo
+                .GetAllQueryable()
                 .Include(c => c.Students)
                 .Include(c => c.Sections)
                 .Where(c => !c.IsDeleted)
                 .ToListAsync(cancellationToken);
 
-            return _mapper.Map<IEnumerable<ClassResponseDto>>(classes);
+            if (classes == null || !classes.Any())
+                return new List<ClassResponseDto>();
+
+            return classes.Select(c => new ClassResponseDto
+            {
+                Oid = c.Oid,
+                Name = c.Name ?? string.Empty,
+                Level = c.Level ?? string.Empty,
+                CreatedAt = c.CreatedAt,
+                StudentsCount = c.Students?.Count(s => !s.IsDeleted) ?? 0,
+                SectionsCount = c.Sections?.Count(s => !s.IsDeleted) ?? 0
+            }).ToList();
         }
     }
 }
