@@ -34,6 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ===========================
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IGenAIService, OpenRouterAIService>();
+builder.Services.AddScoped<IFileService, FileService>();
 // ===========================
 // 🔹 AUTOMAPPER
 // ===========================
@@ -200,6 +201,7 @@ else
 
 app.UseCors("AllowReactApp");
 app.UseAuthentication();
+app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
 
