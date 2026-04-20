@@ -17,7 +17,6 @@ namespace SchoolSystem.API.Controllers
 {
     [Route("api/student/grades")]
     [ApiController]
-    [Authorize(Roles = "Student")]
     public class StudentGradesController : ControllerBase
     {
         private readonly IMediator _mediator;

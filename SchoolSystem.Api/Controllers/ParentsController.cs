@@ -11,9 +11,12 @@ using SchoolSystem.Application.Features.Parents.DTOs.Update;
 using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Features.Parents.Queries.GetAll;
 using SchoolSystem.Application.Features.Parents.Queries.GetById;
+using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
+using SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SchoolSystem.Api.Controllers
@@ -168,6 +171,48 @@ namespace SchoolSystem.Api.Controllers
                     "ParentDeletionFailed", _messageService,
                     new List<string> { "An error occurred while deleting the parent." }
                 ));
+            }
+        }
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                }
+
+                var query = new GetParentDashboardQuery { ParentUserId = userId };
+                var dashboard = await _mediator.Send(query);
+
+                return Ok(new { success = true, data = dashboard });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+        [HttpGet("my-children")]
+        public async Task<IActionResult> GetMyChildren()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                }
+
+                var query = new GetMyChildrenQuery { ParentUserId = userId };
+                var result = await _mediator.Send(query);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, error = ex.Message });
             }
         }
     }
