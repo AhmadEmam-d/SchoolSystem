@@ -33,4 +33,10 @@
         public DateTime PerformedAt { get; set; }
         public string? IpAddress { get; set; }
     }
+    public class UploadAvatarDto
+    {
+        public string Base64Image { get; set; }
+        public string FileName { get; set; }
+        public string FileType { get; set; }
+    }
 }

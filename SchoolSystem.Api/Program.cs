@@ -15,6 +15,7 @@ using SchoolSystem.Infrastructure.Services;
 using SchoolSystem.Persistence.Contexts;
 using SchoolSystem.Persistence.Repositories.Common;
 using System.Text;
+using SchoolSystem.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -152,6 +153,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "API for School Management System"
     });
+    c.OperationFilter<FileUploadOperationFilter>();
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {

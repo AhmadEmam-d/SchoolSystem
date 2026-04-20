@@ -124,6 +124,7 @@ namespace SchoolSystem.Api.Controllers
                 Teacher123 = BCrypt.Net.BCrypt.HashPassword("Teacher@123"),
             });
         }
+
         //// POST: api/Profile/upload-avatar
         //[HttpPost("upload-avatar")]
         //[Consumes("multipart/form-data")]  // أضف هذا
@@ -199,7 +200,81 @@ namespace SchoolSystem.Api.Controllers
         //    }
         //}
 
-        // GET: api/Profile/activity
+        // POST: api/Profile/upload-avatar
+        // POST: api/Profile/upload-avatar
+        [HttpPost("upload-avatar")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "AvatarUploadFailed", _messageService,
+                        new List<string> { "No file uploaded" }
+                    ));
+                }
+
+                // تحقق من نوع الملف
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "AvatarUploadFailed", _messageService,
+                        new List<string> { "Invalid file format. Only JPG, PNG, GIF, WEBP are allowed." }
+                    ));
+                }
+
+                // تحقق من حجم الملف (max 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "AvatarUploadFailed", _messageService,
+                        new List<string> { "File size exceeds 5MB limit" }
+                    ));
+                }
+
+                // حفظ الملف
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "avatars");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var avatarUrl = $"/uploads/avatars/{fileName}";
+
+                // تحديث الـ Avatar في قاعدة البيانات
+                var updateResult = await _mediator.Send(new UpdateUserAvatarCommand(avatarUrl));
+
+                if (updateResult.Success)
+                {
+                    return Ok(ApiResponseFactory.Success(new { avatarUrl }, "AvatarUploadedSuccessfully", _messageService));
+                }
+
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "AvatarUploadFailed", _messageService,
+                    new List<string> { updateResult.Message ?? "Failed to update avatar" }
+                ));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "AvatarUploadFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
         [HttpGet("activity")]
             public async Task<IActionResult> GetRecentActivity()
             {
