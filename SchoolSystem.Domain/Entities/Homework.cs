@@ -28,5 +28,6 @@ namespace SchoolSystem.Domain.Entities
 
         public ICollection<HomeworkAttachment> Attachments { get; set; } = new List<HomeworkAttachment>();
         public ICollection<HomeworkSubmission> Submissions { get; set; } = new List<HomeworkSubmission>();
+        public ICollection<Material> Materials { get; set; } = new List<Material>();
     }
 }

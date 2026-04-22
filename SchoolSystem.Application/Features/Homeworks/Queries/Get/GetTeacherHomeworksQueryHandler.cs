@@ -10,13 +10,14 @@ namespace SchoolSystem.Application.Features.Homeworks.Queries.GetTeacherHomework
     public class GetTeacherHomeworksQueryHandler : IRequestHandler<GetTeacherHomeworksQuery, List<HomeworkListResponseDto>>
     {
         private readonly IGenericRepository<Homework> _homeworkRepo;
-        private readonly IGenericRepository<Teacher> _teacherRepo;  // ✅ أضف هذا
+        private readonly IGenericRepository<Teacher> _teacherRepo;
         private readonly IGenericRepository<Class> _classRepo;
         private readonly IMapper _mapper;
 
+
         public GetTeacherHomeworksQueryHandler(
             IGenericRepository<Homework> homeworkRepo,
-            IGenericRepository<Teacher> teacherRepo,  // ✅ أضف هذا
+            IGenericRepository<Teacher> teacherRepo,
             IGenericRepository<Class> classRepo,
             IMapper mapper)
         {
@@ -41,7 +42,8 @@ namespace SchoolSystem.Application.Features.Homeworks.Queries.GetTeacherHomework
                 .Include(h => h.Class)
                 .Include(h => h.Subject)
                 .Include(h => h.Submissions)
-                .Where(h => h.TeacherOid == teacher.Oid && !h.IsDeleted)  // ✅ استخدم teacher.Oid
+                .Where(h => h.TeacherOid == teacher.Oid && !h.IsDeleted)
+               .Include(e => e.Materials)
                 .OrderByDescending(h => h.CreatedAt)
                 .ToListAsync(cancellationToken);
 

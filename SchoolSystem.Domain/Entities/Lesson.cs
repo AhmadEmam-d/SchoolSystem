@@ -23,7 +23,7 @@ namespace SchoolSystem.Domain.Entities
         public Guid SubjectOid { get; set; }            
         public Subject Subject { get; set; }
 
-        public ICollection<LessonMaterial> Materials { get; set; } = new List<LessonMaterial>();
+        public ICollection<Material> Materials { get; set; } = new List<Material>();
 
         public ICollection<LessonObjective> Objectives { get; set; } = new List<LessonObjective>();
 

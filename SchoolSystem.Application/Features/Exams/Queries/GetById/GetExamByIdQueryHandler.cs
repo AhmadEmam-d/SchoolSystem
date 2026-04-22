@@ -28,6 +28,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetById
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
                 .Where(e => e.Oid == request.Oid)
+                .Include(e => e.Materials)
                 .ProjectTo<ExamDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
 

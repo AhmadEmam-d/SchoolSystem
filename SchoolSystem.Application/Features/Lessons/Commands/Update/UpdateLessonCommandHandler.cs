@@ -13,14 +13,14 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Update
     {
         private readonly IGenericRepository<Lesson> _lessonRepo;
         private readonly IGenericRepository<LessonObjective> _objectiveRepo;
-        private readonly IGenericRepository<LessonMaterial> _materialRepo;
+        private readonly IGenericRepository<Material> _materialRepo;
         private readonly IGenericRepository<LessonHomework> _homeworkRepo;
         private readonly IMapper _mapper;
 
         public UpdateLessonCommandHandler(
             IGenericRepository<Lesson> lessonRepo,
             IGenericRepository<LessonObjective> objectiveRepo,
-            IGenericRepository<LessonMaterial> materialRepo,
+            IGenericRepository<Material> materialRepo,
             IGenericRepository<LessonHomework> homeworkRepo,
             IMapper mapper)
         {
@@ -112,7 +112,7 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Update
                 }
                 else if (!string.IsNullOrEmpty(materialDto.Name))
                 {
-                    var newMaterial = _mapper.Map<LessonMaterial>(materialDto);
+                    var newMaterial = _mapper.Map<Material>(materialDto);
                     newMaterial.Oid = Guid.NewGuid();
                     newMaterial.LessonOid = lesson.Oid;
                     newMaterial.CreatedAt = DateTime.UtcNow;

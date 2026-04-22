@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SchoolSystem.Application.Features.Materials.Commands;
 using SchoolSystem.Application.Interfaces.Services;
 
 namespace SchoolSystem.API.Controllers
@@ -35,10 +36,12 @@ namespace SchoolSystem.API.Controllers
 
                 switch (entityType.ToLower())
                 {
-                    case "lessons":
-                        await _mediator.Send(new AddLessonMaterialCommand
+
+                    case "lesson":
+                        await _mediator.Send(new AddMaterialCommand
                         {
                             LessonOid = entityId,
+                            EntityType = "lesson",
                             Name = result.Name,
                             FileUrl = result.FileUrl,
                             FileType = result.FileType,
@@ -46,11 +49,31 @@ namespace SchoolSystem.API.Controllers
                         });
                         break;
 
-                        // add more cases here when you have other entities
-                        // case "exams":
-                        // case "homework":
-                }
+                    case "exams":
+                case "exam":
+                    await _mediator.Send(new AddMaterialCommand
+                    {
+                        ExamOid = entityId,
+                        EntityType = "exam",
+                        Name = result.Name,
+                        FileUrl = result.FileUrl,
+                        FileType = result.FileType,
+                        FileSize = result.FileSize
+                    });
+                    break;
 
+                case "homework":
+                    await _mediator.Send(new AddMaterialCommand
+                    {
+                        HomeworkOid = entityId,
+                        EntityType = "homework",
+                        Name = result.Name,
+                        FileUrl = result.FileUrl,
+                        FileType = result.FileType,
+                        FileSize = result.FileSize
+                    });
+                    break;
+                }
                 return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
@@ -76,11 +99,13 @@ namespace SchoolSystem.API.Controllers
                 switch (entityType.ToLower())
                 {
                     case "lessons":
+                    case "lesson":
                         foreach (var result in results)
                         {
-                            await _mediator.Send(new AddLessonMaterialCommand
+                            await _mediator.Send(new AddMaterialCommand
                             {
                                 LessonOid = entityId,
+                                EntityType = "lesson",
                                 Name = result.Name,
                                 FileUrl = result.FileUrl,
                                 FileType = result.FileType,
@@ -88,6 +113,40 @@ namespace SchoolSystem.API.Controllers
                             });
                         }
                         break;
+
+                    case "exams":
+                    case "exam":
+                        foreach (var result in results)
+                        {
+                            await _mediator.Send(new AddMaterialCommand
+                            {
+                                ExamOid = entityId,
+                                EntityType = "exam",
+                                Name = result.Name,
+                                FileUrl = result.FileUrl,
+                                FileType = result.FileType,
+                                FileSize = result.FileSize
+                            });
+                        }
+                        break;
+
+                    case "homework":
+                        foreach (var result in results)
+                        {
+                            await _mediator.Send(new AddMaterialCommand
+                            {
+                                HomeworkOid = entityId,
+                                EntityType = "homework",
+                                Name = result.Name,
+                                FileUrl = result.FileUrl,
+                                FileType = result.FileType,
+                                FileSize = result.FileSize
+                            });
+                        }
+                        break;
+
+                    default:
+                        return BadRequest(new { success = false, error = $"Unsupported entity type: {entityType}" });
                 }
 
                 return Ok(new { success = true, data = results, count = results.Count });

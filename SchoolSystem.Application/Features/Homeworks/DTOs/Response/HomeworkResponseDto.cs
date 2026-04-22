@@ -1,4 +1,6 @@
-﻿namespace SchoolSystem.Application.Features.Homeworks.DTOs
+﻿using SchoolSystem.Application.Features.Lessons.DTOs;
+
+namespace SchoolSystem.Application.Features.Homeworks.DTOs
 {
     public class HomeworkListResponseDto
     {
@@ -11,6 +13,8 @@
         public int TotalStudents { get; set; }
         public string Status { get; set; } = string.Empty;
         public decimal TotalMarks { get; set; }
+        public List<MaterialResponseDto> Materials { get; set; }
+
     }
 
     public class HomeworkDetailResponseDto
@@ -35,8 +39,10 @@
         public int GradedCount { get; set; }
         public int LateCount { get; set; }
         public List<HomeworkAttachmentDto> Attachments { get; set; } = new();
-    }
+        public List<MaterialResponseDto> Materials { get; set; }
 
+
+    }
     public class HomeworkSubmissionResponseDto
     {
         public Guid Id { get; set; }

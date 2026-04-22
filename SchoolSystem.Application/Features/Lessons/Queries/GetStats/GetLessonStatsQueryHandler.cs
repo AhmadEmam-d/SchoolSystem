@@ -12,11 +12,11 @@ namespace SchoolSystem.Application.Features.Lessons.Queries.GetStats
     public class GetLessonStatsQueryHandler : IRequestHandler<GetLessonStatsQuery, LessonStatsDto>
     {
         private readonly IGenericRepository<Lesson> _lessonRepo;
-        private readonly IGenericRepository<LessonMaterial> _materialRepo;
+        private readonly IGenericRepository<Material> _materialRepo;
 
         public GetLessonStatsQueryHandler(
             IGenericRepository<Lesson> lessonRepo,
-            IGenericRepository<LessonMaterial> materialRepo)
+            IGenericRepository<Material> materialRepo)
         {
             _lessonRepo = lessonRepo;
             _materialRepo = materialRepo;

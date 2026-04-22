@@ -41,7 +41,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<LessonObjective> LessonObjectives { get; set; }
-        public DbSet<LessonMaterial> LessonMaterials { get; set; }
+        public DbSet<Material> Materials { get; set; }
         public DbSet<LessonHomework> LessonHomeworks { get; set; }
         public DbSet<SmartTutorConversation> SmartTutorConversations { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
@@ -507,8 +507,8 @@ namespace SchoolSystem.Persistence.Contexts
                       .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // LessonMaterial Configuration
-            modelBuilder.Entity<LessonMaterial>(entity =>
+            // Material
+            modelBuilder.Entity<Material>(entity =>
             {
                 entity.HasKey(e => e.Oid);
 
@@ -522,10 +522,34 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.FileType)
                       .HasMaxLength(50);
 
+                entity.Property(e => e.EntityType)
+                      .HasMaxLength(50);
+
+                // Lesson — optional
                 entity.HasOne(e => e.Lesson)
                       .WithMany(l => l.Materials)
                       .HasForeignKey(e => e.LessonOid)
+                      .IsRequired(false)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Exam — optional
+                entity.HasOne(e => e.Exam)
+                      .WithMany(e => e.Materials)
+                      .HasForeignKey(e => e.ExamOid)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                // Homework — optional
+                entity.HasOne(e => e.Homework)
+                      .WithMany(h => h.Materials)
+                      .HasForeignKey(e => e.HomeworkOid)
+                      .IsRequired(false)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(e => e.LessonOid);
+                entity.HasIndex(e => e.ExamOid);
+                entity.HasIndex(e => e.HomeworkOid);
+                entity.HasIndex(e => e.EntityType);
             });
 
             // LessonHomework Configuration

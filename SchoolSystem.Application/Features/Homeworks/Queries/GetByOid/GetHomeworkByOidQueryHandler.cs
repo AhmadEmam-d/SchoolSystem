@@ -37,6 +37,7 @@ namespace SchoolSystem.Application.Features.Homeworks.Queries.GetById
                 .Include(h => h.Class)
                 .Include(h => h.Subject)
                 .Include(h => h.Teacher)
+                .Include(e => e.Materials)
                 .Include(h => h.Attachments)
                 .FirstOrDefaultAsync(h => h.Oid == request.Id && !h.IsDeleted, cancellationToken);
 

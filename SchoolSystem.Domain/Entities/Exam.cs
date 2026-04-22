@@ -23,4 +23,6 @@ public class Exam : BaseEntity
     public string Instructions { get; set; }
 
     public ICollection<ExamResult> Results { get; set; } = new List<ExamResult>();
+    public ICollection<Material> Materials { get; set; } = new List<Material>();
+
 }

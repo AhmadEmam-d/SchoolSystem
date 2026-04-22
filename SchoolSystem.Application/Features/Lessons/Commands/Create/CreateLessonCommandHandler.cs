@@ -14,7 +14,7 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Create
         private readonly IGenericRepository<Lesson> _lessonRepo;
         private readonly IGenericRepository<Teacher> _teacherRepo;  // ✅ أضف هذا
         private readonly IGenericRepository<LessonObjective> _objectiveRepo;
-        private readonly IGenericRepository<LessonMaterial> _materialRepo;
+        private readonly IGenericRepository<Material> _materialRepo;
         private readonly IGenericRepository<LessonHomework> _homeworkRepo;
         private readonly IMapper _mapper;
 
@@ -22,7 +22,7 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Create
             IGenericRepository<Lesson> lessonRepo,
             IGenericRepository<Teacher> teacherRepo,  // ✅ أضف هذا
             IGenericRepository<LessonObjective> objectiveRepo,
-            IGenericRepository<LessonMaterial> materialRepo,
+            IGenericRepository<Material> materialRepo,
             IGenericRepository<LessonHomework> homeworkRepo,
             IMapper mapper)
         {
@@ -71,7 +71,7 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Create
             // Add materials
             foreach (var materialDto in request.Lesson.Materials)
             {
-                var material = _mapper.Map<LessonMaterial>(materialDto);
+                var material = _mapper.Map<Material>(materialDto);
                 material.Oid = Guid.NewGuid();
                 material.LessonOid = lesson.Oid;
                 material.CreatedAt = DateTime.UtcNow;

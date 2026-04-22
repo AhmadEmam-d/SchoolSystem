@@ -1,4 +1,6 @@
 ﻿using System;
+using SchoolSystem.Application.Features.Lessons.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,5 +18,7 @@ namespace SchoolSystem.Application.Features.Homeworks.DTOs.Get
         public int SubmittedCount { get; set; }
         public int TotalStudents { get; set; }
         public string Status { get; set; } = string.Empty;
+        public List<MaterialResponseDto> Materials { get; set; }
+
     }
 }

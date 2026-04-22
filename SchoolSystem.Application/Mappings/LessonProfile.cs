@@ -23,7 +23,7 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.Materials, opt => opt.Ignore())
                 .ForMember(dest => dest.Homeworks, opt => opt.Ignore());
 
-            CreateMap<CreateMaterialDto, LessonMaterial>()
+            CreateMap<CreateMaterialDto, Material>()
                 .ForMember(dest => dest.Oid, opt => opt.Ignore())
                 .ForMember(dest => dest.LessonOid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -46,7 +46,7 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.Materials, opt => opt.Ignore())
                 .ForMember(dest => dest.Homeworks, opt => opt.Ignore());
 
-            CreateMap<UpdateMaterialDto, LessonMaterial>()
+            CreateMap<UpdateMaterialDto, Material>()
                 .ForMember(dest => dest.LessonOid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
@@ -71,7 +71,7 @@ namespace SchoolSystem.Application.Mapping
                 .ForMember(dest => dest.ResourceLinks, opt => opt.Ignore());
 
             CreateMap<LessonObjective, ObjectiveResponseDto>();
-            CreateMap<LessonMaterial, MaterialResponseDto>();
+            CreateMap<Material, MaterialResponseDto>();
             CreateMap<LessonHomework, HomeworkResponseDto>();
         }
     }

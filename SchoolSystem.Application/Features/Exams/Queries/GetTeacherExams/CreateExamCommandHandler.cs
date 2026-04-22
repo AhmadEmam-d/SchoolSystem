@@ -36,6 +36,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetTeacherExams
                 .GetAllQueryable()
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
+                .Include(e => e.Materials)
                 .Where(e => e.TeacherOid == teacher.Oid && !e.IsDeleted)
                 .OrderByDescending(e => e.Date)
                 .ToListAsync(cancellationToken);

@@ -35,6 +35,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
         public async Task<ExamsSummaryDto> Handle(GetExamsSummaryQuery request, CancellationToken cancellationToken)
         {
             var exams = await _examRepo.GetAllQueryable()
+                .Include(e => e.Materials)
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
                 .ToListAsync(cancellationToken);

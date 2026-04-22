@@ -43,6 +43,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetAll
             return await query
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
+                .Include(e => e.Materials)
                 .OrderByDescending(e => e.Date)
                 .ProjectTo<ExamDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);

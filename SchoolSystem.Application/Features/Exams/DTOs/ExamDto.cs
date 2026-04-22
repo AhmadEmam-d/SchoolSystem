@@ -1,4 +1,7 @@
 ﻿using System;
+using SchoolSystem.Application.Features.Lessons.DTOs;
+using SchoolSystem.Application.Features.Lessons.DTOs.Create;
+using System;
 using System.Collections.Generic;
 
 namespace SchoolSystem.Application.Features.Exams.DTOs
@@ -22,6 +25,8 @@ namespace SchoolSystem.Application.Features.Exams.DTOs
         public string Room { get; set; }
         public string Instructions { get; set; }
         public int StudentsCount { get; set; }
+        public List<MaterialResponseDto> Materials { get; set; }
+
         public ExamStatisticsDto Statistics { get; set; }
     }
 
@@ -46,6 +51,8 @@ namespace SchoolSystem.Application.Features.Exams.DTOs
         public string StartTime { get; set; }
         public string Duration { get; set; }
         public int MaxScore { get; set; }
+        public List<CreateMaterialDto> Materials { get; set; } = new List<CreateMaterialDto>();
+
         public int PassingScore { get; set; }
         public string Room { get; set; }
         public string Instructions { get; set; }
