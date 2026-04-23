@@ -61,14 +61,14 @@ namespace SchoolSystem.Application.Features.Messages.Commands.Send
                 message.ReceiverOid = receiverOid;
                 message.ReceiverName = receiverName;
                 message.ReceiverRole = receiverRole;
-                message.TargetRole = request.Dto.TargetRole ?? "All";
+                message.TargetRole = null;
             }
             else
             {
                 message.ReceiverOid = null;
                 message.ReceiverName = null;
                 message.ReceiverRole = null;
-                message.TargetRole = null;
+                message.TargetRole = request.Dto.TargetRole ?? "All"; 
             }
 
             message.SentAt = DateTime.UtcNow;
