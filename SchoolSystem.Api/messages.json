@@ -1242,7 +1242,14 @@
   "UserNotFound": {
     "EN": "User not authenticated",
     "AR": "المستخدم غير مصرح له"
+  },
+  "ParentDashboardFetchedSuccessfully": {
+    "EN": "Parent dashboard data fetched successfully",
+    "AR": "تم جلب بيانات لوحة تحكم ولي الأمر بنجاح"
+  },
+  "ParentDashboardFetchFailed": {
+    "EN": "An error occurred while fetching parent dashboard data",
+    "AR": "حدث خطأ أثناء جلب بيانات لوحة تحكم ولي الأمر"
   }
-
 
 }
