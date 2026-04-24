@@ -153,36 +153,7 @@ namespace SchoolSystem.Application.Features.Attendance.DTOs
         public string? Remarks { get; set; }
         public string? CheckInTime { get; set; }
     }
-    public class ParentAttendanceDashboardDto
-    {
-        // الإحصائيات العلوية (تطابق الكروت في الصورة)
-        public double OverallAttendancePercentage { get; set; }
-        public int TotalPresentDays { get; set; }
-        public int TotalAbsentDays { get; set; }
-        public int TotalLateDays { get; set; }
-
-        // بيانات الرسم البياني
-        public List<AttendanceChartItemDto> MonthlyTrend { get; set; } = new();
-
-        // سجل الحضور الأخير
-        public List<AttendanceHistoryDto> RecentRecords { get; set; } = new();
-
-        // الرسالة التحذيرية
-        public string? WarningMessage { get; set; }
-    }
-
-    public class AttendanceChartItemDto
-    {
-        public string Month { get; set; }
-        public double Percentage { get; set; }
-    }
-
-    public class AttendanceHistoryDto
-    {
-        public DateTime Date { get; set; }
-        public string DayName => Date.ToString("dddd");
-        public string Status { get; set; }
-    }
+  
 
     public enum AttendanceMethod
     {

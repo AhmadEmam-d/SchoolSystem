@@ -13,7 +13,6 @@ using SchoolSystem.Application.Features.Attendance.Queries.GetAll;
 using SchoolSystem.Application.Features.Attendance.Queries.GetById;
 using SchoolSystem.Application.Features.Attendance.Queries.GetClassStats;
 using SchoolSystem.Application.Features.Attendance.Queries.GetMonthlyReport;
-using SchoolSystem.Application.Features.Attendance.Queries.GetParentAttendancequery;
 using SchoolSystem.Application.Features.Attendance.Queries.GetToday;
 using SchoolSystem.Application.Features.Attendance.Queries.GetWeekly;
 using SchoolSystem.Application.Interfaces.Services;
@@ -250,24 +249,6 @@ namespace SchoolSystem.Api.Controllers
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "AttendanceSubmitFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
-        }
-        [HttpGet("parent-dashboard/{studentOid:guid}")]
-        [Authorize(Roles = "Parent,Admin")] // السماح لأولياء الأمور والمسؤولين فقط
-        public async Task<IActionResult> GetParentDashboard(Guid studentOid)
-        {
-            try
-            {
-                var result = await _mediator.Send(new GetParentAttendanceQuery { StudentOid = studentOid });
-
-                return Ok(ApiResponseFactory.Success(result, "ParentDashboardFetchedSuccessfully", _messageService));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ParentDashboardFetchFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }

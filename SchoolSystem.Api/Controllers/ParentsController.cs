@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
@@ -12,6 +13,7 @@ using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Features.Parents.Queries.GetAll;
 using SchoolSystem.Application.Features.Parents.Queries.GetById;
 using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
+using SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
@@ -213,6 +215,33 @@ namespace SchoolSystem.Api.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+        [HttpGet("Children-Attendance")]
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> GetParentDashboard()
+        {
+            try
+            {
+                // سحب الـ ID من التوكن (Claims)
+                var parentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (parentIdClaim == null || !Guid.TryParse(parentIdClaim.Value, out var parentId))
+                    return Unauthorized();
+
+                // إرسال الـ ParentOid للـ Handler لجلب بيانات الأب وأبنائه
+                var query = new GetParentAttendanceQuery { ParentOid = parentId };
+                var result = await _mediator.Send(query);
+
+                // رسالة النجاح المطلوبة
+                return Ok(ApiResponseFactory.Success(result, "ParentDashboardFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                // رسالة الفشل المطلوبة مع تفاصيل الخطأ
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ParentDashboardFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
             }
         }
     }

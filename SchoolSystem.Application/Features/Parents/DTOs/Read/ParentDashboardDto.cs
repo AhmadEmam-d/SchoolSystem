@@ -58,4 +58,51 @@ namespace SchoolSystem.Application.Features.Parents.DTOs
         public double Attendance { get; set; }      // 85%
         public int SubjectsCount { get; set; }      // 4
     }
+    public class ParentAttendanceDashboardDto
+    {
+        // الإحصائيات العلوية (تطابق الكروت في الصورة)
+        public double OverallAttendancePercentage { get; set; }
+        public int TotalPresentDays { get; set; }
+        public int TotalAbsentDays { get; set; }
+        public int TotalLateDays { get; set; }
+
+        // بيانات الرسم البياني
+        public List<AttendanceChartItemDto> MonthlyTrend { get; set; } = new();
+
+        // سجل الحضور الأخير
+        public List<AttendanceHistoryDto> RecentRecords { get; set; } = new();
+
+        // الرسالة التحذيرية
+        public string? WarningMessage { get; set; }
+    }
+
+    public class AttendanceChartItemDto
+    {
+        public string Month { get; set; }
+        public double Percentage { get; set; }
+    }
+
+    public class AttendanceHistoryDto
+    {
+        public DateTime Date { get; set; }
+        public string DayName { get; set; }
+        public string Status { get; set; }
+    }
+
+    public class ParentFullDashboardDto
+    {
+        public string ParentName { get; set; }
+        public List<StudentDashboardDetailDto> Children { get; set; } = new();
+    }
+
+    public class StudentDashboardDetailDto
+    {
+        public Guid StudentOid { get; set; }
+        public string StudentName { get; set; }    // تأكد أنها Name وليست StudentName
+        public string GradeLevel { get; set; }
+        public double GPA { get; set; }
+        public double Attendance { get; set; }
+        public int SubjectsCount { get; set; }
+        public ParentAttendanceDashboardDto AttendanceStats { get; set; }
+    }
 }
