@@ -26,15 +26,18 @@ namespace SchoolSystem.API.Controllers
         private readonly IMediator _mediator;
         private readonly IMessageService _messageService;
         private readonly IGenericRepository<Student> _studentRepo;
+        private readonly IGenericRepository<HomeworkSubmission> _submissionRepo; // Add this
 
         public StudentHomeworkController(
             IMediator mediator,
             IMessageService messageService,
-            IGenericRepository<Student> studentRepo)
+            IGenericRepository<Student> studentRepo,
+            IGenericRepository<HomeworkSubmission> submissionRepo) // Inject submission repo
         {
             _mediator = mediator;
             _messageService = messageService;
             _studentRepo = studentRepo;
+            _submissionRepo = submissionRepo;
         }
 
         [HttpGet]
@@ -108,6 +111,95 @@ namespace SchoolSystem.API.Controllers
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "HomeworkSubmissionFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+
+        // NEW: Get my submission for a specific homework
+        [HttpGet("{homeworkId:guid}/my-submission")]
+        public async Task<IActionResult> GetMySubmission(Guid homeworkId)
+        {
+            try
+            {
+                var student = await GetCurrentStudent();
+                if (student == null)
+                    return Unauthorized();
+
+                // Find submission for this homework and student
+                var submission = await _submissionRepo.GetAllQueryable()
+                    .FirstOrDefaultAsync(s => s.HomeworkOid == homeworkId && s.StudentOid == student.Oid);
+
+                if (submission == null)
+                {
+                    Console.WriteLine("NoSubmissionFound");
+                }
+
+                // Prepare response
+                var submissionData = new
+                {
+                    submissionId = submission.Oid,
+                    submission.Content,
+                    submission.AttachmentUrl,
+                    submission.SubmittedAt,
+                    submission.Grade,
+                    submission.Feedback,
+                    Status = submission.Status.ToString(),
+                    submission.GradedAt,
+                    IsGraded = submission.Grade.HasValue,
+                    CanResubmit = submission.Status == SubmissionStatus.Pending || submission.Status == SubmissionStatus.Late
+                };
+
+                return Ok(ApiResponseFactory.Success(submissionData, "SubmissionFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "FetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+
+        // NEW: Get all my submissions (all homework submissions)
+        [HttpGet("my-submissions")]
+        public async Task<IActionResult> GetAllMySubmissions()
+        {
+            try
+            {
+                var student = await GetCurrentStudent();
+                if (student == null)
+                    return Unauthorized();
+
+                var submissions = await _submissionRepo.GetAllQueryable()
+                    .Where(s => s.StudentOid == student.Oid && !s.IsDeleted)
+                    .Include(s => s.Homework)
+                    .OrderByDescending(s => s.SubmittedAt)
+                    .Select(s => new
+                    {
+                        submissionId = s.Oid,
+                        homeworkId = s.HomeworkOid,
+                        homeworkTitle = s.Homework != null ? s.Homework.Title : "Unknown",
+                        s.SubmittedAt,
+                        s.Grade,
+                        s.Feedback,
+                        Status = s.Status.ToString(),
+                        s.AttachmentUrl,
+                        s.GradedAt,
+                        IsGraded = s.Grade.HasValue
+                    })
+                    .ToListAsync();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    Total = submissions.Count,
+                    Submissions = submissions
+                }, "SubmissionsFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "FetchFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }
