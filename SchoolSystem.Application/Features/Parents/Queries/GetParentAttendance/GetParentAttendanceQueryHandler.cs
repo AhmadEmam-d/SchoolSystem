@@ -43,7 +43,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
 
             var response = new ParentFullDashboardDto
             {
-                ParentName = parentUser?.FullName ?? "محمود علي",
+                ParentName = parentUser?.FullName ?? "N/A",
                 Children = new List<StudentDashboardDetailDto>()
             };
 

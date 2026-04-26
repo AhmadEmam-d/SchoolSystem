@@ -15,6 +15,7 @@ using SchoolSystem.Application.Features.Parents.Queries.GetById;
 using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard;
+using SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
 using System.Collections.Generic;
@@ -240,6 +241,32 @@ namespace SchoolSystem.Api.Controllers
                 // رسالة الفشل المطلوبة مع تفاصيل الخطأ
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ParentDashboardFetchFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
+        [HttpGet("children-homework")]
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> GetChildrenHomework()
+        {
+            try
+            {
+                // استخراج معرف المستخدم من الـ Token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                    return Unauthorized();
+                
+
+                // إرسال الطلب للـ Handler الذي أنشأناه
+                var query = new GetStudentHomeworkQuery { ParentUserId = userId };
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ChildrenHomeworkFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ChildrenHomeworkFetchFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
             }
