@@ -10,6 +10,7 @@ using SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentHomew
 using SchoolSystem.Application.Interfaces.Services;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using SchoolSystem.Infrastructure.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,18 +27,21 @@ namespace SchoolSystem.API.Controllers
         private readonly IMediator _mediator;
         private readonly IMessageService _messageService;
         private readonly IGenericRepository<Student> _studentRepo;
-        private readonly IGenericRepository<HomeworkSubmission> _submissionRepo; // Add this
+        private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
+        private readonly IFileService _fileService;
 
         public StudentHomeworkController(
             IMediator mediator,
             IMessageService messageService,
             IGenericRepository<Student> studentRepo,
-            IGenericRepository<HomeworkSubmission> submissionRepo) // Inject submission repo
+            IGenericRepository<HomeworkSubmission> submissionRepo,
+            IFileService fileService) // Inject submission repo
         {
             _mediator = mediator;
             _messageService = messageService;
             _studentRepo = studentRepo;
             _submissionRepo = submissionRepo;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -85,7 +89,42 @@ namespace SchoolSystem.API.Controllers
                 ));
             }
         }
+        [HttpPost("{homeworkId:guid}/upload-attachment")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadAttachment(Guid homeworkId, IFormFile file)
+        {
+            try
+            {
+                var student = await GetCurrentStudent();
+                if (student == null)
+                    return Unauthorized();
 
+                if (file == null || file.Length == 0)
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "NoFileProvided", _messageService,
+                        new List<string> { "File is required." }
+                    ));
+
+                // ✅ Use built-in validation from IFileService
+                if (!_fileService.IsValidFile(file, out var errorMessage))
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "InvalidFile", _messageService,
+                        new List<string> { errorMessage }
+                    ));
+
+                // ✅ Correct signature: (IFormFile, entityType, entityId)
+                var result = await _fileService.UploadFileAsync(file, "homework", homeworkId);
+
+                return Ok(ApiResponseFactory.Success(new { attachmentUrl = result.FileUrl }, "FileUploadedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "FileUploadFailed", _messageService,
+                    new List<string> { ex.Message }
+                ));
+            }
+        }
         [HttpPost("{homeworkId:guid}/submit")]
         public async Task<IActionResult> SubmitHomework(Guid homeworkId, [FromBody] SubmitHomeworkDto dto)
         {

@@ -1,14 +1,15 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
 using SchoolSystem.Application.Features.Exams.Commands.Create;
-using SchoolSystem.Application.Features.Exams.Commands.Delete;
-using SchoolSystem.Application.Features.Exams.Commands.Update;
 using SchoolSystem.Application.Features.Exams.Commands.CreateResult;
-using SchoolSystem.Application.Features.Exams.Commands.UpdateResult;
+using SchoolSystem.Application.Features.Exams.Commands.Delete;
 using SchoolSystem.Application.Features.Exams.Commands.DeleteResult;
+using SchoolSystem.Application.Features.Exams.Commands.Update;
+using SchoolSystem.Application.Features.Exams.Commands.UpdateResult;
 using SchoolSystem.Application.Features.Exams.DTOs;
 using SchoolSystem.Application.Features.Exams.Queries.GetAll;
 using SchoolSystem.Application.Features.Exams.Queries.GetById;
@@ -16,6 +17,8 @@ using SchoolSystem.Application.Features.Exams.Queries.GetResults;
 using SchoolSystem.Application.Features.Exams.Queries.GetSummary;
 using SchoolSystem.Application.Features.Exams.Queries.GetTeacherExams;
 using SchoolSystem.Application.Interfaces.Services;
+using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Interfaces.Common;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -30,11 +33,17 @@ namespace SchoolSystem.Api.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IMessageService _messageService;
+        private readonly IGenericRepository<ExamSubmission> _submissionRepo;
+        private readonly IFileService _fileService;
+        private readonly IGenericRepository<Teacher> _teacherRepo;
 
-        public ExamsController(IMediator mediator, IMessageService messageService)
+        public ExamsController(IMediator mediator, IMessageService messageService, IGenericRepository<ExamSubmission> submissionRepo, IFileService fileService, IGenericRepository<Teacher> teacherRepo)
         {
             _mediator = mediator;
             _messageService = messageService;
+            _submissionRepo = submissionRepo;
+            _fileService = fileService;
+            _teacherRepo = teacherRepo;
         }
 
         // GET: api/Exams/teacher
@@ -155,6 +164,72 @@ namespace SchoolSystem.Api.Controllers
         {
             var result = await _mediator.Send(new DeleteExamResultCommand(oid));
             return Ok(ApiResponseFactory.Success(result, "ExamResultDeletedSuccessfully", _messageService));
+        }
+        [HttpGet("{oid}/submissions")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GetSubmissions(Guid oid)
+        {
+            var submissions = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Student).ThenInclude(s => s.User)
+                .Where(s => s.ExamOid == oid && !s.IsDeleted)
+                .OrderByDescending(s => s.SubmittedAt)
+                .Select(s => new ExamSubmissionViewDto
+                {
+                    SubmissionId = s.Oid,
+                    StudentId = s.StudentOid,
+                    StudentName = s.Student.User.FullName,
+                    AnswerText = s.AnswerText,
+                    AttachmentUrl = s.AttachmentUrl,
+                    FileName = s.FileName,
+                    SubmittedAt = s.SubmittedAt,
+                    Score = s.Score,
+                    Feedback = s.Feedback,
+                    Status = s.Status.ToString(),
+                    GradedAt = s.GradedAt
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponseFactory.Success(new
+            {
+                Total = submissions.Count,
+                Graded = submissions.Count(s => s.IsGraded),
+                Pending = submissions.Count(s => !s.IsGraded),
+                Submissions = submissions
+            }, "SubmissionsFetchedSuccessfully", _messageService));
+        }
+
+        // PUT: api/Exams/submissions/{submissionId}/grade — grade a submission
+        [HttpPut("submissions/{submissionId:guid}/grade")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GradeSubmission(Guid submissionId, [FromBody] GradeExamSubmissionDto dto)
+        {
+            var submission = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Exam)
+                .FirstOrDefaultAsync(s => s.Oid == submissionId && !s.IsDeleted);
+
+            if (submission == null)
+                return NotFound(ApiResponseFactory.Failure<object>("SubmissionNotFound", _messageService, null));
+
+            if (dto.Score < 0 || dto.Score > submission.Exam.MaxScore)
+                return BadRequest(ApiResponseFactory.Failure<object>("InvalidScore", _messageService,
+                    new List<string> { $"Score must be between 0 and {submission.Exam.MaxScore}." }));
+
+            submission.Score = dto.Score;
+            submission.Feedback = dto.Feedback;
+            submission.GradedAt = DateTime.UtcNow;
+            submission.Status = ExamSubmissionStatus.Graded;
+            submission.UpdatedAt = DateTime.UtcNow;
+
+            await _submissionRepo.UpdateAsync(submission);
+
+            return Ok(ApiResponseFactory.Success(new
+            {
+                submissionId = submission.Oid,
+                submission.Score,
+                submission.Feedback,
+                submission.GradedAt,
+                Status = submission.Status.ToString()
+            }, "SubmissionGradedSuccessfully", _messageService));
         }
     }
 }

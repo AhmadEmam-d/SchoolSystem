@@ -52,6 +52,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<HomeworkAttachment> HomeworkAttachments { get; set; }
         public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<ExamSubmission> ExamSubmissions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -783,6 +784,7 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Token).IsRequired().HasMaxLength(10);
             });
+            modelBuilder.Entity<ExamSubmission>().HasKey(e => e.Oid);
         }
     }
 }
