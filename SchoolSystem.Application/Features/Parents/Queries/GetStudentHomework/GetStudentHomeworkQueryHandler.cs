@@ -44,9 +44,9 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework
             // 2. جلب جميع الأبناء المرتبطين بهذا الوالد
             var allStudents = await _studentRepo.GetAllAsync();
             var studentIds = allStudents
-                .Where(s => s.ParentOid == parent.Oid)
-                .Select(s => new { s.Oid, s.ClassOid })
-                .ToList();
+                  .Where(s => s.ParentOid == parent.Oid)
+                  .Select(s => new { s.Oid, s.ClassOid, s.FullName })
+                  .ToList();
 
             if (!studentIds.Any())
                 return new List<StudentHomeworkDto>();
@@ -73,13 +73,14 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework
 
                     resultList.Add(new StudentHomeworkDto
                     {
+                        StudentOid = student.Oid,
+                        StudentName = student.FullName,
                         SubjectName = subject?.Name ?? "General",
                         Title = homework.Title,
                         DueDate = homework.DueDate,
-                        // منطق تحديد الحالة: Submitted أو Late أو Pending أو Overdue
                         Status = submission != null
-                            ? submission.Status.ToString()
-                            : (homework.DueDate < DateTime.Now ? "Overdue" : "Pending"),
+                        ? submission.Status.ToString()
+                        : (homework.DueDate < DateTime.Now ? "Overdue" : "Pending"),
                         Grade = submission?.Grade,
                         TotalMarks = homework.TotalMarks
                     });

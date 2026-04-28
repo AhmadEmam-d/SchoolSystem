@@ -15,6 +15,7 @@ using SchoolSystem.Application.Features.Parents.Queries.GetById;
 using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard;
+using SchoolSystem.Application.Features.Parents.Queries.GetParentGrades;
 using SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
@@ -269,6 +270,29 @@ namespace SchoolSystem.Api.Controllers
                     "ChildrenHomeworkFetchFailed", _messageService,
                     new List<string> { ex.Message }
                 ));
+            }
+        }
+        [HttpGet("grades")]
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> GetParentGrades()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+                    return Unauthorized();
+
+                var result = await _mediator.Send(
+                    new GetParentGradesQuery { ParentUserId = userId });
+
+                return Ok(ApiResponseFactory.Success(result,
+                    "GradesFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "GradesFetchFailed", _messageService,
+                    new List<string> { ex.Message }));
             }
         }
     }
