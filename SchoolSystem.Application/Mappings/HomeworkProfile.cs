@@ -59,7 +59,9 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.IsOverdue, opt => opt.MapFrom(src => src.DueDate < DateTime.UtcNow))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => GetPriority(src.DueDate)))
                 .ForMember(dest => dest.Grade, opt => opt.Ignore()) // Will be set manually
-                .ForMember(dest => dest.Status, opt => opt.Ignore()); // Will be set manually
+                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Will be set manually
+               .ForMember(dest => dest.Materials, opt => opt.MapFrom(src =>
+                    src.Materials.Where(a => !a.IsDeleted).ToList()));
 
             // Homework Details Mapping
             CreateMap<Homework, HomeworkDetailsDto>()
@@ -93,6 +95,9 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.Feedback, opt => opt.MapFrom(src => src.Feedback))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.IsLate, opt => opt.MapFrom(src => src.Status == SubmissionStatus.Late));
+            CreateMap<Material, AttachmentDto>()
+                .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.Name)) // ✅ Name → FileName
+                .ForMember(dest => dest.SizeText, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)));
         }
 
         // Helper methods

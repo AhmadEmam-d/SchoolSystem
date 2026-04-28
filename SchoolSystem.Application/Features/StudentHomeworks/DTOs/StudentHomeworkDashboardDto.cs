@@ -33,6 +33,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.DTOs
         public decimal TotalMarks { get; set; }
         public string Priority { get; set; } // high, medium, low
         public string? AttachmentUrl { get; set; }
+        public List<AttachmentDto> Materials { get; set; } = new();
     }
 
     public class HomeworkDetailsDto

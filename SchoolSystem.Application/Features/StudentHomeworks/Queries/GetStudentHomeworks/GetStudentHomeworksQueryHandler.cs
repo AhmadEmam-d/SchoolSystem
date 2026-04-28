@@ -44,6 +44,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentH
                 .Include(h => h.Subject)
                 .Include(h => h.Teacher)
                 .Include(h => h.Attachments)
+                .Include(h => h.Materials)
                 .Where(h => h.ClassOid == student.ClassOid && !h.IsDeleted)
                 .ToListAsync(cancellationToken);
 
