@@ -192,8 +192,8 @@ namespace SchoolSystem.Api.Controllers
             return Ok(ApiResponseFactory.Success(new
             {
                 Total = submissions.Count,
-                Graded = submissions.Count(s => s.IsGraded),
-                Pending = submissions.Count(s => !s.IsGraded),
+                Graded = submissions.Count(s => s.Status == ExamSubmissionStatus.Graded.ToString()),
+                Pending = submissions.Count(s => s.Status != ExamSubmissionStatus.Graded.ToString()),
                 Submissions = submissions
             }, "SubmissionsFetchedSuccessfully", _messageService));
         }
