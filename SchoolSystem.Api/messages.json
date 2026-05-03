@@ -1250,6 +1250,22 @@
   "ParentDashboardFetchFailed": {
     "EN": "An error occurred while fetching parent dashboard data",
     "AR": "حدث خطأ أثناء جلب بيانات لوحة تحكم ولي الأمر"
+  },
+  "ChildrenHomeworkFetchedSuccessfully": {
+    "EN": "Children's homework fetched successfully",
+    "AR": "تم جلب واجبات الأبناء بنجاح"
+  },
+  "ChildrenHomeworkFetchFailed": {
+    "EN": "An error occurred while fetching children's homework",
+    "AR": "حدث خطأ أثناء جلب واجبات الأبناء"
+  },
+  "GradesFetchedSuccessfully": {
+    "EN": "Grades fetched successfully",
+    "AR": "تم جلب الدرجات بنجاح"
+  },
+  "GradesFetchFailed": {
+    "EN": "An error occurred while fetching grades",
+    "AR": "حدث خطأ أثناء جلب الدرجات"
   }
 
 }

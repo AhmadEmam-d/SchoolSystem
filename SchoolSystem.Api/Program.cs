@@ -35,6 +35,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IGenAIService, OpenRouterAIService>();
 builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddHostedService<MonthlyInvoiceGenerator>();
 //builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 // ===========================

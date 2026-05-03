@@ -1,0 +1,53 @@
+{
+  "email": "admin.real@school.com",
+  "password": "Admin@1234",
+  "role": 1
+}
+
+{
+  "email": "sara.mahmoud@school.com",
+  "password": "Teacher@123",
+  "role": 2
+}
+
+{
+  "email": "fatima.student@school.com",
+  "password": "Student@123",
+  "role": 3
+}
+
+{
+  "email": "mahmoud.ali@school.com",
+  "password": "Parent@123",
+  "role": 4
+}
+
+
+
+#	Entity	ملف Frontend	الحالة
+1	Timetable	Timetable.jsx (admin)	❌ يحتاج ربط
+2	Attendance	Attendance.jsx (admin)	❌ يحتاج ربط
+3	Exam	Exams.jsx (admin)	❌ يحتاج ربط
+4	ExamResult	ExamResults.jsx (admin)	❌ يحتاج ربط
+5	Announcement	Announcements.jsx (admin)	❌ يحتاج ربط
+6	Message	Messages.jsx (admin)	❌ يحتاج ربط
+7	Notification	Notifications.jsx (admin)	❌ يحتاج ربط
+8	Report	Reports.jsx (admin)	❌ يحتاج ربط
+الصفحات التي تم ربطها حالياً في Frontend:
+text
+frontend/src/app/pages/admin/
+├── Dashboard.jsx        ✅ مرتبط
+├── Students.jsx         ✅ مرتبط
+├── Teachers.jsx         ✅ مرتبط
+├── Parents.jsx          ✅ مرتبط
+├── Classes.jsx          ✅ مرتبط
+├── Subjects.jsx         ✅ مرتبط
+├── Timetable.jsx        ❌ غير مرتبط
+├── Attendance.jsx       ❌ غير مرتبط
+├── Exams.jsx            ❌ غير مرتبط
+├── ExamResults.jsx      ❌ غير مرتبط
+├── Announcements.jsx    ❌ غير مرتبط
+├── Messages.jsx         ❌ غير مرتبط
+├── Notifications.jsx    ❌ غير مرتبط
+├── Reports.jsx          ❌ غير مرتبط
+└── Settings.jsx         ❌ غير مرتبط

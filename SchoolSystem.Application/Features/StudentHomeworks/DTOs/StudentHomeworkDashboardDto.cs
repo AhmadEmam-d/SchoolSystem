@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 
 namespace SchoolSystem.Application.Features.StudentHomeworks.DTOs
@@ -31,6 +32,8 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.DTOs
         public decimal? Grade { get; set; }
         public decimal TotalMarks { get; set; }
         public string Priority { get; set; } // high, medium, low
+        public string? AttachmentUrl { get; set; }
+        public List<AttachmentDto> Materials { get; set; } = new();
     }
 
     public class HomeworkDetailsDto
@@ -74,8 +77,9 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.DTOs
 
     public class SubmitHomeworkDto
     {
-        public Guid HomeworkId { get; set; }
+        //public Guid HomeworkId { get; set; }
         public string SubmissionText { get; set; }
         public string AttachmentUrl { get; set; }
+        //public IFormFile? File { get; set; }
     }
 }

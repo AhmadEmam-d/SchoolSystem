@@ -82,6 +82,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
             }
 
             // حفظ الجلسة في قاعدة البيانات
+            // حفظ الجلسة في قاعدة البيانات
             var session = new AttendanceSession
             {
                 Oid = sessionId,
@@ -90,7 +91,20 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
                 Method = (int)request.Dto.Method,
                 StartTime = DateTime.UtcNow,
                 ExpiresAt = response.ExpiresAt,
-                CorrectNumber = request.Dto.Method == AttendanceMethod.NumberSelection ? response.RandomNumbers?.First() : null,
+                CorrectNumber = request.Dto.Method == AttendanceMethod.NumberSelection
+                    ? response.RandomNumbers?.First()
+                    : null,
+
+                // ✅ FIX: save QR code so students can retrieve it
+                QrCode = request.Dto.Method == AttendanceMethod.QRCode
+                    ? response.QrCodeBase64
+                    : null,
+
+                // ✅ FIX: save all random numbers as JSON so students see all 3 options
+                RandomNumbersJson = request.Dto.Method == AttendanceMethod.NumberSelection
+                    ? System.Text.Json.JsonSerializer.Serialize(response.RandomNumbers)
+                    : null,
+
                 CreatedAt = DateTime.UtcNow
             };
             await _sessionRepo.AddAsync(session);

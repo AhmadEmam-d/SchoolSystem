@@ -105,4 +105,15 @@ namespace SchoolSystem.Application.Features.Parents.DTOs
         public int SubjectsCount { get; set; }
         public ParentAttendanceDashboardDto AttendanceStats { get; set; }
     }
+    public class StudentHomeworkDto
+    {
+        public Guid StudentOid { get; set; }
+        public string StudentName { get; set; }
+        public string SubjectName { get; set; }
+        public string Title { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Status { get; set; }
+        public decimal? Grade { get; set; }
+        public decimal TotalMarks { get; set; }
+    }
 }

@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Exams.DTOs;
+using SchoolSystem.Application.Features.Lessons.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Enums;
 using SchoolSystem.Domain.Interfaces.Common;
@@ -38,6 +39,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
                 .Include(e => e.Materials)
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
+                .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
             var totalStudents = await _studentRepo.GetAllQueryable().CountAsync(cancellationToken);
@@ -66,7 +68,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
                 .Where(e => e.Status == ExamStatus.Completed)
                 .OrderByDescending(e => e.Date)
                 .Take(5)
-                .Select(e => _mapper.Map<ExamDto>(e))
+                .Select(e => MapToDto(e))
                 .ToList();
 
             return new ExamsSummaryDto
@@ -80,6 +82,44 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
                 UpcomingExams = upcomingExams,
                 RecentExams = recentExams
             };
+
         }
+        private static ExamDto MapToDto(Exam e) => new ExamDto
+        {
+            Oid = e.Oid,
+            Name = e.Name ?? "",
+            Description = e.Description ?? "",
+            Type = e.Type.ToString(),
+            SubjectOid = e.SubjectOid,
+            SubjectName = e.Subject?.Name ?? "",
+            ClassOid = e.ClassOid,
+            ClassName = e.Class?.Name ?? "",
+            Date = e.Date,
+            StartTime = e.StartTime.ToString(@"hh\:mm"),
+            Duration = e.Duration.ToString(@"hh\:mm"),
+            MaxScore = e.MaxScore,
+            PassingScore = e.PassingScore,
+            Status = e.Status.ToString(),
+            Room = e.Room ?? "",
+            Instructions = e.Instructions ?? "",
+            StudentsCount = 0,
+            Materials = e.Materials?.Select(m => new MaterialResponseDto
+            {
+                Name = m.Name ?? "",
+                FileUrl = m.FileUrl ?? "",
+                FileType = m.FileType ?? "",
+                FileSize = m.FileSize
+            }).ToList() ?? new(),
+            Statistics = new ExamStatisticsDto
+            {
+                TotalStudents = e.Results?.Count ?? 0,
+                GradedCount = e.Results?.Count(r => r.GradedAt.HasValue) ?? 0,
+                AverageScore = e.Results?.Any() == true ? e.Results.Average(r => r.Percentage ?? 0) : 0,
+                HighestScore = e.Results?.Any() == true ? e.Results.Max(r => r.Score) : 0,
+                LowestScore = e.Results?.Any() == true ? e.Results.Min(r => r.Score) : 0,
+                PassRate = e.Results?.Any() == true
+            ? (double)e.Results.Count(r => r.IsPassed) / e.Results.Count * 100 : 0
+            }
+        };
     }
 }

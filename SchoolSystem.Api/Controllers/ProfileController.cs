@@ -275,6 +275,7 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
+
         [HttpGet("activity")]
             public async Task<IActionResult> GetRecentActivity()
             {

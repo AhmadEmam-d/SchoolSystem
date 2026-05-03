@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Api.Common.Helpers;
 using SchoolSystem.Api.Common.Models;
 using SchoolSystem.Application.Features.Attendance.Commands.Create;
 using SchoolSystem.Application.Features.Attendance.Commands.Delete;
 using SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceSession;
+using SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAttendance;
 using SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendanceSession;
 using SchoolSystem.Application.Features.Attendance.Commands.Update;
 using SchoolSystem.Application.Features.Attendance.DTOs;
@@ -15,7 +17,10 @@ using SchoolSystem.Application.Features.Attendance.Queries.GetClassStats;
 using SchoolSystem.Application.Features.Attendance.Queries.GetMonthlyReport;
 using SchoolSystem.Application.Features.Attendance.Queries.GetToday;
 using SchoolSystem.Application.Features.Attendance.Queries.GetWeekly;
+using SchoolSystem.Application.Features.Attendance.Quieries.GetActiveSession;
 using SchoolSystem.Application.Interfaces.Services;
+using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Interfaces.Common;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -30,11 +35,13 @@ namespace SchoolSystem.Api.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IMessageService _messageService;
+        private readonly IGenericRepository<AttendanceSession> _sessionRepo;
 
-        public AttendanceController(IMediator mediator, IMessageService messageService)
+        public AttendanceController(IMediator mediator, IMessageService messageService, IGenericRepository<AttendanceSession> sessionRepo)
         {
             _mediator = mediator;
             _messageService = messageService;
+            _sessionRepo = sessionRepo;
         }
 
         [HttpGet("today")]
@@ -252,6 +259,68 @@ namespace SchoolSystem.Api.Controllers
                     new List<string> { ex.Message }
                 ));
             }
+        }
+        [HttpGet("active-session")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> GetActiveSession()
+        {
+            try
+            {
+                var studentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (studentIdClaim == null || !Guid.TryParse(studentIdClaim.Value, out var studentId))
+                    return Unauthorized();
+
+                var result = await _mediator.Send(new GetActiveSessionForStudentQuery { StudentId = studentId });
+                return Ok(ApiResponseFactory.Success(result, "ActiveSessionFetched", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ActiveSessionFetchFailed", _messageService,
+                    new List<string> { ex.Message }));
+            }
+        }
+        [HttpPost("student-submit")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> StudentSubmit([FromBody] StudentSubmitAttendanceDto dto)
+        {
+            try
+            {
+                var studentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (studentIdClaim == null || !Guid.TryParse(studentIdClaim.Value, out var studentId))
+                    return Unauthorized();
+
+                var command = new StudentSubmitAttendanceCommand { Dto = dto, StudentId = studentId };
+                var result = await _mediator.Send(command);
+
+                return Ok(ApiResponseFactory.Success(result, "AttendanceSubmittedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "AttendanceSubmitFailed", _messageService,
+                    new List<string> { ex.Message }));
+            }
+        }
+        [HttpGet("qr-preview/{sessionId}")]
+        [Authorize(Roles = "Teacher,Admin,Student")]
+        public async Task<IActionResult> QrPreview(Guid sessionId)
+        {
+            var sessions = _sessionRepo
+                .GetAllQueryable()
+                .Cast<AttendanceSession>();
+
+            AttendanceSession? session = null;
+            await foreach (var s in sessions.AsAsyncEnumerable())
+            {
+                if (s.Oid == sessionId) { session = s; break; }
+            }
+
+            if (session == null || string.IsNullOrEmpty(session.QrCode))
+                return NotFound("No QR code for this session.");
+
+            var bytes = Convert.FromBase64String(session.QrCode);
+            return File(bytes, "image/png");
         }
     }
 }

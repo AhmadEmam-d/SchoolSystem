@@ -15,5 +15,6 @@ namespace SchoolSystem.Domain.Entities
         public decimal NetProfit { get; set; }
         public string Details { get; set; } 
         public DateTime GeneratedAt { get; set; }
+        public Guid? GeneratedBy { get; set; }
     }
 }

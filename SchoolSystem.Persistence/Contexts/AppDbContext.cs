@@ -23,7 +23,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<ExamResult> ExamResults { get; set; }
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<FeeInvoice> FeeInvoices { get; set; }
-        public DbSet<FeePayment> FeePayments { get; set; }
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
         public DbSet<Event> Events { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
@@ -52,6 +52,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<HomeworkAttachment> HomeworkAttachments { get; set; }
         public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<ExamSubmission> ExamSubmissions { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -371,11 +372,24 @@ namespace SchoolSystem.Persistence.Contexts
 
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
                 entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
+
+                // Relationship from FeeInvoice to PaymentTransaction
+                entity.HasMany(f => f.Payments)
+                      .WithOne(p => p.Invoice)
+                      .HasForeignKey(p => p.InvoiceId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<FeePayment>(entity =>
+            modelBuilder.Entity<PaymentTransaction>(entity =>
             {
+                entity.HasKey(e => e.Oid);
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
+
+                // Relationship from PaymentTransaction to FeeInvoice
+                entity.HasOne(p => p.Invoice)
+                      .WithMany(f => f.Payments)
+                      .HasForeignKey(p => p.InvoiceId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<FinancialReport>(entity =>
@@ -383,19 +397,6 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.NetProfit).HasPrecision(18, 2);
                 entity.Property(e => e.TotalExpenses).HasPrecision(18, 2);
                 entity.Property(e => e.TotalIncome).HasPrecision(18, 2);
-            });
-
-            // -------------------------
-            // FeePayment
-            // -------------------------
-            modelBuilder.Entity<FeePayment>(entity =>
-            {
-                entity.HasKey(e => e.Oid);
-
-                entity.HasOne(p => p.FeeInvoice)
-                      .WithMany(f => f.Payments)
-                      .HasForeignKey(p => p.FeeInvoiceOid)
-                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // -------------------------
@@ -783,6 +784,7 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Token).IsRequired().HasMaxLength(10);
             });
+            modelBuilder.Entity<ExamSubmission>().HasKey(e => e.Oid);
         }
     }
 }

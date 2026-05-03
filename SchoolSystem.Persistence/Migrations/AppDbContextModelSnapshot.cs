@@ -214,84 +214,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("ExamResults");
                 });
 
-            modelBuilder.Entity("FeeInvoice", b =>
-                {
-                    b.Property<Guid>("Oid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InvoiceNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("PaidAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("StudentOid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Oid");
-
-                    b.HasIndex("StudentOid");
-
-                    b.ToTable("FeeInvoices");
-                });
-
-            modelBuilder.Entity("FeePayment", b =>
-                {
-                    b.Property<Guid>("Oid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("FeeInvoiceOid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PaymentMethod")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiptNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TransactionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Oid");
-
-                    b.HasIndex("FeeInvoiceOid");
-
-                    b.ToTable("FeePayments");
-                });
-
             modelBuilder.Entity("Message", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -524,10 +446,12 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeSpan?>("CheckInTime")
-                        .HasColumnType("time");
+                        .HasPrecision(0)
+                        .HasColumnType("time(0)");
 
                     b.Property<TimeSpan?>("CheckOutTime")
-                        .HasColumnType("time");
+                        .HasPrecision(0)
+                        .HasColumnType("time(0)");
 
                     b.Property<Guid>("ClassOid")
                         .HasColumnType("uniqueidentifier");
@@ -542,7 +466,8 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -556,6 +481,10 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasKey("Oid");
 
                     b.HasIndex("ClassOid");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("StudentOid", "Date")
                         .IsUnique();
@@ -597,6 +526,9 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("QrCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RandomNumbersJson")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartTime")
@@ -754,6 +686,63 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("EmailConfigurations");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.ExamSubmission", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AnswerText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ExamOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Feedback")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GradedByOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("ExamOid");
+
+                    b.HasIndex("StudentOid");
+
+                    b.ToTable("ExamSubmissions");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.FAQ", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -800,6 +789,85 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("FAQs");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.FeeInvoice", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CardLastFour")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiptNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("RemainingAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("FeeInvoices");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.FinancialReport", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -819,10 +887,14 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Property<DateTime>("GeneratedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("GeneratedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("NetProfit")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Period")
@@ -833,9 +905,11 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("TotalExpenses")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalIncome")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -1192,49 +1266,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.ToTable("LessonHomeworks");
                 });
 
-            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonMaterial", b =>
-                {
-                    b.Property<Guid>("Oid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("LessonOid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Oid");
-
-                    b.HasIndex("LessonOid");
-
-                    b.ToTable("LessonMaterials");
-                });
-
             modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonObjective", b =>
                 {
                     b.Property<Guid>("Oid")
@@ -1266,6 +1297,66 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("LessonOid");
 
                     b.ToTable("LessonObjectives");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Material", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("ExamOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("HomeworkOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("LessonOid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("EntityType");
+
+                    b.HasIndex("ExamOid");
+
+                    b.HasIndex("HomeworkOid");
+
+                    b.HasIndex("LessonOid");
+
+                    b.ToTable("Materials");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Parent", b =>
@@ -1348,6 +1439,56 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("Token");
 
                     b.ToTable("PasswordResetTokens");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Oid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CardLastFour")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GatewayResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Oid");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("PaymentTransactions");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Report", b =>
@@ -2094,28 +2235,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("FeeInvoice", b =>
-                {
-                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
-                        .WithMany("FeeInvoices")
-                        .HasForeignKey("StudentOid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("FeePayment", b =>
-                {
-                    b.HasOne("FeeInvoice", "FeeInvoice")
-                        .WithMany("Payments")
-                        .HasForeignKey("FeeInvoiceOid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FeeInvoice");
-                });
-
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Attendance", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Class", "Class")
@@ -2169,6 +2288,36 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasForeignKey("TeacherOid");
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.ExamSubmission", b =>
+                {
+                    b.HasOne("Exam", "Exam")
+                        .WithMany("Submissions")
+                        .HasForeignKey("ExamOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentOid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.FeeInvoice", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
+                        .WithMany("FeeInvoices")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
@@ -2266,17 +2415,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Lesson");
                 });
 
-            modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonMaterial", b =>
-                {
-                    b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
-                        .WithMany("Materials")
-                        .HasForeignKey("LessonOid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lesson");
-                });
-
             modelBuilder.Entity("SchoolSystem.Domain.Entities.LessonObjective", b =>
                 {
                     b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
@@ -2284,6 +2422,30 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasForeignKey("LessonOid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.Material", b =>
+                {
+                    b.HasOne("Exam", "Exam")
+                        .WithMany("Materials")
+                        .HasForeignKey("ExamOid")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Homework", "Homework")
+                        .WithMany("Materials")
+                        .HasForeignKey("HomeworkOid")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("SchoolSystem.Domain.Entities.Lesson", "Lesson")
+                        .WithMany("Materials")
+                        .HasForeignKey("LessonOid")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Homework");
 
                     b.Navigation("Lesson");
                 });
@@ -2297,6 +2459,17 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("SchoolSystem.Domain.Entities.FeeInvoice", "Invoice")
+                        .WithMany("Payments")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.SmartTutorConversation", b =>
@@ -2463,12 +2636,11 @@ namespace SchoolSystem.Persistence.Migrations
 
             modelBuilder.Entity("Exam", b =>
                 {
-                    b.Navigation("Results");
-                });
+                    b.Navigation("Materials");
 
-            modelBuilder.Entity("FeeInvoice", b =>
-                {
-                    b.Navigation("Payments");
+                    b.Navigation("Results");
+
+                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>
@@ -2484,9 +2656,16 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Timetables");
                 });
 
+            modelBuilder.Entity("SchoolSystem.Domain.Entities.FeeInvoice", b =>
+                {
+                    b.Navigation("Payments");
+                });
+
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Homework", b =>
                 {
                     b.Navigation("Attachments");
+
+                    b.Navigation("Materials");
 
                     b.Navigation("Submissions");
                 });

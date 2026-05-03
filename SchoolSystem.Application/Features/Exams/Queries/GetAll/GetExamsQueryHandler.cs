@@ -40,13 +40,16 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetAll
             if (request.Type.HasValue)
                 query = query.Where(e => e.Type == (ExamType)request.Type.Value);
 
-            return await query
+            var exams = await query
                 .Include(e => e.Subject)
                 .Include(e => e.Class)
                 .Include(e => e.Materials)
+                .Include(e => e.Results)
                 .OrderByDescending(e => e.Date)
-                .ProjectTo<ExamDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(cancellationToken);
+                .AsSplitQuery()
+                .ToListAsync(cancellationToken); 
+
+            return exams.Select(e => _mapper.Map<ExamDto>(e)).ToList();
         }
     }
 }

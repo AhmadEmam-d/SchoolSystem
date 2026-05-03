@@ -44,6 +44,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentH
                 .Include(h => h.Subject)
                 .Include(h => h.Teacher)
                 .Include(h => h.Attachments)
+                .Include(h => h.Materials)
                 .Where(h => h.ClassOid == student.ClassOid && !h.IsDeleted)
                 .ToListAsync(cancellationToken);
 
@@ -94,6 +95,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentH
                 summary.Status = status;
                 summary.Grade = grade;
                 summary.IsOverdue = isOverdue && !hasSubmission;
+                summary.AttachmentUrl = hasSubmission ? submission.AttachmentUrl : null; // ✅ Add this
 
                 // Filter by status if specified
                 if (!string.IsNullOrEmpty(request.Status) && request.Status != "All" && status != request.Status)
