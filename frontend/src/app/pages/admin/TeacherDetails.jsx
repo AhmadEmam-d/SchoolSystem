@@ -9,13 +9,10 @@ import {
   ArrowLeft,
   Edit,
   Mail,
-  BookOpen,
-  GraduationCap
+  BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
-import apiConfig from '../../../../public/assets/links/api.json';
-
-const API_URL = apiConfig.API_URL;
+import { api } from '../../../app/lib/api'; // ✅ أهم سطر
 
 export function TeacherDetails() {
   const { id } = useParams();
@@ -26,25 +23,19 @@ export function TeacherDetails() {
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Fetch Teacher from API
+  // ✅ Fetch باستخدام api
   useEffect(() => {
     const fetchTeacher = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const teacherData = await api.teachers.getById(id);
 
-        const res = await fetch(`${API_URL}/Teachers/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data.success) {
-          setTeacher(data.data);
-        } else {
-          toast.error(data.messages?.EN || 'Failed to load teacher');
+        if (!teacherData) {
+          toast.error('Teacher not found');
+          return;
         }
+
+        setTeacher(teacherData);
+
       } catch (err) {
         console.error(err);
         toast.error('Network error');
@@ -135,41 +126,6 @@ export function TeacherDetails() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Stats
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-        <Card>
-          <CardContent className="p-6 flex justify-between">
-            <div>
-              <p className="text-sm text-gray-500">{t('totalClasses')}</p>
-              <p className="text-2xl font-bold">12</p>
-            </div>
-            <GraduationCap />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6 flex justify-between">
-            <div>
-              <p className="text-sm text-gray-500">{t('totalStudents')}</p>
-              <p className="text-2xl font-bold">156</p>
-            </div>
-            <GraduationCap />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6 flex justify-between">
-            <div>
-              <p className="text-sm text-gray-500">{t('avgPerformance')}</p>
-              <p className="text-2xl font-bold">87%</p>
-            </div>
-            <BookOpen />
-          </CardContent>
-        </Card>
-
-      </div> */}
 
       {/* Personal Info */}
       <Card>

@@ -1,425 +1,261 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { ArrowLeft, Upload, X, FileText, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { CLASSES } from '../../lib/mockData';
-import { Alert, AlertDescription } from '../../components/ui/alert';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+
+const API_BASE_URL = "https://localhost:7179/api";
 
 export function AddExam() {
   const navigate = useNavigate();
-  const [files, setFiles] = useState([]);
+  const token = localStorage.getItem("token");
 
+  const [classes, setClasses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    instructions: "",
+    type: "Final",
+    classOid: "",
+    subjectOid: "",
+    date: "",
+    startTime: "09:00",
+    duration: "02:00",
+    maxScore: 100,
+    passingScore: 60,
+    room: "",
+  });
+
+  // ================= LOAD =================
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const classRes = await fetch(`${API_BASE_URL}/Classes`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((r) => r.json());
+
+        const subjectRes = await fetch(`${API_BASE_URL}/Subjects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((r) => r.json());
+
+        setClasses(classRes.data || classRes || []);
+        setSubjects(subjectRes.data || subjectRes || []);
+      } catch (err) {
+        console.error(err);
+        alert("Error loading data");
+      }
+    };
+
+    load();
+  }, []);
+
+  // ================= FILE =================
   const handleFileChange = (e) => {
-    if (e.target.files) {
-      setFiles([...files, ...Array.from(e.target.files)]);
+    setFiles([...files, ...Array.from(e.target.files)]);
+  };
+
+  const removeFile = (i) => {
+    setFiles(files.filter((_, index) => index !== i));
+  };
+
+  // ================= SUBMIT =================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.classOid || !formData.subjectOid) {
+      alert("اختار Class و Subject");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const formatTime = (timeStr) => {
+        if (!timeStr) return "00:00:00";
+        return timeStr.split(":").length === 2 ? `${timeStr}:00` : timeStr;
+      };
+
+      // ================= 1. CREATE EXAM =================
+      const createRes = await fetch(`${API_BASE_URL}/Exams`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          date: new Date(formData.date).toISOString(),
+          startTime: formatTime(formData.startTime),
+          duration: formatTime(formData.duration),
+          maxScore: Number(formData.maxScore),
+          passingScore: Number(formData.passingScore),
+          materials: [], // فاضي الأول
+        }),
+      });
+
+      const created = await createRes.json();
+      console.log("Created Exam:", created);
+
+      const examId = created.data; // الـ backend بيرجع Guid في created.data
+      console.log("Created Exam ID:", examId);
+
+      if (!examId) {
+        alert("فشل إنشاء الامتحان ❌");
+        return;
+      }
+
+      // ================= 2. UPLOAD FILES =================
+      if (files.length > 0) {
+        const fd = new FormData();
+        files.forEach((file) => fd.append("Files", file)); // ⚠️ مهم: "Files" جمع
+
+        const uploadRes = await fetch(
+          `${API_BASE_URL}/Files/upload-multiple/Exam/${examId}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: fd,
+          }
+        );
+
+        const uploadData = await uploadRes.json();
+        console.log("Uploaded Files:", uploadData);
+      }
+
+      alert("تم إنشاء الامتحان + رفع الملفات ✅");
+      navigate("/teacher/exams");
+
+    } catch (err) {
+      console.error(err);
+      alert("في مشكلة ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeFile = (index) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast.success('Exam created successfully!');
-    navigate('/teacher/exams');
-  };
-
-  const { t } = useTranslation();
-
+  // ================= UI =================
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/teacher/exams')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('scheduleExam')}
-          </h1>
-          <p className="text-muted-foreground">
-            {t('setupExam')}
-          </p>
-        </div>
-      </div>
+    <div style={{ padding: 20 }}>
+      <h2>Add Exam</h2>
 
-      {/* Form */}
       <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('examsAssessments')}</CardTitle>
-              <CardDescription>
-                Enter the basic details of the exam
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Exam Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title">Exam Title *</Label>
-                <Input
-                  id="title"
-                  placeholder="e.g., Mathematics Final Exam - Semester 1"
-                  required
-                />
-              </div>
 
-              {/* Class and Subject */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="class">Class *</Label>
-                  <Select required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CLASSES.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <input
+          placeholder="Exam Name"
+          required
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
 
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject *</Label>
-                  <Select required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mathematics">Mathematics</SelectItem>
-                      <SelectItem value="physics">Physics</SelectItem>
-                      <SelectItem value="chemistry">Chemistry</SelectItem>
-                      <SelectItem value="biology">Biology</SelectItem>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="arabic">Arabic</SelectItem>
-                      <SelectItem value="history">History</SelectItem>
-                      <SelectItem value="geography">Geography</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        <br /><br />
 
-              {/* Exam Type */}
-              <div className="space-y-2">
-                <Label htmlFor="examType">Exam Type *</Label>
-                <Select required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select exam type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="midterm">Mid-Term Exam</SelectItem>
-                    <SelectItem value="final">Final Exam</SelectItem>
-                    <SelectItem value="quiz">Quiz</SelectItem>
-                    <SelectItem value="test">Test</SelectItem>
-                    <SelectItem value="assessment">Assessment</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+        <select onChange={(e) => setFormData({ ...formData, classOid: e.target.value })}>
+          <option value="">Class</option>
+          {classes.map((c) => (
+            <option key={c.id || c.oid} value={c.id || c.oid}>{c.name}</option>
+          ))}
+        </select>
 
-          {/* Schedule & Duration */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule & Duration</CardTitle>
-              <CardDescription>
-                Set the exam date, time, and duration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Date and Time */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="examDate">Exam Date *</Label>
-                  <Input
-                    id="examDate"
-                    type="date"
-                    required
-                  />
-                </div>
+        <br /><br />
 
-                <div className="space-y-2">
-                  <Label htmlFor="examTime">Start Time *</Label>
-                  <Input
-                    id="examTime"
-                    type="time"
-                    required
-                  />
-                </div>
-              </div>
+        <select onChange={(e) => setFormData({ ...formData, subjectOid: e.target.value })}>
+          <option value="">Subject</option>
+          {subjects.map((s) => (
+            <option key={s.id || s.oid} value={s.id || s.oid}>{s.name}</option>
+          ))}
+        </select>
 
-              {/* Duration and Total Marks */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Duration *</Label>
-                  <Select required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="45">45 minutes</SelectItem>
-                      <SelectItem value="60">1 hour</SelectItem>
-                      <SelectItem value="90">1.5 hours</SelectItem>
-                      <SelectItem value="120">2 hours</SelectItem>
-                      <SelectItem value="150">2.5 hours</SelectItem>
-                      <SelectItem value="180">3 hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        <br /><br />
 
-                <div className="space-y-2">
-                  <Label htmlFor="totalMarks">Total Marks *</Label>
-                  <Input
-                    id="totalMarks"
-                    type="number"
-                    placeholder="e.g., 100"
-                    min="1"
-                    required
-                  />
-                </div>
-              </div>
+        <select onChange={(e) => setFormData({ ...formData, type: e.target.value })} defaultValue="Final">
+          <option value="Final">Final</option>
+          <option value="Midterm">Midterm</option>
+          <option value="Quiz">Quiz</option>
+        </select>
 
-              {/* Room/Location */}
-              <div className="space-y-2">
-                <Label htmlFor="location">Exam Location</Label>
-                <Input
-                  id="location"
-                  placeholder="e.g., Room 101, Main Hall"
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <br /><br />
 
-          {/* Instructions & Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Instructions & Description</CardTitle>
-              <CardDescription>
-                Provide detailed instructions and description for the exam
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Exam Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe what the exam covers, topics included, etc..."
-                  rows={3}
-                />
-              </div>
+        <input
+          type="date"
+          required
+          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+        />
 
-              {/* Instructions */}
-              <div className="space-y-2">
-                <Label htmlFor="instructions">Exam Instructions *</Label>
-                <Textarea
-                  id="instructions"
-                  placeholder="Enter detailed instructions for students:&#10;- Allowed materials (calculator, books, etc.)&#10;- Answer format requirements&#10;- Any special rules or guidelines&#10;- Grading criteria"
-                  rows={6}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  These instructions will be displayed to students before they start the exam
-                </p>
-              </div>
+        <br /><br />
 
-              {/* Warning Message */}
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Make sure to clearly specify all rules and requirements. Students will see these instructions before taking the exam.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+        <input
+          type="time"
+          value={formData.startTime}
+          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+        />
 
-          {/* Exam Materials & Attachments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Exam Materials</CardTitle>
-              <CardDescription>
-                Upload exam papers, question sheets, or reference materials
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Attachments Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="attachments">Question Paper & Materials</Label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-foreground mb-1">
-                    Upload exam files
-                  </p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    PDFs, Word documents, images (Max 10MB per file)
-                  </p>
-                  <Input
-                    id="attachments"
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('attachments')?.click()}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Choose Files
-                  </Button>
-                </div>
+        <br /><br />
 
-                {/* File List */}
-                {files.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium text-foreground">
-                      Uploaded files ({files.length})
-                    </p>
-                    {files.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-600" />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {(file.size / 1024).toFixed(2)} KB
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                        >
-                          <X className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <input
+          placeholder="Duration (HH:mm)"
+          value={formData.duration}
+          onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+        />
 
-          {/* Additional Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Settings</CardTitle>
-              <CardDescription>
-                Configure exam settings and notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="notifyStudents"
-                    className="rounded border-gray-300"
-                    defaultChecked
-                  />
-                  <Label htmlFor="notifyStudents" className="cursor-pointer">
-                    Notify students about this exam
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="notifyParents"
-                    className="rounded border-gray-300"
-                    defaultChecked
-                  />
-                  <Label htmlFor="notifyParents" className="cursor-pointer">
-                    Notify parents about this exam
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="sendReminder"
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="sendReminder" className="cursor-pointer">
-                    Send reminder 24 hours before exam
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="allowCalculator"
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="allowCalculator" className="cursor-pointer">
-                    Calculator allowed
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="openBook"
-                    className="rounded border-gray-300"
-                  />
-                  <Label htmlFor="openBook" className="cursor-pointer">
-                    Open book exam
-                  </Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <br /><br />
 
-          {/* Form Actions */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/teacher/exams')}
-                >
-                  Cancel
-                </Button>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => toast.info('Exam saved as draft')}
-                  >
-                    Save as Draft
-                  </Button>
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700">
-                    Create Exam
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <input
+          type="number"
+          placeholder="Max Score"
+          value={formData.maxScore}
+          onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
+        />
+
+        <br /><br />
+
+        <input
+          type="number"
+          placeholder="Passing Score"
+          value={formData.passingScore}
+          onChange={(e) => setFormData({ ...formData, passingScore: e.target.value })}
+        />
+
+        <br /><br />
+
+        <input
+          placeholder="Room (e.g. Room 301)"
+          onChange={(e) => setFormData({ ...formData, room: e.target.value })}
+        />
+
+        <br /><br />
+
+        <textarea
+          placeholder="Description"
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+
+        <br /><br />
+
+        <textarea
+          placeholder="Instructions for students"
+          required
+          onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+        />
+
+        <br /><br />
+
+        <input type="file" multiple onChange={handleFileChange} />
+
+        {files.map((file, i) => (
+          <div key={i}>
+            {file.name}
+            <button type="button" onClick={() => removeFile(i)}>حذف</button>
+          </div>
+        ))}
+
+        <br /><br />
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Loading..." : "Create Exam"}
+        </button>
+
       </form>
     </div>
   );

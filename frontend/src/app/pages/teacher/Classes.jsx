@@ -1,156 +1,190 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { useAuth } from '../../context/AuthContext';
-import {
-  Users, Clock, BookOpen, Calendar, ClipboardCheck,
-  Eye, FileText, BookOpenCheck, Loader2
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
+import { Calendar, Clock, Users, BookOpen, Eye, ClipboardCheck } from "lucide-react";
+import { toast } from "sonner";
 import { api } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 
 export function TeacherClasses() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const [schedule, setSchedule] = useState(null);
+
+  const [schedule, setSchedule] = useState({});
   const [loading, setLoading] = useState(true);
-  const isRTL = i18n.language === 'ar';
+
+  // كل أيام الأسبوع (حتى الفاضي)
+  const weekDays = ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"];
 
   useEffect(() => {
-    const fetchTimetable = async () => {
-      const effectiveTeacherId = user?.teacherId || localStorage.getItem('teacherId');
-
-      if (!effectiveTeacherId) {
-        console.log("No teacherId found yet...");
-        return;
-      }
-
+    const fetchSchedule = async () => {
       try {
-        setLoading(true);
-        const result = await api.timetable.getByTeacher(effectiveTeacherId);
-        console.log("API Result in Component:", result);
+        const teacherId = user?.teacherId || localStorage.getItem("teacherId");
 
-        if (result && result.data && result.data.weeklySchedule) {
-          setSchedule(result.data.weeklySchedule);
-        } else {
-          setSchedule({}); 
-        }
-      } catch (error) {
+        if (!teacherId) return;
+
+        setLoading(true);
+
+        const res = await api.timetable.getByTeacher(teacherId);
+
+        console.log("API RAW:", res);
+
+        // ✅ الحل هنا
+        const weekly = res?.data?.data?.weeklySchedule || {};
+
+        console.log("FINAL SCHEDULE:", weekly);
+
+        setSchedule(weekly);
+      } catch (err) {
+        console.error(err);
         toast.error("Failed to load schedule");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTimetable();
+    fetchSchedule();
   }, [user?.teacherId]);
 
-  const days = schedule ? Object.keys(schedule) : [];
-  const totalClasses = days.reduce((acc, day) => acc + (schedule[day]?.length || 0), 0);
+  const totalClasses = weekDays.reduce(
+    (acc, day) => acc + (schedule[day]?.length || 0),
+    0
+  );
 
   if (loading) {
     return (
       <div className="h-96 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        Loading...
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-foreground">{t('myClasses')}</h1>
-          <p className="text-muted-foreground">{t('myClassesDesc')}</p>
-        </div>
+
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">{t('myClasses')}</h1>
+        <p className="text-gray-500">{t('myClassesDesc')}</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                {t('myWeeklySchedule')}
-              </CardTitle>
-              <CardDescription>{t('yourTeachingSchedule')}</CardDescription>
-            </div>
-            <Badge variant="outline" className="text-sm">
-              {totalClasses} {t('classesThisWeek')}
-            </Badge>
+      {/* Schedule Card */}
+      <div className="bg-white rounded-xl shadow p-6">
+
+        {/* Top */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="text-indigo-600" />
+            <h2 className="text-xl font-semibold">
+              {t('myWeeklySchedule')}
+            </h2>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {days.map((day) => (
-              <div key={day} className="border border-border rounded-lg overflow-hidden">
-                <div className="bg-indigo-50 dark:bg-indigo-900/20 px-4 py-3 border-b border-border">
-                  <h3 className="font-semibold text-foreground">{t(day.toLowerCase())}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {schedule[day]?.length || 0} {(schedule[day]?.length || 0) === 1 ? t('classScheduled') : t('classesScheduled')}
-                  </p>
+
+          <Badge variant="outline">
+            {totalClasses} classes this week
+          </Badge>
+        </div>
+
+        {/* Days */}
+        <div className="space-y-4">
+
+          {weekDays.map((day) => {
+            const dayClasses = schedule[day] || [];
+
+            return (
+              <div key={day} className="border rounded-lg overflow-hidden">
+
+                {/* Day Header */}
+                <div className="bg-gray-100 px-4 py-2 flex justify-between">
+                  <span className="font-semibold">{day}</span>
+                  <span className="text-sm text-gray-500">
+                    {dayClasses.length} classes
+                  </span>
                 </div>
-                <div className="p-4 bg-card">
-                  {schedule[day] && schedule[day].length > 0 ? (
+
+                {/* Content */}
+                <div className="p-4">
+
+                  {dayClasses.length > 0 ? (
                     <div className="space-y-3">
-                      {schedule[day].map((slot, slotIdx) => (
+
+                      {dayClasses.map((cls, i) => (
                         <div
-                          key={slotIdx}
-                          className="p-4 bg-muted/30 border border-border rounded-lg hover:shadow-md transition-shadow"
+                          key={i}
+                          className="border rounded-lg p-4 bg-gray-50"
                         >
-                          <div className="flex items-center gap-4 mb-3 flex-wrap">
-                            <div className="flex items-center gap-2 min-w-[120px]">
-                              <Clock className="h-4 w-4 text-indigo-500" />
-                              <span className="text-sm font-medium text-foreground">{slot.time}</span>
+
+                          {/* Info */}
+                          <div className="flex flex-wrap gap-4 mb-3">
+
+                            <div className="flex items-center gap-2">
+                              <Clock size={16} />
+                              {cls.time}
                             </div>
-                            <div className="flex items-center gap-2 flex-1">
-                              <Users className="h-4 w-4 text-blue-500" />
-                              <span className="text-sm font-semibold text-foreground">{slot.className}</span>
+
+                            <div className="flex items-center gap-2">
+                              <Users size={16} />
+                              {cls.className}
                             </div>
-                            <div className="flex items-center gap-2 min-w-[140px]">
-                              <BookOpen className="h-4 w-4 text-green-500" />
-                              <span className="text-sm text-muted-foreground">{slot.subjectName}</span>
+
+                            <div className="flex items-center gap-2">
+                              <BookOpen size={16} />
+                              {cls.subjectName}
                             </div>
-                            <div className="flex items-center gap-2 min-w-[100px]">
-                              <div className="h-3 w-3 bg-purple-500 rounded"></div>
-                              <span className="text-sm text-muted-foreground">{slot.room}</span>
+
+                            <div className="text-sm text-gray-500">
+                              {cls.room}
                             </div>
+
                           </div>
 
-                          <div className="flex gap-2 flex-wrap">
+                          {/* Buttons */}
+                          <div className="flex gap-2">
+
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => navigate(`/teacher/class-details?className=${slot.className}`)}
+                              onClick={() =>
+                              navigate(`/teacher/class-details/${cls.classOid}`)
+                              }
                             >
-                              <Eye className="h-3.5 w-3.5 mr-1" /> {t('viewClassDetails')}
+                              <Eye size={14} /> Details
                             </Button>
+
                             <Button
                               size="sm"
-                              variant="default"
-                              onClick={() => navigate(`/teacher/attendance/method-selection?className=${slot.className}`)}
+                              onClick={() =>
+                     navigate(
+  `/teacher/attendance/method-selection?classOid=${cls.classOid}&className=${cls.className}`
+)
+                              }
                             >
-                              <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> {t('takeAttendance')}
+                              <ClipboardCheck size={14} /> TakeAttendance
                             </Button>
+
                           </div>
+
                         </div>
                       ))}
+
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-muted-foreground text-sm">
-                      {t('noClassesScheduled')}
+                    <div className="text-center text-gray-400">
+                      No classes
                     </div>
                   )}
+
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            );
+          })}
+
+        </div>
+
+      </div>
     </div>
   );
 }

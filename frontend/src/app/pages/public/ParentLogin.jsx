@@ -7,7 +7,6 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
-import apiConfig from '../../../../public/assets/links/api.json';
 
 export function ParentLogin() {
   const { login } = useAuth();
@@ -20,7 +19,7 @@ export function ParentLogin() {
   const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
 
-  const API_URL = apiConfig.API_URL;
+  const API_BASE_URL = 'https://localhost:7179/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,53 +27,34 @@ export function ParentLogin() {
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/Auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-          role: 4 // Parent
-        })
+      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+        email: email,
+        password: password,
+        role: 4  // 4 = Parent role
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.errors?.[0] || 'Login failed');
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.data && data.data.token) {
-        const parentData = data.data;
-
-        localStorage.setItem('token', parentData.token);
-        localStorage.setItem('userId', parentData.userId);
-        localStorage.setItem('parentId', parentData.parentId);
-        localStorage.setItem('userName', parentData.fullName);
-        localStorage.setItem('userEmail', parentData.email);
-        localStorage.setItem('userRole', 'parent');
-
-        login({
-          id: parentData.userId,
-          parentId: parentData.parentId,
-          name: parentData.fullName,
-          email: parentData.email,
-          token: parentData.token,
-          role: 'parent'
-        });
-
-        setTimeout(() => {
-          navigate('/parent/dashboard');
-        }, 100);
-
+      if (response.data.success) {
+        const { token, userId, fullName, role, redirectTo } = response.data.data;
+        
+        localStorage.setItem('token', token);
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('userName', fullName);
+        localStorage.setItem('userRole', role);
+        
+        login('parent', { userId, fullName, token });
+        navigate('/parent/dashboard');
       } else {
-        setError(data.errors?.[0] || 'Invalid email or password');
+        setError(response.data.messages?.AR || 'فشل تسجيل الدخول');
       }
-
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message);
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.data?.errors) {
+        setError(err.response.data.errors[0]);
+      } else {
+        setError('حدث خطأ في الاتصال بالخادم');
+      }
     } finally {
       setLoading(false);
     }
@@ -135,8 +115,9 @@ export function ParentLogin() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="parent@school.com"
-                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
-                        }`}
+                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'
+                      }`}
                       required
                     />
                   </div>
@@ -156,8 +137,9 @@ export function ParentLogin() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={t('enterPasswordPlaceholder')}
-                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'
-                        }`}
+                      className={`block w-full py-3 border border-border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'
+                      }`}
                       required
                     />
                     <button
@@ -185,12 +167,31 @@ export function ParentLogin() {
                 </div>
 
                 <Button type="submit" disabled={loading} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 text-base font-medium shadow-lg">
-                  {loading ? t('Loading') : t('signInBtn')}
+                  {loading ? 'جاري التسجيل...' : t('signInBtn')}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* حسابات تجريبية لولي الأمر */}
+        <div className="mt-6 text-center text-xs text-muted-foreground">
+          <p>حسابات تجريبية لأولياء الأمور:</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <button 
+              onClick={() => { setEmail('ahmed.mahmoud@school.com'); setPassword('Parent@123'); }}
+              className="text-orange-600 hover:underline"
+            >
+              أحمد محمود
+            </button>
+            <button 
+              onClick={() => { setEmail('khaled.abdullah@school.com'); setPassword('Parent@123'); }}
+              className="text-orange-600 hover:underline"
+            >
+              خالد عبدالله
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -5,231 +5,180 @@ import { Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Shield, KeyRound } from 'luci
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 
-const CTX_KEY = 'pwdRecoveryCtx';
+const API_BASE_URL = "https://localhost:7179/api";
 
-function saveRecoveryCtx(ctx) {
-  try { sessionStorage.setItem(CTX_KEY, JSON.stringify(ctx)); } catch { /* ignore */ }
-}
+const getHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`
+});
 
 export function ChangePassword() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [loading, setLoading] = useState(false);
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const isRTL = i18n.language === 'ar';
 
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmNewPassword: '',
+    confirmPassword: '',
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmNewPassword) {
-      toast.error(t('allFieldsRequired'));
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+      toast.error("كل الحقول مطلوبة");
       return;
     }
 
     if (formData.newPassword.length < 8) {
-      toast.error(t('passwordMinLengthMsg'));
+      toast.error("الباسورد لازم يكون 8 حروف على الأقل");
       return;
     }
 
-    if (formData.newPassword !== formData.confirmNewPassword) {
-      toast.error(t('passwordsDoNotMatch'));
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast.error("الباسورد غير متطابق");
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      toast.success(t('passwordUpdatedSuccess'));
+    try {
+      setLoading(true);
+
+      const res = await fetch(`${API_BASE_URL}/Profile/change-password`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+      console.log("CHANGE PASSWORD:", data);
+
+      if (res.ok && data.success) {
+        toast.success("تم تغيير كلمة المرور ✅");
+
+        setFormData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+
+        navigate(-1);
+      } else {
+        toast.error(data?.errors?.[0] || "فشل تغيير كلمة المرور");
+      }
+
+    } catch (err) {
+      console.error(err);
+      toast.error("حصل خطأ");
+    } finally {
       setLoading(false);
-      setFormData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-      navigate(-1);
-    }, 1000);
+    }
   };
 
   const handleBack = () => navigate(`/${user?.role}/profile`);
 
-  const handleForgotPassword = () => {
-    const ctx = { from: 'account', returnTo: '/change-password' };
-    saveRecoveryCtx(ctx);
-    navigate('/forgot-password', { state: ctx });
-  };
-
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   const inputClass = (extra = '') =>
-    `w-full py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-foreground placeholder:text-muted-foreground transition-colors ${extra}`;
-
-  const PasswordField = ({ id, name, label, value, show, onToggle, hint }) => (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">
-        {label}
-      </label>
-      <div className="relative">
-        <Lock
-          className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none ${
-            isRTL ? 'right-3' : 'left-3'
-          }`}
-        />
-        <input
-          id={id}
-          type={show ? 'text' : 'password'}
-          name={name}
-          value={value}
-          onChange={handleChange}
-          className={inputClass(isRTL ? 'pr-10 pl-10 text-right' : 'pl-10 pr-10')}
-          placeholder="••••••••"
-          required
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${
-            isRTL ? 'left-3' : 'right-3'
-          }`}
-        >
-          {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-        </button>
-      </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-    </div>
-  );
+    `w-full py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${extra}`;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
+    <div className="min-h-screen py-8 px-4">
       <div className="max-w-lg mx-auto">
 
-        {/* Back Button */}
-        <button
-          onClick={handleBack}
-          className={`flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors ${
-            isRTL ? 'flex-row-reverse' : ''
-          }`}
-        >
+        {/* BACK */}
+        <button onClick={handleBack} className="flex items-center gap-2 mb-6">
           <BackIcon className="h-5 w-5" />
-          <span className="text-sm font-medium">{t('back')}</span>
+          Back
         </button>
 
-        <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow border overflow-hidden">
 
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
-            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="h-14 w-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                <Shield className="h-7 w-7 text-white" />
-              </div>
-              <div className={`space-y-0.5 ${isRTL ? 'text-right' : ''}`}>
-                <h1 className="text-xl font-bold text-white">
-                  {t('changePasswordTitle')}
-                </h1>
-                <p className="text-blue-100 text-sm">
-                  {user?.email || user?.name || t('changePasswordSubtitle')}
-                </p>
-              </div>
+          {/* HEADER */}
+          <div className="bg-blue-600 px-6 py-8 text-white flex items-center gap-4">
+            <Shield />
+            <div>
+              <h1 className="text-xl font-bold">Change Password</h1>
+              <p className="text-sm">{user?.email}</p>
             </div>
           </div>
 
-          {/* Form */}
+          {/* FORM */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
 
-            {/* Current Password */}
-            <div className="space-y-1.5">
-              <label
-                htmlFor="currentPassword"
-                className="block text-sm font-medium text-foreground"
-              >
-                {t('currentPassword')}
-              </label>
+            {/* CURRENT */}
+            <div>
+              <label>Current Password</label>
               <div className="relative">
-                <Lock
-                  className={`absolute top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none ${
-                    isRTL ? 'right-3' : 'left-3'
-                  }`}
-                />
                 <input
-                  id="currentPassword"
                   type={showCurrentPassword ? 'text' : 'password'}
                   name="currentPassword"
                   value={formData.currentPassword}
                   onChange={handleChange}
-                  className={inputClass(isRTL ? 'pr-10 pl-10 text-right' : 'pl-10 pr-10')}
-                  placeholder="••••••••"
-                  required
+                  className={inputClass()}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${
-                    isRTL ? 'left-3' : 'right-3'
-                  }`}
-                >
-                  {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
+                  {showCurrentPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                className={`mt-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors flex items-center gap-1 ${
-                  isRTL ? 'flex-row-reverse mr-auto' : 'ml-auto'
-                }`}
-              >
-                <KeyRound className="h-3.5 w-3.5" />
-                {t('forgotPassword')}
-              </button>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-border" />
+            {/* NEW */}
+            <div>
+              <label>New Password</label>
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                name="newPassword"
+                value={formData.newPassword}
+                onChange={handleChange}
+                className={inputClass()}
+              />
+            </div>
 
-            {/* New Password */}
-            <PasswordField
-              id="newPassword"
-              name="newPassword"
-              label={t('newPassword')}
-              value={formData.newPassword}
-              show={showNewPassword}
-              onToggle={() => setShowNewPassword(!showNewPassword)}
-              hint={t('passwordMinLengthMsg')}
-            />
+            {/* CONFIRM */}
+            <div>
+              <label>Confirm Password</label>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={inputClass()}
+              />
+            </div>
 
-            {/* Confirm New Password */}
-            <PasswordField
-              id="confirmNewPassword"
-              name="confirmNewPassword"
-              label={t('confirmNewPassword')}
-              value={formData.confirmNewPassword}
-              show={showConfirmPassword}
-              onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-            />
-
-            {/* Action Buttons */}
-            <div className={`flex gap-3 pt-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            {/* BUTTONS */}
+            <div className="flex gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg"
               >
-                {loading ? t('updating') : t('updatePassword')}
+                {loading ? "Saving..." : "Update Password"}
               </button>
+
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3 border border-border rounded-lg text-foreground hover:bg-muted font-medium transition-colors"
+                className="px-5 py-3 border rounded-lg"
               >
-                {t('cancel')}
+                Cancel
               </button>
             </div>
+
           </form>
         </div>
       </div>

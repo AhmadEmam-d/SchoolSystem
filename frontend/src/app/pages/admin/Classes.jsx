@@ -58,16 +58,21 @@ export function AdminClasses() {
                 {t('grade')} {cls.level}
               </span>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                <Users className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <span className="text-sm">{cls.students?.length || 0} {t('studentsNum')}</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                <BookOpen className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <span className="text-sm">{cls.sections?.length || 0} {t('sectionsNum')}</span>
-              </div>
-            </div>
+           <div className="space-y-3">
+  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+    <Users className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+    <span className="text-sm">
+      {cls.studentsCount || 0} {t('studentsNum')}
+    </span>
+  </div>
+
+  <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+    <BookOpen className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+    <span className="text-sm">
+      {cls.sectionsCount || 0} {t('sectionsNum')}
+    </span>
+  </div>
+</div>
             <div className="mt-6 flex flex-col gap-2">
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1 dark:border-gray-600 dark:text-gray-300" onClick={() => navigate(`/admin/classes/${cls.oid}`)}>

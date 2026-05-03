@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Save, Bell, Lock, Globe, Mail, Database, Shield, Sun, Moon, KeyRound, School } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { api } from '../../../app/lib/api';
 
 export function AdminSettings() {
   const { t } = useTranslation();
@@ -19,6 +20,10 @@ export function AdminSettings() {
   const { currentLanguage, changeLanguage } = useLanguage();
   const navigate = useNavigate();
   const isRTL = currentLanguage === 'ar';
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -29,8 +34,72 @@ export function AdminSettings() {
     sessionTimeout: '30',
   });
 
-  const handleSave = () => {
-    toast.success(t('settingsSaved'));
+  // ================= LOAD =================
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const [notifications, security] = await Promise.all([
+          api.settings.getNotifications(),
+          api.settings.getSecurity(),
+        ]);
+
+        if (notifications) {
+          setSettings(prev => ({
+            ...prev,
+            emailNotifications: notifications.emailNotifications ?? true,
+            pushNotifications: notifications.pushNotifications ?? true,
+            attendanceReminders: notifications.attendanceReminders ?? true,
+            gradeUpdates: notifications.gradeUpdates ?? true,
+          }));
+        }
+
+        if (security) {
+          setSettings(prev => ({
+            ...prev,
+            twoFactorAuth: security.twoFactorAuthentication ?? false,
+            sessionTimeout: String(security.sessionTimeoutMinutes ?? 30),
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast.error(t('errorFetchingSettings') || 'Failed to load settings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [t]);
+
+  // ================= SAVE =================
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      if (activeTab === 'notifications') {
+        const result = await api.settings.updateNotifications({
+          emailNotifications: settings.emailNotifications,
+          pushNotifications: settings.pushNotifications,
+          attendanceReminders: settings.attendanceReminders,
+          gradeUpdates: settings.gradeUpdates,
+        });
+        if (!result.success) throw new Error(result.message);
+      }
+
+      if (activeTab === 'security') {
+        const result = await api.settings.updateSecurity({
+          twoFactorAuthentication: settings.twoFactorAuth,
+          sessionTimeoutMinutes: parseInt(settings.sessionTimeout),
+        });
+        if (!result.success) throw new Error(result.message);
+      }
+
+      toast.success(t('settingsSaved'));
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error(error.message || t('errorSavingSettings') || 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLanguageChange = (lang) => {
@@ -52,6 +121,20 @@ export function AdminSettings() {
     toast.success(t('themeUpdated'));
   };
 
+  const handleCreateBackup = async () => {
+    try {
+      const result = await api.settings.createBackup();
+      if (result.success) {
+        toast.success(t('backupCreated') || 'Backup created successfully');
+      } else {
+        toast.error(result.message || 'Failed to create backup');
+      }
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      toast.error('Failed to create backup');
+    }
+  };
+
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
   return (
@@ -61,13 +144,17 @@ export function AdminSettings() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('settings')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">{t('settingsPageDesc')}</p>
         </div>
-        <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving || activeTab === 'general' || activeTab === 'system'}
+          className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+        >
           <Save className="h-4 w-4" />
-          {t('save')}
+          {isSaving ? t('saving') || 'Saving...' : t('save')}
         </Button>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
+      <Tabs defaultValue="general" className="space-y-6" onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
           <TabsTrigger value="general">{t('generalSettings')}</TabsTrigger>
           <TabsTrigger value="notifications">{t('notificationSettings')}</TabsTrigger>
@@ -165,46 +252,54 @@ export function AdminSettings() {
               <CardDescription className="dark:text-gray-400">{t('manageNotificationsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="dark:text-gray-200">{t('emailNotifications')}</Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('emailNotificationsDesc')}</p>
+              {isLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
                 </div>
-                <Switch
-                  checked={settings.emailNotifications}
-                  onCheckedChange={(checked) => setSettings({ ...settings, emailNotifications: checked })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="dark:text-gray-200">{t('pushNotifications')}</Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('pushNotificationsDesc')}</p>
-                </div>
-                <Switch
-                  checked={settings.pushNotifications}
-                  onCheckedChange={(checked) => setSettings({ ...settings, pushNotifications: checked })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="dark:text-gray-200">{t('attendanceReminders')}</Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('attendanceRemindersDesc')}</p>
-                </div>
-                <Switch
-                  checked={settings.attendanceReminders}
-                  onCheckedChange={(checked) => setSettings({ ...settings, attendanceReminders: checked })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="dark:text-gray-200">{t('gradeUpdatesLabel')}</Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('gradeUpdatesAdminDesc')}</p>
-                </div>
-                <Switch
-                  checked={settings.gradeUpdates}
-                  onCheckedChange={(checked) => setSettings({ ...settings, gradeUpdates: checked })}
-                />
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="dark:text-gray-200">{t('emailNotifications')}</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('emailNotificationsDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.emailNotifications}
+                      onCheckedChange={(checked) => setSettings({ ...settings, emailNotifications: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="dark:text-gray-200">{t('pushNotifications')}</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('pushNotificationsDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.pushNotifications}
+                      onCheckedChange={(checked) => setSettings({ ...settings, pushNotifications: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="dark:text-gray-200">{t('attendanceReminders')}</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('attendanceRemindersDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.attendanceReminders}
+                      onCheckedChange={(checked) => setSettings({ ...settings, attendanceReminders: checked })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="dark:text-gray-200">{t('gradeUpdatesLabel')}</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('gradeUpdatesAdminDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.gradeUpdates}
+                      onCheckedChange={(checked) => setSettings({ ...settings, gradeUpdates: checked })}
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -220,43 +315,51 @@ export function AdminSettings() {
               <CardDescription className="dark:text-gray-400">{t('manageAccountSettings')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label className="dark:text-gray-200">{t('twoFactorAuth')}</Label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('twoFactorAuthDesc')}</p>
+              {isLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
                 </div>
-                <Switch
-                  checked={settings.twoFactorAuth}
-                  onCheckedChange={(checked) => setSettings({ ...settings, twoFactorAuth: checked })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="dark:text-gray-200">{t('sessionTimeoutLabel')}</Label>
-                <Select
-                  value={settings.sessionTimeout}
-                  onValueChange={(value) => setSettings({ ...settings, sessionTimeout: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">{t('min15')}</SelectItem>
-                    <SelectItem value="30">{t('min30')}</SelectItem>
-                    <SelectItem value="60">{t('hour1')}</SelectItem>
-                    <SelectItem value="120">{t('hours2')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="pt-4 border-t dark:border-gray-700">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/change-password')}
-                  className="w-full dark:border-gray-600 dark:text-white flex items-center justify-center gap-2"
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {t('changePassword')}
-                </Button>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="dark:text-gray-200">{t('twoFactorAuth')}</Label>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('twoFactorAuthDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={settings.twoFactorAuth}
+                      onCheckedChange={(checked) => setSettings({ ...settings, twoFactorAuth: checked })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="dark:text-gray-200">{t('sessionTimeoutLabel')}</Label>
+                    <Select
+                      value={settings.sessionTimeout}
+                      onValueChange={(value) => setSettings({ ...settings, sessionTimeout: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">{t('min15')}</SelectItem>
+                        <SelectItem value="30">{t('min30')}</SelectItem>
+                        <SelectItem value="60">{t('hour1')}</SelectItem>
+                        <SelectItem value="120">{t('hours2')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="pt-4 border-t dark:border-gray-700">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('/change-password')}
+                      className="w-full dark:border-gray-600 dark:text-white flex items-center justify-center gap-2"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      {t('changePassword')}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -278,7 +381,12 @@ export function AdminSettings() {
                   <div>
                     <h4 className="font-medium text-blue-900 dark:text-blue-100">{t('backupRecovery')}</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">{t('lastBackupTime')}</p>
-                    <Button variant="outline" size="sm" className="mt-3 dark:border-blue-700 dark:text-blue-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 dark:border-blue-700 dark:text-blue-300"
+                      onClick={handleCreateBackup}
+                    >
                       {t('createBackupNow')}
                     </Button>
                   </div>
@@ -290,7 +398,12 @@ export function AdminSettings() {
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-gray-100">{t('emailServerConfig')}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{t('emailServerConfigDesc')}</p>
-                    <Button variant="outline" size="sm" className="mt-3 dark:border-gray-600 dark:text-gray-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 dark:border-gray-600 dark:text-gray-300"
+                      onClick={() => navigate('/admin/settings/email-config')}
+                    >
                       {t('configureEmail')}
                     </Button>
                   </div>

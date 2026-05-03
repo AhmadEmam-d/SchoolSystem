@@ -2,17 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
-import apiConfig from '../../../../public/assets/links/api.json';
 
 export function AddStudent() {
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState([]);
   const [sections, setSections] = useState([]);
   const [parents, setParents] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
-  
-  const API_URL = apiConfig.API_URL;
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -26,7 +24,7 @@ export function AddStudent() {
     parentOid: ''
   });
 
-  // fetch Data
+  // ✅ Load Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,7 +32,7 @@ export function AddStudent() {
 
         const [clsRes, secRes, parRes] = await Promise.all([
           api.classes.getAll(),
-          fetch(`${API_URL}/Sections`, {
+          fetch(`https://localhost:7179/api/Sections`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -48,7 +46,7 @@ export function AddStudent() {
 
       } catch (err) {
         console.error(err);
-        toast.error('فشل تحميل البيانات');
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
@@ -57,20 +55,18 @@ export function AddStudent() {
     fetchData();
   }, []);
 
-  // ✅ فلترة الشُعب حسب الصف
+  // ✅ Filter sections by class
   useEffect(() => {
     if (formData.classOid) {
 
-      // 🔥 جرب الاتنين دول حسب شكل الداتا عندك
       const filtered = sections.filter(
         s =>
-          s.classOid === formData.classOid ||   // الشكل الصح غالبًا
-          s.class?.oid === formData.classOid    // fallback
+          s.classOid === formData.classOid ||
+          s.class?.oid === formData.classOid
       );
 
       setFilteredSections(filtered);
 
-      // امسح الشعبة القديمة
       setFormData(prev => ({
         ...prev,
         sectionOid: ''
@@ -81,7 +77,7 @@ export function AddStudent() {
     }
   }, [formData.classOid, sections]);
 
-  // ✅ تغيير القيم
+  // ✅ Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -95,10 +91,9 @@ export function AddStudent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔥 validation مهم
-    if (!formData.classOid) return toast.error('اختار الصف');
-    if (!formData.sectionOid) return toast.error('اختار الشعبة');
-    if (!formData.parentOid) return toast.error('اختار ولي الأمر');
+    if (!formData.classOid) return toast.error('Select class');
+    if (!formData.sectionOid) return toast.error('Select section');
+    if (!formData.parentOid) return toast.error('Select parent');
 
     setLoading(true);
 
@@ -122,24 +117,24 @@ export function AddStudent() {
       console.log("📥 Response:", data);
 
       if (ok && data.success) {
-        toast.success('تم إضافة الطالب');
+        toast.success('Student added successfully');
         navigate('/admin/students');
       } else {
-       if (data.errors && data.errors.length > 0) {
-  data.errors.forEach(err => {
-    console.error("❌ Backend Error:", err);
-    toast.error(err);
-  });
-} else if (data.message) {
-  toast.error(data.message);
-} else {
-  toast.error('فشل في الإضافة');
-}
+        if (data.errors && data.errors.length > 0) {
+          data.errors.forEach(err => {
+            console.error("❌ Backend Error:", err);
+            toast.error(err);
+          });
+        } else if (data.message) {
+          toast.error(data.message);
+        } else {
+          toast.error('Failed to add student');
+        }
       }
 
     } catch (err) {
       console.error(err);
-      toast.error('خطأ في السيرفر');
+      toast.error('Server error');
     } finally {
       setLoading(false);
     }
@@ -147,19 +142,19 @@ export function AddStudent() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">إضافة طالب</h2>
+      <h2 className="text-2xl font-bold mb-4">Add Student</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        <input name="fullName" placeholder="الاسم"
+        <input name="fullName" placeholder="Full Name"
           value={formData.fullName}
           onChange={handleChange} />
 
-        <input name="email" placeholder="الإيميل"
+        <input name="email" placeholder="Email"
           value={formData.email}
           onChange={handleChange} />
 
-        <input name="phone" placeholder="الموبايل"
+        <input name="phone" placeholder="Phone"
           value={formData.phone}
           onChange={handleChange} />
 
@@ -168,17 +163,17 @@ export function AddStudent() {
           onChange={handleChange} />
 
         <select name="gender" value={formData.gender} onChange={handleChange}>
-          <option value="Male">ذكر</option>
-          <option value="Female">أنثى</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
         </select>
 
-        <textarea name="address" placeholder="العنوان"
+        <textarea name="address" placeholder="Address"
           value={formData.address}
           onChange={handleChange} />
 
         {/* Class */}
         <select name="classOid" value={formData.classOid} onChange={handleChange}>
-          <option value="">اختر الصف</option>
+          <option value="">Select Class</option>
           {classes.map(c => (
             <option key={c.oid} value={c.oid}>
               {c.name}
@@ -193,10 +188,10 @@ export function AddStudent() {
           onChange={handleChange}
           disabled={!formData.classOid}
         >
-          <option value="">اختر الشعبة</option>
+          <option value="">Select Section</option>
 
           {filteredSections.length === 0 && (
-            <option disabled>لا يوجد شعب</option>
+            <option disabled>No Sections Available</option>
           )}
 
           {filteredSections.map(s => (
@@ -208,7 +203,7 @@ export function AddStudent() {
 
         {/* Parent */}
         <select name="parentOid" value={formData.parentOid} onChange={handleChange}>
-          <option value="">اختر ولي الأمر</option>
+          <option value="">Select Parent</option>
           {parents.map(p => (
             <option key={p.oid} value={p.oid}>
               {p.fatherName} - {p.phone}
@@ -217,7 +212,7 @@ export function AddStudent() {
         </select>
 
         <button disabled={loading}>
-          {loading ? 'جاري الحفظ...' : 'إضافة'}
+          {loading ? 'Saving...' : 'Add'}
         </button>
 
       </form>

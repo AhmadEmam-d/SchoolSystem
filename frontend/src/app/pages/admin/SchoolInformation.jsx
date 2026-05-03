@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save, School, Mail, Phone, MapPin, Globe } from 'lucide-react';
@@ -9,36 +9,111 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
+import { api } from '../../../app/lib/api';
 
 export function SchoolInformation() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [formData, setFormData] = useState({
-    schoolName: 'Edu Smart Academy',
-    schoolNameAr: 'أكاديمية إديو سمارت',
-    email: 'admin@edusmart.edu',
-    phone: '+1 (555) 123-4567',
-    website: 'www.edusmart.edu',
-    address: '123 Education Street, Learning City, LC 12345',
-    addressAr: '٢٣٣ شارع التعليم، مدينة التعلم، LC ٢٣٣٤٥',
+    schoolName: '',
+    schoolNameAr: '',
+    email: '',
+    phone: '',
+    website: '',
+    address: '',
+    addressAr: '',
     timezone: 'America/New_York',
-    principalName: 'Dr. John Smith',
-    principalNameAr: 'د. جون سميث',
-    establishedYear: '2005',
-    studentCapacity: '1000',
-    description: 'A leading educational institution dedicated to excellence in learning and character development.',
-    descriptionAr: 'مؤسسة تعليمية رائدة مكرسة للتميز في التعلم وتنمية الشخصية.',
+    principalName: '',
+    principalNameAr: '',
+    establishedYear: '',
+    studentCapacity: '',
+    description: '',
+    descriptionAr: '',
   });
+
+  // ================= LOAD =================
+  useEffect(() => {
+    const loadSchoolInfo = async () => {
+      try {
+        const data = await api.settings.getSchoolInfo();
+        if (data) {
+          setFormData({
+            schoolName: data.schoolName || '',
+            schoolNameAr: data.schoolNameAr || '',
+            email: data.schoolEmail || '',
+            phone: data.schoolPhone || '',
+            website: data.website || '',
+            address: data.addressEn || data.schoolAddress || '',
+            addressAr: data.addressAr || '',
+            timezone: data.timezone || 'America/New_York',
+            principalName: data.principalName || '',
+            principalNameAr: data.principalNameAr || '',
+            establishedYear: data.establishedYear || '',
+            studentCapacity: data.studentCapacity || '',
+            description: data.descriptionEn || '',
+            descriptionAr: data.descriptionAr || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading school info:', error);
+        toast.error(t('errorFetchingSchoolInfo') || 'Failed to load school information');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSchoolInfo();
+  }, [t]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast.success(t('schoolInformationSaved'));
+  // ================= SAVE =================
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    setIsSaving(true);
+    try {
+      const result = await api.settings.updateSchoolInfo({
+        schoolName: formData.schoolName,
+        schoolAddress: formData.address,
+        schoolPhone: formData.phone,
+        schoolEmail: formData.email,
+        schoolLogo: '',
+        principalName: formData.principalName,
+        establishedYear: formData.establishedYear,
+        website: formData.website,
+        registrationNumber: '',
+        descriptionEn: formData.description,
+        descriptionAr: formData.descriptionAr,
+        addressEn: formData.address,
+        addressAr: formData.addressAr,
+      });
+
+      if (result.success) {
+        toast.success(t('schoolInformationSaved'));
+      } else {
+        toast.error(result.message || t('errorSavingSchoolInfo') || 'Failed to save school information');
+      }
+    } catch (error) {
+      console.error('Error saving school info:', error);
+      toast.error(t('errorSavingSchoolInfo') || 'Failed to save school information');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -53,9 +128,9 @@ export function SchoolInformation() {
           <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('schoolInformation')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">{t('schoolInformationDesc')}</p>
         </div>
-        <Button onClick={handleSubmit} className="bg-purple-600 hover:bg-purple-700">
+        <Button onClick={handleSubmit} disabled={isSaving} className="bg-purple-600 hover:bg-purple-700">
           <Save className="h-4 w-4 mr-2" />
-          {t('save')}
+          {isSaving ? t('saving') || 'Saving...' : t('save')}
         </Button>
       </div>
 
@@ -310,9 +385,9 @@ export function SchoolInformation() {
           >
             {t('cancel')}
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+          <Button type="submit" disabled={isSaving} className="bg-purple-600 hover:bg-purple-700">
             <Save className="h-4 w-4 mr-2" />
-            {t('saveChanges')}
+            {isSaving ? t('saving') || 'Saving...' : t('saveChanges')}
           </Button>
         </div>
       </form>

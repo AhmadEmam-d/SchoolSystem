@@ -32,43 +32,43 @@ export function AddTeacher() {
     subjectOids: []
   });
 
-  // ✅ تحميل المواد
+  // ✅ Load Subjects
   useEffect(() => {
     api.subjects.getAll()
       .then(res => {
         setSubjects(Array.isArray(res) ? res : (res?.data || []));
       })
       .catch(() => {
-        toast.error("فشل تحميل المواد");
+        toast.error("Failed to load subjects");
       })
       .finally(() => setLoading(false));
   }, []);
 
-  // ✅ submit
+  // ✅ Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.fullName || !formData.email || !formData.phone) {
-      toast.error("اكمل البيانات");
+      toast.error("Please complete all required fields");
       return;
     }
 
     if (formData.subjectOids.length === 0) {
-      toast.error("اختار مادة واحدة على الأقل");
+      toast.error("Select at least one subject");
       return;
     }
 
     setSubmitting(true);
 
     try {
-    const payload = {
-  teacher: {
-    fullName: formData.fullName,
-    email: formData.email,
-    phone: formData.phone,
-    subjectOids: formData.subjectOids
-  }
-};
+      const payload = {
+        teacher: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          subjectOids: formData.subjectOids
+        }
+      };
 
       console.log("🚀 Sending:", payload);
 
@@ -77,21 +77,21 @@ export function AddTeacher() {
       console.log("📥 Response:", res);
 
       if (res?.success) {
-        toast.success("تم إضافة المدرس بنجاح");
+        toast.success("Teacher added successfully");
         navigate('/admin/teachers');
       } else {
-        toast.error(res?.messages?.EN || "فشل الإضافة");
+        toast.error(res?.messages?.EN || "Failed to add teacher");
       }
 
     } catch (err) {
       console.error(err);
-      toast.error("خطأ في الاتصال بالسيرفر");
+      toast.error("Server connection error");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // loading
+  // Loading
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -122,14 +122,14 @@ export function AddTeacher() {
           <CardHeader>
             <CardTitle className="flex gap-2 items-center">
               <User className="h-5 w-5" />
-              البيانات الشخصية
+              Personal Information
             </CardTitle>
           </CardHeader>
 
           <CardContent className="grid gap-4">
 
             <Input
-              placeholder="الاسم"
+              placeholder="Full Name"
               value={formData.fullName}
               onChange={e => setFormData({...formData, fullName: e.target.value})}
             />
@@ -154,7 +154,7 @@ export function AddTeacher() {
           <CardHeader>
             <CardTitle className="flex gap-2 items-center">
               <BookOpen className="h-5 w-5" />
-              المواد
+              Subjects
             </CardTitle>
           </CardHeader>
 

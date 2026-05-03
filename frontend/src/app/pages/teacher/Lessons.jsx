@@ -1,312 +1,188 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import { Search, Plus, BookOpen, Calendar, Clock, Eye, Edit, Trash2, FileText, AlertCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { api } from "../../lib/api";
 
-export function TeacherLessons() {
+import {
+  BookOpen,
+  Calendar,
+  Clock,
+  Trash2,
+  Edit,
+  Eye,
+  Plus
+} from "lucide-react";
+
+const TeacherLessons = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [lessonToDelete, setLessonToDelete] = useState(null);
 
-  // Mock lessons data
-  const [lessons, setLessons] = useState([
-    {
-      id: 'l1',
-      title: 'Introduction to Calculus',
-      subject: 'Mathematics',
-      classId: 'c1',
-      className: 'Class 10-A',
-      date: '2026-03-05',
-      duration: '45 min',
-      status: 'completed',
-      materials: 3,
-      description: 'Basic concepts of derivatives and limits'
-    },
-    {
-      id: 'l2',
-      title: 'Quadratic Equations',
-      subject: 'Mathematics',
-      classId: 'c1',
-      className: 'Class 10-A',
-      date: '2026-03-06',
-      duration: '45 min',
-      status: 'upcoming',
-      materials: 2,
-      description: 'Solving quadratic equations using different methods'
-    },
-    {
-      id: 'l3',
-      title: 'Trigonometry Basics',
-      subject: 'Mathematics',
-      classId: 'c2',
-      className: 'Class 10-B',
-      date: '2026-03-04',
-      duration: '60 min',
-      status: 'completed',
-      materials: 4,
-      description: 'Introduction to sine, cosine, and tangent'
-    },
-  ]);
+  const [lessons, setLessons] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredLessons = lessons.filter(lesson =>
-    lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lesson.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lesson.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // ================= LOAD =================
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'upcoming':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+        const lessonsRes = await api.lessons.getAll();
+        setLessons(lessonsRes?.data || []);
+
+        const statsRes = await api.lessons.getStats();
+        setStats(statsRes?.data || statsRes);
+
+      } catch (err) {
+        setError("فشل تحميل البيانات");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // ================= DELETE =================
+  const handleDelete = async (id) => {
+    if (!window.confirm("متأكد من حذف الدرس؟")) return;
+
+    try {
+      await api.lessons.delete(id);
+      setLessons(prev => prev.filter(l => l.oid !== id));
+    } catch {
+      alert("فشل الحذف");
     }
   };
 
-  const handleDeleteLesson = (id) => {
-    setLessonToDelete(id);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDeleteLesson = () => {
-    if (lessonToDelete) {
-      setLessons(lessons.filter(lesson => lesson.id !== lessonToDelete));
-      setShowDeleteDialog(false);
-    }
-  };
+  if (loading) return <div className="p-10 text-center">⏳ جاري التحميل...</div>;
+  if (error) return <div className="p-10 text-red-500">{error}</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('lessons')}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {t('manageLessonsDesc')}
-          </p>
-        </div>
-        <Button
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => navigate('/teacher/lessons/add')}
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">📚 Teacher Lessons</h1>
+
+        <button
+          onClick={() => navigate("/teacher/add-lesson")}
+          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('addNewLesson')}
-        </Button>
+          <Plus size={16} />
+          Add Lesson
+        </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('totalLessons')}</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{lessons.length}</div>
-            <p className="text-xs text-muted-foreground">{t('thisSemester')}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('upcoming')}</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {lessons.filter(l => l.status === 'upcoming').length}
-            </div>
-            <p className="text-xs text-muted-foreground">{t('nextWeek')}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('completed')}</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {lessons.filter(l => l.status === 'completed').length}
-            </div>
-            <p className="text-xs text-muted-foreground">{t('thisMonth')}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('materials')}</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {lessons.reduce((acc, l) => acc + l.materials, 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">{t('totalFiles')}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder={t('searchLessons')}
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Lessons List */}
-      <div className="grid gap-4">
-        {filteredLessons.map((lesson) => (
-          <Card key={lesson.id} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1">
-                  {/* Icon */}
-                  <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <BookOpen className="h-6 w-6" />
-                  </div>
-
-                  {/* Lesson Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {lesson.title}
-                      </h3>
-                      <Badge className={getStatusColor(lesson.status)}>
-                        {t(lesson.status)}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      {lesson.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <BookOpen className="h-4 w-4" />
-                        <span>{lesson.subject}</span>
-                      </div>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{new Date(lesson.date).toLocaleDateString()}</span>
-                      </div>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{lesson.duration}</span>
-                      </div>
-                      <span>•</span>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {lesson.className}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/teacher/lessons/${lesson.id}`)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    {t('viewDetails')}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => navigate(`/teacher/lessons/edit/${lesson.id}`)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteLesson(lesson.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-600" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Materials Badge */}
-              <div className="mt-4 pt-4 border-t dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <FileText className="h-4 w-4" />
-                    <span>{lesson.materials} {t('studyMaterialsAttached')}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {filteredLessons.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
-          <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('noLessonsFound')}</h3>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {searchTerm ? t('tryDifferentSearch') : t('createFirstLesson')}
-          </p>
+      {/* ================= STATS ================= */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <StatCard title="Total" value={stats.totalLessons} />
+          <StatCard title="Completed" value={stats.completedLessons} green />
+          <StatCard title="Upcoming" value={stats.upcomingLessons} blue />
+          <StatCard title="Month" value={stats.thisMonthLessons} purple />
+          <StatCard title="Week" value={stats.thisWeekLessons} orange />
+          <StatCard title="Materials" value={stats.totalMaterials} />
         </div>
       )}
 
-      {/* Delete Dialog */}
-      {showDeleteDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+      {/* ================= LIST ================= */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {lessons.map((lesson) => (
+          <div
+            key={lesson.oid}
+            className="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition"
+          >
+            {/* TITLE */}
+            <h2 className="text-lg font-semibold mb-1">
+              {lesson.title}
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+              {lesson.description}
+            </p>
+
+            {/* META */}
+            <div className="text-xs text-gray-500 space-y-1 mb-3">
+              <div className="flex items-center gap-2">
+                <Calendar size={14} />
+                {new Date(lesson.date).toLocaleDateString()}
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                  {t('deleteLesson')}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t('deleteLessonConfirm')}
-                </p>
+
+              <div className="flex items-center gap-2">
+                <Clock size={14} />
+                {lesson.startTime?.slice(11, 16)}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <BookOpen size={14} />
+                {lesson.subjectName}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteDialog(false)}
+
+            {/* STATUS */}
+            <span className={`inline-block text-xs px-2 py-1 rounded-full mb-3
+              ${lesson.status === "Completed"
+                ? "bg-green-100 text-green-700"
+                : "bg-blue-100 text-blue-700"}
+            `}>
+              {lesson.status}
+            </span>
+
+            {/* ACTIONS */}
+            <div className="flex justify-between mt-3">
+
+              <button
+                onClick={() => navigate(`/teacher/lessons/${lesson.oid}`)}
+                className="flex items-center gap-1 text-indigo-600 hover:underline text-sm"
               >
-                {t('cancel')}
-              </Button>
-              <Button
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={confirmDeleteLesson}
+                <Eye size={16} /> Details
+              </button>
+
+              <button
+                onClick={() => navigate(`/teacher/lessons/edit/${lesson.oid}`)}
+                className="flex items-center gap-1 text-yellow-600 hover:underline text-sm"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {t('delete')}
-              </Button>
+                <Edit size={16} /> Edit
+              </button>
+
+              <button
+                onClick={() => handleDelete(lesson.oid)}
+                className="flex items-center gap-1 text-red-600 hover:underline text-sm"
+              >
+                <Trash2 size={16} /> Delete
+              </button>
+
             </div>
           </div>
+        ))}
+      </div>
+
+      {/* EMPTY */}
+      {lessons.length === 0 && (
+        <div className="text-center text-gray-500 mt-10">
+          مفيش دروس لسه 😅
         </div>
       )}
     </div>
   );
-}
+};
+
+// ================= STAT CARD =================
+const StatCard = ({ title, value, green, blue, purple, orange }) => {
+  let color = "text-gray-800";
+
+  if (green) color = "text-green-600";
+  if (blue) color = "text-blue-600";
+  if (purple) color = "text-purple-600";
+  if (orange) color = "text-orange-500";
+
+  return (
+    <div className="bg-white border rounded-xl p-4 text-center shadow-sm">
+      <p className="text-xs text-gray-500">{title}</p>
+      <p className={`text-xl font-bold ${color}`}>{value || 0}</p>
+    </div>
+  );
+};
+
+export default TeacherLessons;

@@ -18,4 +18,16 @@ export default defineConfig({
     extensions: ['.jsx', '.js', '.ts', '.tsx', '.json'],
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  server: {
+   proxy: {
+      '/api': {
+        // 🚩 غير الرقم ده لرقم بورت السيرفر (Backend) بتاعك
+        target: 'http://localhost:5000', 
+        changeOrigin: true,
+        secure: false,
+        // ضيف السطر ده عشان تشيل كلمة /api من الـ URL قبل ما تروح للسيرفر لو السيرفر مش مستنيها
+        rewrite: (path) => path.replace(/^\/api/, '') 
+      }
+    }
+  }
 })

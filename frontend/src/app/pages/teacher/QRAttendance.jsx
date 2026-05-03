@@ -1,190 +1,193 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { ArrowLeft, QrCode, Users, CheckCircle } from 'lucide-react';
-import { STUDENTS, CLASSES } from '../../lib/mockData';
-import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { api } from '../../lib/api';
 import { useAttendance } from '../../context/AttendanceContext';
+import { QRCodeSVG } from 'qrcode.react';
+import { Users, QrCode, Clock, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function QRAttendance() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const { sessions, studentStatus, endSession } = useAttendance();
+  const { startSession, endSession, sessions } = useAttendance();
 
-  const classId = searchParams.get('classId') || '0';
-  const className = searchParams.get('className') || 'Mathematics';
-  const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+  const classOid = searchParams.get('classOid');
+  const className = searchParams.get('className') || 'Class A1';
 
-  const session = sessions[classId];
-  const sessionActive = session?.attendanceEnabled && session?.status === 'active';
-  const sessionCode = session?.sessionId || 'waiting...';
+  const [students, setStudents] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(5); // 5 Minutes
+  
+  // ✅ Ref to prevent duplicate end session calls and toasts
+  const hasEndedRef = useRef(false);
+  const session = sessions[classOid];
 
-  const [attendedStudents, setAttendedStudents] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState(300);
-
-  const selectedClassData = CLASSES.find(c => c.id === classId);
-  const classStudents = STUDENTS.slice(0, 15);
-
+  // 1️⃣ Load Students Data
   useEffect(() => {
-    let interval;
-    if (sessionActive && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            handleEndSession();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [sessionActive, timeRemaining]);
-
-  useEffect(() => {
-    if (studentStatus[classId]?.status === 'completed') {
-      const studentId = classStudents[0]?.id || 's1';
-      if (!attendedStudents.includes(studentId)) {
-        setAttendedStudents(prev => [...prev, studentId]);
+    const fetchStudents = async () => {
+      try {
+        const res = await api.students.getAll();
+        const filtered = res.data.filter(s => s.classOid === classOid);
+        setStudents(filtered);
+      } catch (err) {
+        console.error("Error fetching students", err);
       }
-    }
-  }, [studentStatus, classId, classStudents, attendedStudents]);
+    };
+    if (classOid) fetchStudents();
+  }, [classOid]);
 
-  const handleEndSession = () => {
-    endSession(classId);
-    toast.info('Session ended');
-    navigate('/teacher/dashboard');
+  // 2️⃣ Auto-start session on mount
+  useEffect(() => {
+    if (classOid && !session) {
+      startSession(classOid, 'qr').catch(() => toast.error("Failed to start session"));
+    }
+  }, [classOid, session, startSession]);
+
+  // 3️⃣ Handle End Session Logic (Safe from duplicates)
+  const handleEnd = async () => {
+    if (hasEndedRef.current) return;
+    hasEndedRef.current = true;
+
+    try {
+      await endSession(classOid, students);
+      toast.success("Session ended and attendance saved ✅");
+      navigate('/teacher/dashboard');
+    } catch (error) {
+      console.error("End session error", error);
+      navigate('/teacher/dashboard');
+    }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  // 4️⃣ Countdown Timer Logic
+  useEffect(() => {
+    let timer;
+    
+    if (session?.status === 'active' && timeLeft > 0 && !hasEndedRef.current) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } 
+    else if (timeLeft === 0 && session?.status === 'active' && !hasEndedRef.current) {
+      handleEnd();
+    }
+
+    return () => clearInterval(timer);
+  }, [timeLeft, session?.status]);
+
+  const formatTime = (s) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="p-6 space-y-6 bg-[#f8fafc] min-h-screen" dir="ltr">
+      
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate('/teacher/dashboard')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('qrCodeAttendance')}</h1>
-            <p className="text-muted-foreground">
-              {className}
-            </p>
-          </div>
+             <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-100">
+                <QrCode size={24} />
+             </div>
+             <div>
+                <h1 className="text-2xl font-bold text-slate-800">QR Attendance</h1>
+                <p className="text-slate-400 text-sm">{className}</p>
+             </div>
         </div>
-        <div className="flex items-center gap-3">
-          {sessionActive && (
-            <Button onClick={handleEndSession} variant="destructive">
-              {t('endSession')}
-            </Button>
-          )}
+        
+        <div className="flex items-center gap-3 bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
+          <Clock className="text-indigo-400" size={20} />
+          <span className="text-2xl font-mono font-bold text-indigo-700">{formatTime(timeLeft)}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-none shadow-md">
-          <CardContent className="p-6 space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">{t('totalStudents')}</div>
-            <div className="text-2xl font-bold text-foreground">{classStudents.length}</div>
+      {/* STATS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border-none shadow-sm rounded-2xl">
+          <CardContent className="p-6 text-center">
+            <p className="text-slate-500 text-sm mb-1 font-medium">Total Students</p>
+            <h2 className="text-4xl font-black text-slate-800">{students.length}</h2>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md">
-          <CardContent className="p-6 space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">{t('studentsAttended')}</div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{attendedStudents.length}</div>
+
+        <Card className="border-none shadow-sm rounded-2xl text-center">
+          <CardContent className="p-6">
+            <p className="text-slate-500 text-sm mb-1 font-medium">Attended</p>
+            <h2 className="text-4xl font-black text-green-600">{session?.attendance?.length || 0}</h2>
           </CardContent>
         </Card>
-        <Card className="border-none shadow-md">
-          <CardContent className="p-6 space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">{t('timeRemaining')}</div>
-            <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{formatTime(timeRemaining)}</div>
+
+        <Card className="border-none shadow-sm rounded-2xl text-center">
+          <CardContent className="p-6">
+            <p className="text-slate-500 text-sm mb-1 font-medium">Status</p>
+            <h2 className={`text-xl font-bold ${session?.status === 'active' ? 'text-indigo-600' : 'text-orange-500'}`}>
+              {session?.status === 'active' ? 'Active Now' : 'Stopped'}
+            </h2>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* QR Code Display */}
-        <Card className="border-none shadow-md">
-          <CardHeader className="border-b border-border bg-muted/40">
-            <CardTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Scan to Attend
-            </CardTitle>
-            <CardDescription>Students can scan this code using their app</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* QR BOX */}
+        <Card className="border-none shadow-lg rounded-3xl overflow-hidden bg-white">
+          <CardHeader className="bg-emerald-500 text-white text-center py-4">
+            <CardTitle className="text-lg font-bold">Scan to mark attendance</CardTitle>
           </CardHeader>
-          <CardContent className="p-8 flex flex-col items-center justify-center min-h-[400px]">
-            {sessionActive ? (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border-2 border-green-100">
-                  <QRCodeSVG
-                    value={sessionCode}
-                    size={250}
-                    level="H"
-                    includeMargin={true}
-                  />
+          <CardContent className="flex flex-col items-center justify-center p-12 min-h-[380px]">
+            {session?.status === 'active' ? (
+              <div className="flex flex-col items-center gap-6">
+                <div className="p-6 bg-white border-2 border-slate-50 shadow-2xl rounded-[2.5rem]">
+                    <QRCodeSVG value={session.sessionId} size={240} level="H" />
                 </div>
-                <p className="text-sm text-muted-foreground">Session ID: {sessionCode}</p>
+                <p className="text-slate-400 font-medium animate-pulse">QR Code is ready for scanning</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center text-center space-y-3">
-                <QrCode className="h-20 w-20 text-muted-foreground/30" />
-                <p className="text-muted-foreground">Session has ended.</p>
+              <div className="text-center space-y-4">
+                <AlertCircle className="mx-auto text-slate-200" size={100} />
+                <p className="text-slate-400 font-bold text-xl">Session Inactive</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Student List */}
-        <Card className="border-none shadow-md">
-          <CardHeader className="border-b border-border bg-muted/40">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-              Students
+        {/* LIST BOX */}
+        <Card className="border-none shadow-lg rounded-3xl overflow-hidden flex flex-col bg-white">
+          <CardHeader className="border-b border-slate-50 py-6 px-8">
+            <CardTitle className="flex items-center gap-3 text-slate-700">
+              <Users className="text-indigo-500" size={24} />
+              Real-time Attendance
             </CardTitle>
-            <CardDescription>Live attendance feed</CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="max-h-[400px] overflow-y-auto">
-              {classStudents.map((student, index) => {
-                const hasAttended = attendedStudents.includes(student.id);
+          <CardContent className="p-0 flex-1 max-h-[380px] overflow-y-auto">
+            {students.length > 0 ? (
+              students.map((s, i) => {
+                const isPresent = session?.attendance?.includes(s.oid);
                 return (
-                  <div
-                    key={student.id}
-                    className={`flex items-center justify-between p-4 border-b border-border last:border-b-0 transition-colors ${
-                      hasAttended ? 'bg-green-50 dark:bg-green-900/10' : 'bg-card'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm font-medium text-muted-foreground">
-                        #{(index + 1).toString().padStart(2, '0')}
+                  <div key={s.oid} className="flex items-center justify-between px-8 py-4 border-b border-slate-50 hover:bg-slate-50 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${isPresent ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        {s.fullName.charAt(0)}
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 font-semibold text-sm">
-                        {student.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div className="text-sm font-medium text-foreground">{student.name}</div>
+                      <span className={`font-semibold ${isPresent ? 'text-green-700' : 'text-slate-600'}`}>{s.fullName}</span>
                     </div>
-                    {hasAttended && (
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    )}
+                    {isPresent && <span className="bg-green-100 text-green-700 text-[10px] px-3 py-1.5 rounded-xl font-black tracking-wider uppercase">Present</span>}
                   </div>
                 );
-              })}
-            </div>
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center p-20 text-slate-300 italic">No students found</div>
+            )}
           </CardContent>
         </Card>
+      </div>
+
+      <div className="flex justify-center pb-8">
+        <button
+          onClick={handleEnd}
+          className="bg-red-500 hover:bg-red-600 text-white font-black py-4 px-20 rounded-2xl shadow-xl shadow-red-100 transition-all active:scale-95"
+        >
+          End Session & Save
+        </button>
       </div>
     </div>
   );

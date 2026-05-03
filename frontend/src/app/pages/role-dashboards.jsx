@@ -1,11 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Calendar, Users, BookOpen, Clock, Activity, TrendingUp, CheckCircle, ArrowRight, ArrowLeft, Bell, ClipboardCheck, MapPin, FileText } from 'lucide-react';
+import { Calendar, Users, BookOpen, Clock, Activity, TrendingUp, CheckCircle, ArrowRight, ArrowLeft, Bell, ClipboardCheck, MapPin, FileText, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useLanguage } from '../context/LanguageContext';
 import { useAttendance } from '../context/AttendanceContext';
+import { api } from '../lib/api';
 
 export function TeacherDashboard() {
   const navigate = useNavigate();
@@ -15,29 +16,126 @@ export function TeacherDashboard() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const { sessions, endSession } = useAttendance();
 
-  const todayClasses = [
-    { time: '09:00 AM - 09:45 AM', subject: 'Mathematics', class: '10-A', room: 'Room 301', status: 'completed' },
-    { time: '10:00 AM - 10:45 AM', subject: 'Mathematics', class: '10-B', room: 'Room 301', status: 'completed' },
-    { time: '11:00 AM - 11:45 AM', subject: 'Mathematics', class: '9-A', room: 'Room 301', status: 'ongoing' },
-    { time: '01:00 PM - 01:45 PM', subject: 'Mathematics', class: '8-A', room: 'Room 301', status: 'upcoming' },
-  ];
+  // ─── API State ───────────────────────────────────────────────────────────────
+  const [lessons, setLessons]           = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [lessonsError, setLessonsError] = useState(null);
 
-  const pendingHomework = [
-    { class: '10-A', assignment: 'Algebra Problem Set', submissions: 28, total: 30, dueDate: 'Today' },
-    { class: '10-B', assignment: 'Geometry Worksheet', submissions: 25, total: 32, dueDate: 'Today' },
-    { class: '9-A', assignment: 'Trigonometry Quiz', submissions: 20, total: 28, dueDate: 'Tomorrow' },
-  ];
+  const [homework, setHomework]         = useState([]);
+  const [hwLoading, setHwLoading]       = useState(true);
+  const [hwError, setHwError]           = useState(null);
 
-  const upcomingExams = [
-    { subject: 'Mathematics', class: '10-A', type: 'Final Exam', date: 'Friday, Mar 3', time: '09:00 AM' },
-    { subject: 'Mathematics', class: '10-B', type: 'Mid-term Test', date: 'Monday, Mar 6', time: '10:00 AM' },
-  ];
+  const [exams, setExams] = useState([]);
+  const [examsLoading, setExamsLoading] = useState(true);
+  const [examsError, setExamsError] = useState(null);
+
+  // ─── Fetch lessons (Today's Schedule) ────────────────────────────────────────
+  useEffect(() => {
+    const loadLessons = async () => {
+      try {
+        setLessonsError(null);
+        setLessonsLoading(true);
+        const res = await api.lessons.getAll();
+        const data = Array.isArray(res) ? res : res?.data || [];
+        setLessons(data);
+      } catch (err) {
+        console.error('Error loading lessons:', err);
+        setLessonsError('Failed to load schedule');
+      } finally {
+        setLessonsLoading(false);
+      }
+    };
+    loadLessons();
+
+    const loadExams = async () => {
+      try {
+        setExamsLoading(true);
+        setExamsError(null);
+        const res = await api.exams.getAll();
+        const data = Array.isArray(res) ? res : res?.data || [];
+        const upcoming = data
+          .filter(e => e.date && new Date(e.date) >= new Date())
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        setExams(upcoming);
+      } catch (err) {
+        console.error(err);
+        setExamsError('Failed to load exams');
+      } finally {
+        setExamsLoading(false);
+      }
+    };
+    loadExams();
+  }, []);
+
+  // ─── Fetch homework (Homework Overview) ──────────────────────────────────────
+  useEffect(() => {
+    const loadHomework = async () => {
+      try {
+        setHwError(null);
+        setHwLoading(true);
+        const res = await api.homeworks.getTeacherHomeworks();
+        const data = Array.isArray(res) ? res : res?.data || [];
+        const pending = data.filter(hw => hw.status === 'Active' || hw.status === 'Grading').slice(0, 3);
+        setHomework(pending);
+      } catch (err) {
+        console.error('Error loading homework:', err);
+        setHwError('Failed to load homework');
+      } finally {
+        setHwLoading(false);
+      }
+    };
+    loadHomework();
+  }, []);
+
+  // ─── Static data ─────────────────────────────────────────────────────────────
+  const upcomingExams = exams
+    .filter(exam => exam.date && new Date(exam.date) >= new Date())
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 3);
 
   const recentAnnouncements = [
-    { title: 'Parent-Teacher Meeting', date: 'March 5, 2026', priority: 'high' },
+    { title: 'Parent-Teacher Meeting',  date: 'March 5, 2026',  priority: 'high'   },
     { title: 'Math Department Meeting', date: 'March 10, 2026', priority: 'normal' },
   ];
 
+  // ─── Helpers ──────────────────────────────────────────────────────────────────
+  const getLessonStatus = (lesson) => {
+    const now   = new Date();
+    const today = now.toISOString().split('T')[0];
+    const lessonDate = lesson.date ? new Date(lesson.date).toISOString().split('T')[0] : null;
+
+    if (lessonDate && lessonDate < today) return 'completed';
+    if (!lessonDate || lessonDate > today) return 'upcoming';
+
+    if (lesson.startTime) {
+      const [h, m]  = lesson.startTime.split(':').map(Number);
+      const start   = new Date(now);
+      start.setHours(h, m, 0, 0);
+      const end     = new Date(start.getTime() + 45 * 60 * 1000);
+      if (now >= start && now <= end) return 'ongoing';
+      if (now > end) return 'completed';
+    }
+    return 'upcoming';
+  };
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const todayLessons = lessons.filter(lesson => {
+    if (!lesson.date) return false;
+    const lessonDate = new Date(lesson.date).toISOString().split('T')[0];
+    const status = getLessonStatus(lesson);
+    return lessonDate === today && status !== 'completed';
+  });
+
+  const hwSubmissionPercent = (hw) => {
+    if (!hw.totalStudents || hw.totalStudents === 0) return 0;
+    return Math.round(((hw.submissions ?? hw.submissionsCount ?? 0) / hw.totalStudents) * 100);
+  };
+
+  const ongoingCount  = todayLessons.filter(l => getLessonStatus(l) === 'ongoing').length;
+  const upcomingCount = todayLessons.filter(l => getLessonStatus(l) === 'upcoming').length;
+
+  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -47,7 +145,7 @@ export function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* ── Stats Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Link to="/teacher/classes">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -56,8 +154,12 @@ export function TeacherDashboard() {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4</div>
-              <p className="text-xs text-muted-foreground">1 {t('ongoing')}, 1 {t('upcoming')}</p>
+              <div className="text-2xl font-bold">
+                {lessonsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : todayLessons.length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {ongoingCount} {t('ongoing')}, {upcomingCount} {t('upcoming')}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -69,7 +171,9 @@ export function TeacherDashboard() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">
+                {hwLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : homework.length}
+              </div>
               <p className="text-xs text-muted-foreground">{t('submissionsToGrade')}</p>
             </CardContent>
           </Card>
@@ -82,8 +186,14 @@ export function TeacherDashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">2</div>
-              <p className="text-xs text-muted-foreground">Next: Math Final - Friday</p>
+              <div className="text-2xl font-bold">
+                {examsLoading ? '...' : exams.length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {exams.length > 0
+                  ? `Next: ${exams[0].className || ''} - ${exams[0].type || ''}`
+                  : 'No upcoming exams'}
+              </p>
             </CardContent>
           </Card>
         </Link>
@@ -102,7 +212,9 @@ export function TeacherDashboard() {
         </Link>
       </div>
 
+      {/* ── Main Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         {/* Today's Schedule */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -112,67 +224,86 @@ export function TeacherDashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {todayClasses.map((cls, i) => {
-                const session = sessions[i];
-                const isActive = session?.attendanceStatus === 'active';
-                const isCompleted = session?.attendanceStatus === 'completed';
+            {lessonsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+              </div>
+            ) : lessonsError ? (
+              <div className="text-center py-10 text-red-500 text-sm">{lessonsError}</div>
+            ) : todayLessons.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">No lessons for today.</div>
+            ) : (
+              <div className="space-y-3">
+                {todayLessons.map((lesson, i) => {
+                  const status    = getLessonStatus(lesson);
+                  const session   = sessions[i];
+                  const isActive  = session?.attendanceStatus === 'active';
+                  const isDone    = session?.attendanceStatus === 'completed' || status === 'completed';
 
-                return (
-                  <div key={i} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-3 ${
-                    isCompleted || cls.status === 'completed' ? 'bg-muted/50 dark:bg-muted/30 border-border' :
-                    isActive || cls.status === 'ongoing' ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' :
-                    'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
-                  }`}>
-                    <div className="flex items-center gap-4">
-                      <Clock className={`h-5 w-5 ${
-                        isCompleted || cls.status === 'completed' ? 'text-muted-foreground' :
-                        isActive || cls.status === 'ongoing' ? 'text-green-600 dark:text-green-400' :
-                        'text-blue-600 dark:text-blue-400'
-                      }`} />
-                      <div className="space-y-0.5">
-                        <div className="font-semibold text-foreground">{cls.subject} - {cls.class}</div>
-                        <div className="text-sm text-muted-foreground">{cls.time} • {cls.room}</div>
-                        {isActive && (
-                          <div className="text-xs font-medium text-green-700 dark:text-green-400 mt-1 flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 animate-pulse"></span>
-                            Active Session: {session.attendanceMethod}
-                            {session.correctNumber && session.attendanceMethod === 'number' && ` (Target: ${session.correctNumber})`}
+                  const timeLabel = lesson.startTime
+                    ? `${lesson.startTime}${lesson.endTime ? ' - ' + lesson.endTime : ''}`
+                    : lesson.date
+                    ? new Date(lesson.date).toLocaleDateString('en-GB')
+                    : '—';
+
+                  return (
+                    <div
+                      key={lesson.id || lesson.oid || i}
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-3 ${
+                        isDone
+                          ? 'bg-muted/50 dark:bg-muted/30 border-border'
+                          : isActive || status === 'ongoing'
+                          ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800'
+                          : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Clock className={`h-5 w-5 ${
+                          isDone                           ? 'text-muted-foreground'                    :
+                          isActive || status === 'ongoing' ? 'text-green-600 dark:text-green-400'       :
+                                                             'text-blue-600 dark:text-blue-400'
+                        }`} />
+                        <div className="space-y-0.5">
+                          <div className="font-semibold text-foreground">
+                            {lesson.title || lesson.subject || 'Untitled Lesson'}
+                            {lesson.className ? ` — ${lesson.className}` : ''}
                           </div>
+                          <div className="text-sm text-muted-foreground">
+                            {timeLabel}
+                            {lesson.room ? ` • ${lesson.room}` : ''}
+                          </div>
+                          {isActive && (
+                            <div className="text-xs font-medium text-green-700 dark:text-green-400 mt-1 flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
+                              Active Session: {session.attendanceMethod}
+                              {session.correctNumber && session.attendanceMethod === 'number' && ` (Target: ${session.correctNumber})`}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 justify-end">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          isDone
+                            ? 'bg-muted text-muted-foreground'
+                            : isActive || status === 'ongoing'
+                            ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                            : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                        }`}>
+                          {isActive ? 'Session Live' : isDone ? 'Attendance Completed' : t(status)}
+                        </span>
+
+                        {isActive && (
+                          <Button size="sm" variant="destructive" onClick={() => endSession(i)}>
+                            End Session
+                          </Button>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 justify-end">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        isCompleted || cls.status === 'completed' ? 'bg-muted text-muted-foreground' :
-                        isActive || cls.status === 'ongoing' ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' :
-                        'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                      }`}>
-                        {isActive ? 'Session Live' : isCompleted ? 'Attendance Completed' : t(cls.status)}
-                      </span>
-                      {(!isCompleted && cls.status !== 'completed' && !isActive) && (
-                        <Button
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                          onClick={() => navigate(`/teacher/attendance/method-selection?classId=${i}&className=${encodeURIComponent(cls.class)}`)}
-                        >
-                          Take Attendance
-                        </Button>
-                      )}
-                      {isActive && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => endSession(i)}
-                        >
-                          End Session
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -239,7 +370,9 @@ export function TeacherDashboard() {
         </Card>
       </div>
 
+      {/* ── Bottom Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Homework Overview */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -249,24 +382,67 @@ export function TeacherDashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {pendingHomework.map((hw, i) => (
-                <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-foreground">{hw.class}: {hw.assignment}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {hw.submissions}/{hw.total} {t('submitted')} • {t('due')} {hw.dueDate}
+            {hwLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-7 w-7 text-indigo-500 animate-spin" />
+              </div>
+            ) : hwError ? (
+              <div className="text-center py-8 text-red-500 text-sm">{hwError}</div>
+            ) : homework.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No pending homework.</div>
+            ) : (
+              <div className="space-y-3">
+                {homework.map((hw, i) => {
+                  const submitted = hw.submissions ?? hw.submissionsCount ?? 0;
+                  const total     = hw.totalStudents ?? 0;
+                  const percent   = hwSubmissionPercent(hw);
+                  const dueLabel  = hw.dueDate
+                    ? new Date(hw.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                    : '—';
+
+                  return (
+                    <div
+                      key={hw.oid || hw.id || i}
+                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/teacher/homework/${hw.oid || hw.id}`)}
+                    >
+                      <div className="space-y-0.5 flex-1 min-w-0">
+                        <div className="font-semibold text-foreground truncate">
+                          {hw.className ? `${hw.className}: ` : ''}{hw.title}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {total > 0 ? `${submitted}/${total} ${t('submitted')} • ` : ''}
+                          {t('due')} {dueLabel}
+                        </div>
+                        {total > 0 && (
+                          <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                percent === 100 ? 'bg-green-500' : percent >= 60 ? 'bg-indigo-500' : 'bg-amber-500'
+                              }`}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right ml-4 shrink-0">
+                        {total > 0 && (
+                          <>
+                            <div className="text-sm font-semibold text-indigo-600">{percent}%</div>
+                            <div className="text-xs text-muted-foreground">{t('completed')}</div>
+                          </>
+                        )}
+                        <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          hw.status === 'Active' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {hw.status}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-indigo-600">
-                      {Math.round((hw.submissions / hw.total) * 100)}%
-                    </div>
-                    <div className="text-xs text-muted-foreground">{t('completed')}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -287,8 +463,11 @@ export function TeacherDashboard() {
                       <Calendar className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="space-y-0.5">
-                      <div className="font-semibold text-foreground">{exam.class} - {exam.type}</div>
-                      <div className="text-sm text-muted-foreground">{exam.date} at {exam.time}</div>
+                      <div className="font-semibold text-foreground">{exam.className} - {exam.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(exam.date).toLocaleDateString('en-GB')}
+                        {exam.time && ` at ${exam.time}`}
+                      </div>
                     </div>
                   </div>
                   <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs rounded-full">
@@ -300,39 +479,11 @@ export function TeacherDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Announcements */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('recentAnnouncements')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentAnnouncements.map((announcement, index) => (
-              <div key={index} className="flex items-start justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <Bell className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-foreground">{announcement.title}</div>
-                    <div className="text-sm text-muted-foreground">{announcement.date}</div>
-                  </div>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  announcement.priority === 'high' ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300' :
-                  announcement.priority === 'normal' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300' :
-                  'bg-muted text-muted-foreground'
-                }`}>
-                  {t(announcement.priority)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 export function StudentDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -341,35 +492,53 @@ export function StudentDashboard() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const { sessions, studentStatus, completeStudentAttendance } = useAttendance();
 
+  // ─── FIX: exams state معرّفة هنا داخل StudentDashboard ───────────────────
+  const [exams, setExams] = useState([]);
+  const [examsLoading, setExamsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadExams = async () => {
+      try {
+        setExamsLoading(true);
+        const res = await api.exams.getAll();
+        const data = Array.isArray(res) ? res : res?.data || [];
+        const upcoming = data
+          .filter(e => e.date && new Date(e.date) >= new Date())
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        setExams(upcoming);
+      } catch (err) {
+        console.error('Error loading exams:', err);
+        setExams([]);
+      } finally {
+        setExamsLoading(false);
+      }
+    };
+    loadExams();
+  }, []);
+
   const todayClasses = [
-    { time: '09:00 AM', subject: 'Mathematics', teacher: 'Mr. Nash', room: 'Room 302' },
-    { time: '10:00 AM', subject: 'English', teacher: 'Ms. Smith', room: 'Room 205' },
-    { time: '11:00 AM', subject: 'Science', teacher: 'Dr. Brown', room: 'Lab 101' },
-    { time: '02:00 PM', subject: 'History', teacher: 'Mr. Wilson', room: 'Room 310' },
+    { time: '09:00 AM', subject: 'Mathematics', teacher: 'Mr. Nash',   room: 'Room 302' },
+    { time: '10:00 AM', subject: 'English',     teacher: 'Ms. Smith',  room: 'Room 205' },
+    { time: '11:00 AM', subject: 'Science',     teacher: 'Dr. Brown',  room: 'Lab 101'  },
+    { time: '02:00 PM', subject: 'History',     teacher: 'Mr. Wilson', room: 'Room 310' },
   ];
 
-  // ── Modal state: null = closed, object = open for a specific class ──
   const [activeModal, setActiveModal] = useState(null);
 
-  // Student: open method-specific attendance modal
   const handleStudentJoin = (index) => {
     const session = sessions[index];
     if (!session || !session.attendanceEnabled) return;
-    
-    // STRICT: In manual method, student doesn't join themselves
     if (session.attendanceMethod === 'manual') return;
-    
     setActiveModal({
-      classIndex: index,
-      method: session.attendanceMethod, // STRICT: Single method only
+      classIndex:    index,
+      method:        session.attendanceMethod,
       numberOptions: session.numberOptions,
       correctNumber: session.correctNumber,
-      subject: todayClasses[index].subject,
-      time: todayClasses[index].time,
+      subject:       todayClasses[index].subject,
+      time:          todayClasses[index].time,
     });
   };
 
-  // Student: attendance successfully verified
   const handleAttendanceSuccess = (methodUsed) => {
     if (!activeModal) return;
     completeStudentAttendance(activeModal.classIndex, methodUsed);
@@ -377,15 +546,10 @@ export function StudentDashboard() {
   };
 
   const assignments = [
-    { subject: 'History', title: 'Essay on World War II', due: 'Tomorrow', status: 'pending', priority: 'high' },
-    { subject: 'Science', title: 'Lab Report - Chemistry', due: 'In 3 days', status: 'pending', priority: 'medium' },
-    { subject: 'English', title: 'Book Report', due: 'Friday', status: 'pending', priority: 'medium' },
-    { subject: 'Mathematics', title: 'Algebra Problem Set', due: 'Submitted', status: 'completed', priority: 'low' },
-  ];
-
-  const upcomingExams = [
-    { subject: 'Mathematics', type: 'Final Exam', date: 'March 5, 2026', time: '09:00 AM' },
-    { subject: 'Science', type: 'Mid-term Test', date: 'March 8, 2026', time: '10:00 AM' },
+    { subject: 'History',     title: 'Essay on World War II',    due: 'Tomorrow',  status: 'pending',   priority: 'high'   },
+    { subject: 'Science',     title: 'Lab Report - Chemistry',   due: 'In 3 days', status: 'pending',   priority: 'medium' },
+    { subject: 'English',     title: 'Book Report',              due: 'Friday',    status: 'pending',   priority: 'medium' },
+    { subject: 'Mathematics', title: 'Algebra Problem Set',      due: 'Submitted', status: 'completed', priority: 'low'    },
   ];
 
   return (
@@ -470,18 +634,9 @@ export function StudentDashboard() {
             <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white">
               <div className="text-3xl font-bold mb-2">Mathematics</div>
               <div className="flex flex-wrap items-center gap-4 text-indigo-100">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  <span>Mr. Nash</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  <span>Room 302</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>09:00 AM - 09:45 AM</span>
-                </div>
+                <div className="flex items-center gap-2"><Users className="h-4 w-4" /><span>Mr. Nash</span></div>
+                <div className="flex items-center gap-2"><MapPin className="h-4 w-4" /><span>Room 302</span></div>
+                <div className="flex items-center gap-2"><Clock className="h-4 w-4" /><span>09:00 AM - 09:45 AM</span></div>
               </div>
             </div>
           </CardContent>
@@ -489,15 +644,10 @@ export function StudentDashboard() {
 
         {/* Quick Actions */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('quickActions')}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('quickActions')}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Link
-                to="/student/homework"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
-              >
+              <Link to="/student/homework" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
                 <div className="h-10 w-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
                   <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
@@ -507,10 +657,7 @@ export function StudentDashboard() {
                 </div>
               </Link>
 
-              <Link
-                to="/student/grades"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-colors"
-              >
+              <Link to="/student/grades" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-colors">
                 <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
                   <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
@@ -520,10 +667,7 @@ export function StudentDashboard() {
                 </div>
               </Link>
 
-              <Link
-                to="/student/ai"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
-              >
+              <Link to="/student/ai" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-700 transition-colors">
                 <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
                   <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
@@ -548,41 +692,39 @@ export function StudentDashboard() {
         <CardContent>
           <div className="space-y-3">
             {todayClasses.map((cls, i) => {
-              const session = sessions[i];
+              const session   = sessions[i];
               const attStatus = studentStatus[i]?.status || 'pending';
               const isEnabled = session?.attendanceEnabled && attStatus !== 'completed';
-              
+
               let statusLabel = 'Waiting for teacher...';
-              let dotColor = 'bg-muted-foreground/50';
-              let textColor = 'text-muted-foreground';
+              let dotColor    = 'bg-muted-foreground/50';
+              let textColor   = 'text-muted-foreground';
               let borderColor = 'border-border';
-              let bgColor = 'bg-muted/40';
+              let bgColor     = 'bg-muted/40';
 
               if (attStatus === 'completed') {
                 statusLabel = 'Attendance recorded';
-                dotColor = 'bg-green-500';
-                textColor = 'text-green-600 dark:text-green-400';
+                dotColor    = 'bg-green-500';
+                textColor   = 'text-green-600 dark:text-green-400';
                 borderColor = 'border-green-200 dark:border-green-800';
-                bgColor = 'bg-green-50 dark:bg-green-900/10';
+                bgColor     = 'bg-green-50 dark:bg-green-900/10';
               } else if (attStatus === 'absent' || (!session?.attendanceEnabled && session?.attendanceStatus === 'completed')) {
                 statusLabel = 'Session ended — Absent';
-                dotColor = 'bg-red-500';
-                textColor = 'text-red-500 dark:text-red-400';
+                dotColor    = 'bg-red-500';
+                textColor   = 'text-red-500 dark:text-red-400';
                 borderColor = 'border-red-200 dark:border-red-800';
-                bgColor = 'bg-red-50 dark:bg-red-900/10';
+                bgColor     = 'bg-red-50 dark:bg-red-900/10';
               } else if (isEnabled) {
                 statusLabel = 'Session active';
-                dotColor = 'bg-indigo-500 animate-pulse';
-                textColor = 'text-indigo-600 dark:text-indigo-400';
+                dotColor    = 'bg-indigo-500 animate-pulse';
+                textColor   = 'text-indigo-600 dark:text-indigo-400';
                 borderColor = 'border-indigo-200 dark:border-indigo-700';
-                bgColor = 'bg-indigo-50 dark:bg-indigo-900/10';
+                bgColor     = 'bg-indigo-50 dark:bg-indigo-900/10';
               }
 
               return (
                 <div key={i} className={`rounded-xl border overflow-hidden transition-all duration-300 ${borderColor}`}>
-                  {/* ── STUDENT VIEW ── */}
                   <div className={`p-4 ${bgColor}`}>
-                    {/* Class info */}
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <Clock className={`h-5 w-5 shrink-0 ${textColor}`} />
@@ -593,14 +735,11 @@ export function StudentDashboard() {
                       </div>
                       <span className="text-sm font-medium text-muted-foreground shrink-0">{cls.time}</span>
                     </div>
-
-                    {/* Status + button row */}
                     <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
                       <span className={`text-xs flex items-center gap-1.5 ${textColor}`}>
                         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotColor}`} />
                         {statusLabel}
                       </span>
-
                       <AttendanceButton
                         attendanceEnabled={isEnabled}
                         attendanceStatus={attStatus}
@@ -613,7 +752,6 @@ export function StudentDashboard() {
             })}
           </div>
 
-          {/* Attendance verification modal */}
           {activeModal && (
             <AttendanceModal
               isOpen={true}
@@ -649,13 +787,10 @@ export function StudentDashboard() {
                   <div className="flex items-center gap-2">
                     {assignment.status === 'completed' ? (
                       <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                        <CheckCircle className="h-4 w-4" />
-                        {assignment.due}
+                        <CheckCircle className="h-4 w-4" />{assignment.due}
                       </span>
                     ) : (
-                      <span className={`text-sm ${
-                        assignment.priority === 'high' ? 'text-red-500 dark:text-red-400 font-medium' : 'text-muted-foreground'
-                      }`}>
+                      <span className={`text-sm ${assignment.priority === 'high' ? 'text-red-500 dark:text-red-400 font-medium' : 'text-muted-foreground'}`}>
                         {assignment.due}
                       </span>
                     )}
@@ -668,56 +803,59 @@ export function StudentDashboard() {
 
         {/* Upcoming Exams */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('upcomingExams')}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('upcomingExams')}</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {upcomingExams.map((exam, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                      <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            {examsLoading ? (
+              <div className="text-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-indigo-500" />
+              </div>
+            ) : exams.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">No upcoming exams</div>
+            ) : (
+              <div className="space-y-3">
+                {exams.map((exam, i) => (
+                  <div
+                    key={exam.id || i}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                        <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-semibold text-foreground">
+                          {exam.className} - {exam.type}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(exam.date).toLocaleDateString()}{' '}
+                          {exam.time && `at ${exam.time}`}
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-0.5">
-                      <div className="font-semibold text-foreground">{exam.subject} - {exam.type}</div>
-                      <div className="text-sm text-muted-foreground">{exam.date} at {exam.time}</div>
-                    </div>
+                    <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
+                      {t('upcoming')}
+                    </span>
                   </div>
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
-                    {t('upcoming')}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          onClick={() => navigate('/student/grades')}
-          className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
-        >
+        <button onClick={() => navigate('/student/grades')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
           <FileText className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
           <div className="font-semibold text-foreground text-base mb-1">{t('viewGrades')}</div>
           <div className="text-sm text-muted-foreground">{t('detailedGradeReport')}</div>
         </button>
-
-        <button
-          onClick={() => navigate('/student/schedule')}
-          className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
-        >
+        <button onClick={() => navigate('/student/schedule')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
           <Calendar className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
           <div className="font-semibold text-foreground text-base mb-1">{t('viewFullSchedule')}</div>
           <div className="text-sm text-muted-foreground">{t('classTimetable')}</div>
         </button>
-
-        <button
-          onClick={() => navigate('/student/messages')}
-          className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"
-        >
+        <button onClick={() => navigate('/student/messages')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
           <Users className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
           <div className="font-semibold text-foreground text-base mb-1">{t('contactTeachers')}</div>
           <div className="text-sm text-muted-foreground">{t('sendMessages')}</div>
@@ -727,15 +865,16 @@ export function StudentDashboard() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 export function ParentDashboard() {
-  const [selectedChild, setSelectedChild] = React.useState('bart');
+  const [selectedChild, setSelectedChild] = useState('bart');
   const { t } = useTranslation();
   const { currentLanguage } = useLanguage();
   const isRTL = currentLanguage === 'ar';
 
   const children = [
-    { id: 'bart', name: 'Bart Simpson', grade: 'Grade 10', class: '10-A', avatar: 'B' },
-    { id: 'lisa', name: 'Lisa Simpson', grade: 'Grade 8', class: '8-B', avatar: 'L' },
+    { id: 'bart',   name: 'Bart Simpson',   grade: 'Grade 10',     class: '10-A', avatar: 'B' },
+    { id: 'lisa',   name: 'Lisa Simpson',   grade: 'Grade 8',      class: '8-B',  avatar: 'L' },
     { id: 'maggie', name: 'Maggie Simpson', grade: 'Kindergarten', class: 'KG-1', avatar: 'M' },
   ];
 
@@ -746,10 +885,7 @@ export function ParentDashboard() {
           <h1 className="text-3xl font-bold text-foreground">{t('parentDashboard')}</h1>
           <p className="text-muted-foreground mt-1">{t('parentDashboardDesc')}</p>
         </div>
-        <Link
-          to="/parent/messages"
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
+        <Link to="/parent/messages" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
           <Bell className="h-4 w-4" />
           {t('contactTeachers')}
         </Link>
@@ -757,9 +893,7 @@ export function ParentDashboard() {
 
       {/* Child Selector */}
       <Card>
-        <CardHeader>
-          <CardTitle>{t('selectChild')}</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>{t('selectChild')}</CardTitle></CardHeader>
         <CardContent>
           <div className="flex gap-4 flex-wrap">
             {children.map((child) => (
@@ -767,16 +901,12 @@ export function ParentDashboard() {
                 key={child.id}
                 onClick={() => setSelectedChild(child.id)}
                 className={`flex-1 min-w-[140px] p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  selectedChild === child.id
-                    ? 'border-primary bg-primary/10'
-                    : 'border-transparent bg-muted/50 hover:bg-muted'
+                  selectedChild === child.id ? 'border-primary bg-primary/10' : 'border-transparent bg-muted/50 hover:bg-muted'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`h-12 w-12 rounded-full flex items-center justify-center text-xl font-bold shrink-0 ${
-                    selectedChild === child.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground'
+                    selectedChild === child.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}>
                     {child.avatar}
                   </div>
@@ -841,9 +971,7 @@ export function ParentDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('recentActivity')}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('recentActivity')}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex gap-4">
@@ -872,9 +1000,7 @@ export function ParentDashboard() {
 
         {/* Upcoming Events */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('upcomingEventsLabel')}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('upcomingEventsLabel')}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors">
@@ -903,7 +1029,7 @@ export function ParentDashboard() {
   );
 }
 
-// ─── AttendanceButton ────────────────────��──────────────────────────────────
+// ─── AttendanceButton ─────────────────────────────────────────────────────────
 function AttendanceButton({ attendanceEnabled, attendanceStatus, onJoin }) {
   if (attendanceStatus === 'completed') {
     return (
@@ -937,7 +1063,7 @@ function AttendanceButton({ attendanceEnabled, attendanceStatus, onJoin }) {
   );
 }
 
-// ─── AttendanceModal ─────────────────────────────────────────────────────────
+// ─── AttendanceModal ──────────────────────────────────────────────────────────
 function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject, time, onComplete, onClose }) {
   const [selectedNum, setSelectedNum] = useState(null);
   const [scanning, setScanning]       = useState(false);
@@ -945,12 +1071,7 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
   const [done, setDone]               = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      setSelectedNum(null);
-      setScanning(false);
-      setError('');
-      setDone(false);
-    }
+    if (isOpen) { setSelectedNum(null); setScanning(false); setError(''); setDone(false); }
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -960,7 +1081,6 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
     setTimeout(() => onComplete(method), 700);
   };
 
-  // QR
   const handleQRScan = async () => {
     if (scanning || done) return;
     setScanning(true);
@@ -968,7 +1088,6 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
     triggerComplete();
   };
 
-  // Number Select
   const handleNumberPick = (num) => {
     if (selectedNum !== null || done) return;
     setSelectedNum(num);
@@ -982,16 +1101,13 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
 
   const metaDict = {
     qr:     { title: 'Scan QR Code',            icon: '📷', hint: 'Point your camera at the QR code your teacher is displaying.' },
-    number: { title: 'Select the Right Number', icon: '🔢', hint: 'Tap the number your teacher has highlighted on screen.' }
+    number: { title: 'Select the Right Number', icon: '🔢', hint: 'Tap the number your teacher has highlighted on screen.' },
   };
-
   const currentMeta = metaDict[method] || { title: 'Select Attendance Method', icon: '📋', hint: 'Choose a method to join attendance.' };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm overflow-hidden border border-border">
-
-        {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-center gap-3">
             <span className="text-2xl leading-none">{currentMeta.icon}</span>
@@ -1000,28 +1116,16 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
               <p className="text-xs text-muted-foreground">{subject} · {time}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground transition-colors text-lg"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground transition-colors text-lg">✕</button>
         </div>
 
         <p className="text-xs text-muted-foreground text-center px-5 pt-4 pb-0">{currentMeta.hint}</p>
 
         <div className="p-5 pt-4">
-
-          {/* ── QR Scanner ── */}
           {method === 'qr' && (
             <div className="flex flex-col items-center gap-4">
               <div className={`relative w-52 h-52 rounded-xl overflow-hidden flex items-center justify-center transition-colors duration-500 ${done ? 'bg-green-900' : 'bg-gray-900'}`}>
-                {[
-                  'top-3 left-3 border-t-2 border-l-2',
-                  'top-3 right-3 border-t-2 border-r-2',
-                  'bottom-3 left-3 border-b-2 border-l-2',
-                  'bottom-3 right-3 border-b-2 border-r-2',
-                ].map((cls, pi) => (
+                {['top-3 left-3 border-t-2 border-l-2','top-3 right-3 border-t-2 border-r-2','bottom-3 left-3 border-b-2 border-l-2','bottom-3 right-3 border-b-2 border-r-2'].map((cls, pi) => (
                   <span key={pi} className={`absolute ${cls} h-6 w-6 rounded ${done ? 'border-green-400' : 'border-indigo-400'} transition-colors duration-500`} />
                 ))}
                 {done ? (
@@ -1046,17 +1150,13 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
                 )}
               </div>
               {!scanning && !done && (
-                <button
-                  onClick={handleQRScan}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-medium transition-colors"
-                >
+                <button onClick={handleQRScan} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-medium transition-colors">
                   Simulate QR Scan
                 </button>
               )}
             </div>
           )}
 
-          {/* ── Number Method ── */}
           {method === 'number' && (
             <div className="flex flex-col gap-4">
               <div className="flex gap-3">
@@ -1070,9 +1170,9 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
                       onClick={() => handleNumberPick(num)}
                       disabled={selectedNum !== null}
                       className={`flex-1 h-20 rounded-xl text-3xl font-bold border-2 transition-all duration-300 ${
-                        correct            ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 scale-105 shadow-md'  :
-                        wrong              ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-500 animate-bounce'              :
-                        selectedNum!==null ? 'border-border text-muted-foreground opacity-40'     :
+                        correct            ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 scale-105 shadow-md' :
+                        wrong              ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-500 animate-bounce' :
+                        selectedNum!==null ? 'border-border text-muted-foreground opacity-40' :
                         'border-border text-foreground hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:scale-105 active:scale-95'
                       }`}
                     >
@@ -1090,10 +1190,8 @@ function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject
               )}
             </div>
           )}
-
         </div>
       </div>
     </div>
   );
 }
-// ─────────────────────────────────────────────────────────────────────────────

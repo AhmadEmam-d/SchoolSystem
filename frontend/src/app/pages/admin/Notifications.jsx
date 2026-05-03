@@ -12,55 +12,59 @@ export function AdminNotifications() {
   const { t } = useTranslation();
 
   const [notifications, setNotifications] = useState([]);
-  const [summary, setSummary] = useState(null);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Fetch Data
+  // ================= FETCH =================
   useEffect(() => {
-    Promise.all([
-      api.notifications.getAll(),
-      api.notifications.getSummary()
-    ])
-      .then(([list, summary]) => {
+    api.notifications.getAll()
+      .then((list) => {
         setNotifications(list || []);
-        setSummary(summary);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  const unreadCount = summary?.unreadCount || 0;
-  const totalCount = summary?.totalCount || notifications.length;
+  // ================= COUNTS (🔥 بدل summary) =================
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const totalCount = notifications.length;
 
-  // 🔥 Filters
-  const filteredNotifications =
-    filter === 'unread'
-      ? notifications.filter(n => !n.isRead)
-      : notifications;
+  // ================= FILTER =================
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'unread') return !n.isRead;
+    return true;
+  });
 
-  // 🔥 Actions
+  // ================= ACTIONS =================
+
   const markAsRead = (oid) => {
     api.notifications.markAsRead(oid).then(() => {
       setNotifications(prev =>
-        prev.map(n => n.oid === oid ? { ...n, isRead: true } : n)
+        prev.map(n =>
+          n.oid === oid ? { ...n, isRead: true } : n
+        )
       );
     });
   };
 
   const markAllAsRead = () => {
     api.notifications.markAllAsRead().then(() => {
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, isRead: true }))
+      );
     });
   };
 
   const deleteNotification = (oid) => {
     api.notifications.delete(oid).then(() => {
-      setNotifications(prev => prev.filter(n => n.oid !== oid));
+      setNotifications(prev =>
+        prev.filter(n => n.oid !== oid)
+      );
     });
   };
 
-  // 🔥 UI Helpers
+  // ================= UI HELPERS =================
+
   const getIcon = (type) => {
     switch (type?.toLowerCase()) {
       case 'info':
@@ -92,15 +96,15 @@ export function AdminNotifications() {
     }
   };
 
-  // 🔥 Loading
+  // ================= LOADING =================
   if (loading) {
     return <div className="p-6 text-gray-500">Loading notifications...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
@@ -117,7 +121,7 @@ export function AdminNotifications() {
         )}
       </div>
 
-      {/* Stats */}
+      {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
@@ -153,7 +157,7 @@ export function AdminNotifications() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* FILTERS */}
       <div className="flex gap-2">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
@@ -170,7 +174,7 @@ export function AdminNotifications() {
         </Button>
       </div>
 
-      {/* Notifications */}
+      {/* LIST */}
       <div className="space-y-3">
         {filteredNotifications.length === 0 ? (
           <Card>
@@ -187,10 +191,10 @@ export function AdminNotifications() {
             >
               <CardContent className="p-4 flex gap-4">
 
-                {/* Icon */}
+                {/* ICON */}
                 <div>{getIcon(n.type)}</div>
 
-                {/* Content */}
+                {/* CONTENT */}
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-1">
                     <h3 className={`font-semibold ${!n.isRead ? 'text-black' : 'text-gray-500'}`}>
@@ -215,7 +219,7 @@ export function AdminNotifications() {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* ACTIONS */}
                 <div className="flex gap-2">
                   {!n.isRead && (
                     <Button

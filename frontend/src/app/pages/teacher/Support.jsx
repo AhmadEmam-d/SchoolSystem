@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HelpCircle, Search, MessageCircle, FileText, Video, Book, Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -8,54 +8,65 @@ import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../components/ui/accordion';
 import { toast } from 'sonner';
+import { api } from '../../../app/lib/api';
 
 export function TeacherSupport() {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
+  const [faqs, setFaqs] = useState([]);
+  const [isLoadingFaqs, setIsLoadingFaqs] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ticketForm, setTicketForm] = useState({
+    subject: '',
+    category: '',
+    message: '',
+  });
 
-  const faqItems = [
-    {
-      question: t('faqMarkAttendance') || 'How do I mark attendance for my class?',
-      answer: t('faqMarkAttendanceAns') || "Navigate to the Attendance page, select your class and date, then mark each student as Present, Absent, or Late. Don't forget to save your changes when done."
-    },
-    {
-      question: t('faqCreateAssignment') || 'How can I create a new assignment or homework?',
-      answer: t('faqCreateAssignmentAns') || 'Go to the Homework page and click the "Create Homework" button. Fill in the details including title, description, due date, and attach any necessary files. You can assign it to specific classes.'
-    },
-    {
-      question: t('faqGradeSubmissions') || 'How do I grade student submissions?',
-      answer: t('faqGradeSubmissionsAns') || 'Visit the Exams or Homework page, find the assignment you want to grade, and click "Grade Papers". You can view each student\'s submission and enter their marks.'
-    },
-    {
-      question: t('faqMsgParents') || 'Can I send messages to parents?',
-      answer: t('faqMsgParentsAns') || 'Yes! Go to the Messages page where you can communicate with both students and their parents. You can also send bulk announcements through the system.'
-    },
-    {
-      question: t('faqUseSmartTutor') || 'How do I use the SmartTutor AI feature?',
-      answer: t('faqUseSmartTutorAns') || 'Click on "SmartTutor AI" in the sidebar. You can ask questions about creating lesson plans, generating quiz questions, or getting teaching suggestions. The AI is designed to assist teachers in their daily tasks.'
-    },
-    {
-      question: t('faqViewTimetable') || 'How can I view my class timetable?',
-      answer: t('faqViewTimetableAns') || 'Your teaching schedule is available on your dashboard. You can also access a detailed timetable view to see all your classes, timings, and rooms assigned to you.'
-    },
-    {
-      question: t('faqTechnicalIssue') || 'What should I do if I encounter a technical issue?',
-      answer: t('faqTechnicalIssueAns') || 'Use the "Contact Support" form below to describe your issue. Our technical team will respond within 24 hours. For urgent matters, you can also contact the school IT department directly.'
-    },
-    {
-      question: t('faqUpdateProfile') || 'How do I update my profile information?',
-      answer: t('faqUpdateProfileAns') || 'Currently, profile updates need to be requested through the administration. Please contact the school office or use the support form to request any changes to your profile.'
-    },
-  ];
+  // ================= LOAD FAQs =================
+  useEffect(() => {
+    const loadFaqs = async () => {
+      try {
+        const data = await api.helpSupport.getFAQs();
+        setFaqs(data);
+      } catch (error) {
+        console.error('Error loading FAQs:', error);
+        toast.error(t('errorFetchingFAQs') || 'Failed to load FAQs');
+      } finally {
+        setIsLoadingFaqs(false);
+      }
+    };
 
-  const filteredFAQs = faqItems.filter(item =>
-    item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.answer.toLowerCase().includes(searchTerm.toLowerCase())
+    loadFaqs();
+  }, [t]);
+
+  const filteredFAQs = faqs.filter(item =>
+    item.question?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.answer?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSubmitTicket = (e) => {
+  // ================= SUBMIT TICKET =================
+  const handleSubmitTicket = async (e) => {
     e.preventDefault();
-    toast.success(t('supportRequestSubmittedTeacher'));
+    setIsSubmitting(true);
+    try {
+      const result = await api.helpSupport.createTicket({
+        subject: ticketForm.subject,
+        category: ticketForm.category,
+        message: ticketForm.message,
+      });
+
+      if (result.success) {
+        toast.success(t('supportRequestSubmittedTeacher'));
+        setTicketForm({ subject: '', category: '', message: '' });
+      } else {
+        toast.error(result.message || t('errorSubmittingTicket') || 'Failed to submit ticket');
+      }
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+      toast.error(t('errorSubmittingTicket') || 'Failed to submit ticket');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -137,22 +148,30 @@ export function TeacherSupport() {
               </div>
             </CardHeader>
             <CardContent className="p-6">
-              <Accordion type="single" collapsible className="w-full">
-                {filteredFAQs.map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left hover:no-underline">
-                      <span className="font-medium text-foreground">{item.question}</span>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-muted-foreground">{item.answer}</p>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-              {filteredFAQs.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>{t('noFAQsFound')}</p>
+              {isLoadingFaqs ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
                 </div>
+              ) : (
+                <>
+                  <Accordion type="single" collapsible className="w-full">
+                    {filteredFAQs.map((item, index) => (
+                      <AccordionItem key={item.oid || index} value={`item-${index}`}>
+                        <AccordionTrigger className="text-left hover:no-underline">
+                          <span className="font-medium text-foreground">{item.question}</span>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-muted-foreground">{item.answer}</p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                  {filteredFAQs.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>{t('noFAQsFound')}</p>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -169,12 +188,20 @@ export function TeacherSupport() {
               <form onSubmit={handleSubmitTicket} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="subject">{t('subject')}</Label>
-                  <Input id="subject" placeholder={t('briefDescription')} required />
+                  <Input
+                    id="subject"
+                    placeholder={t('briefDescription')}
+                    value={ticketForm.subject}
+                    onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">{t('supportCategoryLabel')}</Label>
                   <select
                     id="category"
+                    value={ticketForm.category}
+                    onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
                     className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     required
                   >
@@ -190,13 +217,19 @@ export function TeacherSupport() {
                   <Textarea
                     id="message"
                     placeholder={t('describeQuestionConcern')}
+                    value={ticketForm.message}
+                    onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
                     rows={6}
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                >
                   <Send className="h-4 w-4 mr-2" />
-                  {t('submitTicketBtn')}
+                  {isSubmitting ? t('submitting') || 'Submitting...' : t('submitTicketBtn')}
                 </Button>
               </form>
             </CardContent>

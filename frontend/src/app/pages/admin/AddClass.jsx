@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import apiConfig from '../../../../public/assets/links/api.json';
-
-const API_URL = apiConfig.API_URL;
+import { api } from '../../lib/api'; // ✅ استخدم API بتاعك
 
 export function AddClass() {
   const navigate = useNavigate();
@@ -29,24 +27,15 @@ export function AddClass() {
     setLoading(true);
 
     try {
-      // ✅ IMPORTANT: mapping للـ API
+      // ✅ أهم تعديل هنا
       const payload = {
-        name: formData.className,
-        level: formData.grade
+        name: formData.className.trim(),
+        level: String(formData.grade) // 🔥 لازم string
       };
 
       console.log("🚀 Sending:", payload);
 
-      const res = await fetch(`${API_URL}/Classes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
+      const data = await api.classes.create(payload);
 
       console.log("📥 Response:", data);
 
@@ -54,7 +43,14 @@ export function AddClass() {
         toast.success("Class added successfully");
         navigate('/admin/classes');
       } else {
-        toast.error(data.errors?.[0] || "Failed");
+        // عرض كل الأخطاء
+        if (data.errors) {
+          Object.values(data.errors).flat().forEach(err => {
+            toast.error(err);
+          });
+        } else {
+          toast.error("Failed");
+        }
       }
 
     } catch (error) {
@@ -66,7 +62,10 @@ export function AddClass() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   return (

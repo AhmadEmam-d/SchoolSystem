@@ -1,335 +1,381 @@
-import React from 'react';
-import { useNavigate } from 'react-router';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  Calendar, 
-  Clock,
-  Users,
-  FileText,
-  Download,
-  Link as LinkIcon,
-  CheckCircle,
-  Target,
-  Edit,
-  Trash2
+import {
+  ArrowLeft, Calendar, Clock, Users,
+  Download, Link as LinkIcon,
+  CheckCircle, Edit, Trash2, FileText,
+  Eye
 } from 'lucide-react';
+import { api } from '../../lib/api';
+
+const API_BASE_URL = "https://localhost:7179";
 
 export function LessonDetails() {
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  // Mock lesson data
-  const lessonData = {
-    id: 'l1',
-    title: 'Introduction to Quadratic Equations',
-    lessonNumber: 'Lesson 12',
-    class: 'Grade 10-A',
-    subject: 'Mathematics',
-    date: '2026-03-02',
-    startTime: '08:00',
-    endTime: '09:00',
-    room: '301',
-    status: 'Completed',
-    description: 'In this lesson, students will learn the fundamentals of quadratic equations, including standard form, solving methods, and real-world applications. We will explore both factoring and the quadratic formula.',
-    objectives: [
-      'Understand the standard form of a quadratic equation',
-      'Learn how to solve quadratic equations using factoring',
-      'Apply the quadratic formula to find solutions',
-      'Identify real-world applications of quadratic equations',
-    ],
-    materials: [
-      'Mathematics textbook (Chapter 8)',
-      'Scientific calculator',
-      'Graph paper',
-      'Whiteboard and markers',
-    ],
-    attachments: [
-      { name: 'Quadratic_Equations_Slides.pdf', size: '2.4 MB', type: 'PDF' },
-      { name: 'Practice_Worksheet.docx', size: '156 KB', type: 'Word Document' },
-      { name: 'Examples_Solutions.pdf', size: '890 KB', type: 'PDF' },
-    ],
-    links: [
-      { title: 'Khan Academy - Quadratic Equations', url: 'https://khanacademy.org/math/quadratic' },
-      { title: 'Interactive Graphing Tool', url: 'https://desmos.com/calculator' },
-    ],
-    homework: 'Complete exercises 1-10 from textbook page 245. Show all working steps.',
-    notes: 'Students showed good understanding. May need extra time on factoring complex equations in next lesson.',
-    attendance: {
-      total: 28,
-      present: 26,
-      absent: 2,
-      percentage: 93,
-    },
+  const [lesson, setLesson] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ================= FETCH LESSON + FILES =================
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Fetch lesson
+        const lessonResponse = await api.lessons.getById(id);
+        const lessonData = lessonResponse?.data?.data || lessonResponse?.data || lessonResponse;
+        
+        // 2. Fetch files from API_BASE_URL + /api/Files/lesson/{id}
+        const filesUrl = `${API_BASE_URL}/api/Files/lesson/${id}`;
+        console.log("Fetching files from:", filesUrl);
+        
+        const filesResponse = await fetch(filesUrl);
+        let filesData = [];
+        
+        if (filesResponse.ok) {
+          const filesJson = await filesResponse.json();
+          console.log("Files API response:", filesJson);
+          
+          // Handle response structure: { success: true, data: [...], count: number }
+          if (filesJson?.success && Array.isArray(filesJson?.data)) {
+            filesData = filesJson.data;
+          } else if (Array.isArray(filesJson)) {
+            filesData = filesJson;
+          } else if (filesJson?.data && Array.isArray(filesJson.data)) {
+            filesData = filesJson.data;
+          } else {
+            filesData = [];
+          }
+        } else {
+          console.warn("Failed to fetch files from API, status:", filesResponse.status);
+          // Fallback: use materials from lesson data if available
+          filesData = lessonData?.materials || [];
+        }
+        
+        setLesson(lessonData);
+        setFiles(filesData);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading lesson:', err);
+        setError('Failed to load lesson data');
+        setLesson(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      load();
+    }
+  }, [id]);
+
+  // ================= HELPER FUNCTIONS =================
+  const formatDate = (d) => {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString("en-US");
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-2 -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+  const formatTime = (t) => {
+    if (!t) return '';
+    return t.substring(11, 16);
+  };
+
+  const formatSize = (size) => {
+    if (!size) return '';
+    if (size < 1024) return size + " B";
+    if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
+    return (size / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
+  // ================= CHECK IF FILE CAN BE PREVIEWED =================
+  const canPreview = (fileType) => {
+    const previewableTypes = [
+      'application/pdf',
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'text/plain', 'text/html'
+    ];
+    return previewableTypes.includes(fileType);
+  };
+
+  // ================= BUILD FULL FILE URL =================
+  const getFullFileUrl = (fileUrl) => {
+    if (!fileUrl) return '';
+    if (fileUrl.startsWith('http')) return fileUrl;
+    if (fileUrl.startsWith('/uploads')) return `${API_BASE_URL}${fileUrl}`;
+    return `${API_BASE_URL}/${fileUrl}`;
+  };
+
+  // ================= OPEN FILE =================
+  const handleFileOpen = (fileUrl, fileName, fileType) => {
+    const fullUrl = getFullFileUrl(fileUrl);
+    console.log("Opening file:", fullUrl);
+    
+    if (canPreview(fileType)) {
+      // Open in new tab for preview
+      window.open(fullUrl, '_blank');
+    } else {
+      // Download directly
+      const link = document.createElement('a');
+      link.href = fullUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  // ================= DELETE LESSON =================
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this lesson?")) return;
+    try {
+      await api.lessons.delete(id);
+      navigate('/teacher/lessons');
+    } catch (err) {
+      console.error('Error deleting lesson:', err);
+      alert('An error occurred while deleting the lesson');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <p className="text-red-500">{error}</p>
+        <Button onClick={() => navigate(-1)} className="mt-4">
+          <ArrowLeft className="h-4 w-4 mr-2" /> Go Back
         </Button>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{lessonData.title}</h1>
-              <Badge 
-                variant="outline" 
-                className={
-                  lessonData.status === 'Completed' 
-                    ? 'bg-green-50 text-green-700 border-green-200' 
-                    : 'bg-blue-50 text-blue-700 border-blue-200'
-                }
-              >
-                {lessonData.status}
-              </Badge>
-            </div>
-            <p className="text-gray-500">{lessonData.lessonNumber} • {lessonData.class} • {lessonData.subject}</p>
+      </div>
+    );
+  }
+
+  if (!lesson) {
+    return (
+      <div className="p-4">
+        <p>Lesson not found</p>
+        <Button onClick={() => navigate('/teacher/lessons')} className="mt-4">
+          Back to List
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 p-4">
+
+      {/* HEADER */}
+      <div className="flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <Button variant="ghost" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> 
+            Back
+          </Button>
+          <h1 className="text-2xl font-bold mt-2">{lesson.title}</h1>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <Badge>{lesson.status}</Badge>
+            {lesson.type && <Badge variant="outline">{lesson.type}</Badge>}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/teacher/add-lesson')}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Lesson
-            </Button>
-            <Button variant="outline" className="text-red-600 hover:text-red-700">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          </div>
+          <p className="text-gray-500 mt-1">
+            {lesson.className} • {lesson.subjectName}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate(`/teacher/lessons/edit/${lesson.oid}`)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <Button variant="destructive" onClick={handleDelete}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
         </div>
       </div>
 
-      {/* Lesson Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* INFO CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Calendar className="h-8 w-8 text-indigo-600" />
-              <div>
-                <p className="text-xs text-gray-600">Date</p>
-                <p className="font-semibold text-gray-900">
-                  {new Date(lessonData.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })}
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            <span>{formatDate(lesson.date)}</span>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-xs text-gray-600">Time</p>
-                <p className="font-semibold text-gray-900">
-                  {lessonData.startTime} - {lessonData.endTime}
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            <span>
+              {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
+            </span>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-xs text-gray-600">Attendance</p>
-                <p className="font-semibold text-gray-900">
-                  {lessonData.attendance.present}/{lessonData.attendance.total} ({lessonData.attendance.percentage}%)
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <BookOpen className="h-8 w-8 text-purple-600" />
-              <div>
-                <p className="text-xs text-gray-600">Room</p>
-                <p className="font-semibold text-gray-900">Room {lessonData.room}</p>
-              </div>
-            </div>
+          <CardContent className="p-4 flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <span>{lesson.teacherName}</span>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                Lesson Description
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 leading-relaxed">{lessonData.description}</p>
-            </CardContent>
-          </Card>
+      {/* DESCRIPTION */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Description</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lesson.description || "No description"}
+        </CardContent>
+      </Card>
 
-          {/* Learning Objectives */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-indigo-600" />
-                Learning Objectives
-              </CardTitle>
-              <CardDescription>What students should achieve in this lesson</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {lessonData.objectives.map((objective, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-gray-700">{objective}</p>
-                  </div>
-                ))}
+      {/* OBJECTIVES */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Objectives ({lesson.objectivesCount || lesson.objectives?.length || 0})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lesson.objectives?.length > 0 ? (
+            lesson.objectives.map((o, index) => (
+              <div key={o.oid || index} className="flex gap-2 mb-2">
+                <CheckCircle className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                <span>{o.description}</span>
               </div>
-            </CardContent>
-          </Card>
+            ))
+          ) : (
+            <p>No objectives</p>
+          )}
+        </CardContent>
+      </Card>
 
-          {/* Attachments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                Attachments
-              </CardTitle>
-              <CardDescription>Files and resources for this lesson</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {lessonData.attachments.map((file, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-200 rounded-lg"
+      {/* FILES */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Files ({files.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {files.length === 0 ? (
+            <p>No files uploaded</p>
+          ) : (
+            <div className="space-y-2">
+              {files.map((file, index) => {
+                const isPreviewable = canPreview(file.fileType);
+                
+                return (
+                  <div 
+                    key={file.entityId || file.oid || index} 
+                    className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition-colors flex-wrap gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{file.name}</p>
-                        <p className="text-xs text-gray-500">{file.size} • {file.type}</p>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileText className="h-5 w-5 shrink-0 text-gray-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {file.fileType?.split('/').pop() || 'File'} • {formatSize(file.fileSize)}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFileOpen(file.fileUrl, file.name, file.fileType)}
+                        className="gap-1"
+                      >
+                        {isPreviewable ? (
+                          <>
+                            <Eye className="h-4 w-4" />
+                            Preview
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-          {/* Resource Links */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-indigo-600" />
-                Resource Links
-              </CardTitle>
-              <CardDescription>External resources and references</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {lessonData.links.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <LinkIcon className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-900">{link.title}</span>
-                    </div>
-                    <span className="text-xs text-blue-600">Open →</span>
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Required Materials */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-indigo-600" />
-                Required Materials
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {lessonData.materials.map((material, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <div className="h-5 w-5 flex items-center justify-center flex-shrink-0">
-                      <div className="h-2 w-2 bg-indigo-600 rounded-full"></div>
-                    </div>
-                    <span className="text-sm text-gray-700">{material}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          {/* Homework */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                Homework Assignment
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-700 mb-4">{lessonData.homework}</p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => navigate('/teacher/homework-details')}
+      {/* LINKS */}
+      {(lesson.resourceLinks ?? []).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lesson.resourceLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-blue-600 hover:underline mb-2"
               >
-                View Homework Details
-              </Button>
-            </CardContent>
-          </Card>
+                <LinkIcon className="inline h-4 w-4 mr-1" />
+                {link}
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Teacher Notes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
-                Teacher Notes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-700 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                {lessonData.notes}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* HOMEWORK */}
+      {lesson.homework && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Homework</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-semibold">{lesson.homework.title}</p>
+            <p className="mt-1">{lesson.homework.description}</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Due Date: {formatDate(lesson.homework.dueDate)}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* NOTES */}
+      {lesson.teacherNotes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Teacher Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lesson.teacherNotes}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* DURATION */}
+      {lesson.duration && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Lesson Duration</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{lesson.duration} minutes</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

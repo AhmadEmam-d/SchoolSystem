@@ -47,16 +47,17 @@ import { TeacherDashboard, StudentDashboard, ParentDashboard } from "./pages/rol
 import { TeacherClasses } from "./pages/teacher/Classes.jsx";
 import { TeacherHomework } from "./pages/teacher/Homework.jsx";
 import { TeacherAttendance } from "./pages/teacher/Attendance.jsx";
+import {EditHomework} from "./pages/teacher/EditHomework.jsx";
 import { TeacherExams } from "./pages/teacher/Exams.jsx";
 import { TeacherMessages } from "./pages/teacher/Messages.jsx";
 import { TeacherSupport } from "./pages/teacher/Support.jsx";
 import { TeacherProfile } from "./pages/teacher/Profile.jsx";
 import { TeacherSettings } from "./pages/teacher/Settings.jsx";
-import { TeacherLessons } from "./pages/teacher/Lessons.jsx";
+import  TeacherLessons  from "./pages/teacher/Lessons.jsx";
 import { AddLesson } from "./pages/teacher/AddLesson.jsx";
 import { AddHomework } from "./pages/teacher/AddHomework.jsx";
 import { AddExam } from "./pages/teacher/AddExam.jsx";
-import { ClassDetails as TeacherClassDetails } from "./pages/teacher/ClassDetails.jsx";
+import { TeacherClassDetails } from "./pages/teacher/ClassDetails.jsx";
 import { HomeworkDetails } from "./pages/teacher/HomeworkDetails.jsx";
 import { HomeworkSubmissions } from "./pages/teacher/HomeworkSubmissions.jsx";
 import { HomeworkGrades } from "./pages/teacher/HomeworkGrades.jsx";
@@ -109,6 +110,10 @@ import {EditStudent} from "./pages/admin/EditStudent.jsx";
 import {TeacherDetails} from "./pages/admin/TeacherDetails.jsx";
 import {EditTeacher} from "./pages/admin/EditTeacher.jsx";
 import {EditParent} from "./pages/admin/EditParent.jsx";
+import {EditExam} from "./pages/teacher/EditExam.jsx";
+import EditLesson from "./pages/teacher/EditLesson.jsx";
+//import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
+import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 
 
 export const router = createBrowserRouter([
@@ -235,7 +240,7 @@ export const router = createBrowserRouter([
       // Teacher Routes
       { path: "teacher/dashboard", Component: TeacherDashboard },
       { path: "teacher/classes", Component: TeacherClasses },
-      { path: "teacher/class-details", Component: TeacherClassDetails },
+      { path: "teacher/class-details/:classOid", Component: TeacherClassDetails  },
       { path: "teacher/attendance", Component: TeacherAttendance },
       { path: "teacher/homework", Component: TeacherHomework },
       { path: "teacher/exams", Component: TeacherExams },
@@ -246,17 +251,22 @@ export const router = createBrowserRouter([
       { path: "teacher/settings", Component: TeacherSettings },
       { path: "teacher/lessons", Component: TeacherLessons },
       { path: "teacher/lessons/add", Component: AddLesson },
-      { path: "teacher/lessons/edit/:id", Component: AddLesson },
+      { path: "teacher/lessons/edit/:id", Component: EditLesson },
       { path: "teacher/lessons/:id", Component: LessonDetails },
       { path: "teacher/add-lesson", Component: AddLesson },
       { path: "teacher/homework/add", Component: AddHomework },
-      { path: "teacher/exam/add", Component: AddExam },
+      { path: "teacher/exams/add", Component: AddExam },
+      { path: "teacher/homework/:id/edit", Component: EditHomework },
+       { path: "teacher/messages/new", Component: SendMessage },
+
+
       { path: "teacher/homework/:id", Component: HomeworkDetails },
       { path: "teacher/homework/:id/submissions", Component: HomeworkSubmissions },
       { path: "teacher/homework/:id/grades", Component: HomeworkGrades },
       { path: "teacher/exams/:id", Component: ExamDetails },
       { path: "teacher/exams/:id/submissions", Component: ExamSubmissions },
       { path: "teacher/exams/:id/grades", Component: ExamGrades },
+      { path: 'teacher/exams/edit/:id', Component: EditExam },
       { path: "teacher/lesson-details", Component: LessonDetails },
       { path: "teacher/homework-details", Component: HomeworkDetailsPage },
       { path: "teacher/notifications", Component: TeacherNotifications },
