@@ -153,8 +153,21 @@ namespace SchoolSystem.Application.Features.Attendance.DTOs
         public string? Remarks { get; set; }
         public string? CheckInTime { get; set; }
     }
-  
 
+    public class StudentSubmitAttendanceDto
+    {
+        public Guid SessionId { get; set; }
+        public int? SelectedNumber { get; set; }  // Required for NumberSelection method only
+        public string? Remarks { get; set; }
+    }
+
+    public class StudentSubmitAttendanceResponseDto
+    {
+        public bool Success { get; set; }
+        public string Status { get; set; }        // "Present" or error reason
+        public string CheckInTime { get; set; }
+        public string Message { get; set; }
+    }
     public enum AttendanceMethod
     {
         Manual = 1,

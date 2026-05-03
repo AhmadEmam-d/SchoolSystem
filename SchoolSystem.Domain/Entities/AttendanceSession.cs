@@ -15,5 +15,7 @@ namespace SchoolSystem.Domain.Entities
         public DateTime? CompletedAt { get; set; }
         public int? CorrectNumber { get; set; }
         public string? QrCode { get; set; }
+        public string? RandomNumbersJson { get; set; }
+
     }
 }
