@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Exams.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Enums;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,17 +15,20 @@ namespace SchoolSystem.Application.Features.Exams.Commands.CreateResult
     public class CreateExamResultCommandHandler : IRequestHandler<CreateExamResultCommand, Guid>
     {
         private readonly IGenericRepository<ExamResult> _examResultRepo;
+        private readonly IGenericRepository<ExamSubmission> _submissionRepo;  // ✅ add
         private readonly IGenericRepository<Exam> _examRepo;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IMapper _mapper;
 
         public CreateExamResultCommandHandler(
             IGenericRepository<ExamResult> examResultRepo,
+            IGenericRepository<ExamSubmission> submissionRepo,              // ✅ add
             IGenericRepository<Exam> examRepo,
             IGenericRepository<Student> studentRepo,
             IMapper mapper)
         {
             _examResultRepo = examResultRepo;
+            _submissionRepo = submissionRepo;                              // ✅ add
             _examRepo = examRepo;
             _studentRepo = studentRepo;
             _mapper = mapper;
@@ -52,12 +57,31 @@ namespace SchoolSystem.Application.Features.Exams.Commands.CreateResult
                 Grade = grade,
                 Remarks = request.Dto.Remarks,
                 IsPassed = isPassed,
-                SubmittedAt = DateTime.UtcNow
+                SubmittedAt = DateTime.UtcNow,
+                GradedAt = DateTime.UtcNow,
             };
 
             await _examResultRepo.AddAsync(result);
 
-            // Update exam status to grading if not completed
+            // ✅ UPDATE the submission so isGraded/score/status reflect correctly
+            var submission = await _submissionRepo
+                .GetAllQueryable()
+                .Cast<ExamSubmission>()
+                .Where(s => s.ExamOid == request.Dto.ExamOid
+                         && s.StudentOid == request.Dto.StudentOid
+                         && !s.IsDeleted)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (submission != null)
+            {
+                submission.Score = request.Dto.Score;
+                submission.Feedback = request.Dto.Remarks;
+                submission.GradedAt = DateTime.UtcNow;
+                submission.Status = ExamSubmissionStatus.Graded;  // enum, not string
+                await _submissionRepo.UpdateAsync(submission);
+            }
+
+            // Update exam status to Grading if not yet Completed
             if (exam.Status != ExamStatus.Completed)
             {
                 exam.Status = ExamStatus.Grading;

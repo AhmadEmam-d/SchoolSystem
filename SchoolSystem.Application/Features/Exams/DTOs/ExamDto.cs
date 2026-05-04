@@ -192,4 +192,5 @@ namespace SchoolSystem.Application.Features.Exams.DTOs
         public string AttachmentUrl { get; set; }
         public string FileName { get; set; }
     }
+
 }

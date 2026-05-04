@@ -9,7 +9,6 @@ namespace SchoolSystem.Application.Mappings
     {
         public HomeworkProfile()
         {
-            // ✅ أضف هذا السطر لتحويل ClassId و SubjectId
             CreateMap<CreateHomeworkDto, Homework>()
                 .ForMember(dest => dest.Oid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -20,7 +19,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
                 .ForMember(dest => dest.Attachments, opt => opt.Ignore())
                 .ForMember(dest => dest.Submissions, opt => opt.Ignore())
-                // ✅ أضف هذين السطرين - المهمين جداً!
                 .ForMember(dest => dest.ClassOid, opt => opt.MapFrom(src => src.ClassId))
                 .ForMember(dest => dest.SubjectOid, opt => opt.MapFrom(src => src.SubjectId));
 
@@ -49,7 +47,6 @@ namespace SchoolSystem.Application.Mappings
 
             CreateMap<HomeworkAttachment, HomeworkAttachmentDto>();
 
-            // ========== ✅ أضف هذه الـ Mappings للطالب ==========
 
             // Student Homework Dashboard Mapping
             CreateMap<Homework, HomeworkSummaryDto>()
@@ -58,8 +55,8 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : "N/A"))
                 .ForMember(dest => dest.IsOverdue, opt => opt.MapFrom(src => src.DueDate < DateTime.UtcNow))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => GetPriority(src.DueDate)))
-                .ForMember(dest => dest.Grade, opt => opt.Ignore()) // Will be set manually
-                .ForMember(dest => dest.Status, opt => opt.Ignore()) // Will be set manually
+                .ForMember(dest => dest.Grade, opt => opt.Ignore()) 
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
                .ForMember(dest => dest.Materials, opt => opt.MapFrom(src =>
                     src.Materials.Where(a => !a.IsDeleted).ToList()));
 
@@ -71,8 +68,9 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.IsOverdue, opt => opt.MapFrom(src => src.DueDate < DateTime.UtcNow))
                 .ForMember(dest => dest.OverdueText, opt => opt.MapFrom(src => GetOverdueText(src.DueDate)))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => GetPriority(src.DueDate)))
-                .ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Attachments.Where(a => !a.IsDeleted)))
-                .ForMember(dest => dest.MySubmission, opt => opt.Ignore()); // Will be set manually
+                .ForMember(dest => dest.Materials, opt => opt.MapFrom(src => src.Materials.Where(m => !m.IsDeleted)))
+                //.ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Attachments.Where(a => !a.IsDeleted)))
+                .ForMember(dest => dest.MySubmission, opt => opt.Ignore());
 
             // HomeworkAttachment to AttachmentDto
             CreateMap<HomeworkAttachment, AttachmentDto>()
@@ -96,7 +94,7 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.IsLate, opt => opt.MapFrom(src => src.Status == SubmissionStatus.Late));
             CreateMap<Material, AttachmentDto>()
-                .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.Name)) // ✅ Name → FileName
+                .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.Name)) 
                 .ForMember(dest => dest.SizeText, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)));
         }
 

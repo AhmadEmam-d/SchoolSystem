@@ -46,7 +46,8 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.DTOs
         public string TeacherName { get; set; }
         public string Description { get; set; }
         public string Instructions { get; set; }
-        public List<AttachmentDto> Attachments { get; set; }
+        //ublic List<AttachmentDto> Attachments { get; set; }
+        public List<AttachmentDto> Materials { get; set; } = new();
         public DateTime DueDate { get; set; }
         public DateTime AssignedDate { get; set; }
         public decimal TotalMarks { get; set; }
