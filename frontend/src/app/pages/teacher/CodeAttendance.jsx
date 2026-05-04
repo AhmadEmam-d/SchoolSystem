@@ -18,7 +18,7 @@ export function CodeAttendance() {
   const className = searchParams.get('className') || 'Class';
 
   const [students, setStudents] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(5); // 5 دقائق
+  const [timeLeft, setTimeLeft] = useState(50); // 5 دقائق
   const hasEndedRef = useRef(false);
 
   const session = sessions[classId];

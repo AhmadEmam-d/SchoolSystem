@@ -126,6 +126,33 @@ export const api = {
       data: data?.data || []
     };
   },
+  getSubjectsWithCount: async (studentId, classId = null) => {
+    const token = localStorage.getItem('token');
+    let url = `${API_BASE_URL}/Students/subjects-count-id?studentId=${studentId}`;
+    
+    if (classId) {
+      url += `&classId=${classId}`;
+    }
+    
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error('Error fetching subjects with count:', error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
 
     getAll: () =>{
       const token = localStorage.getItem('token');
@@ -338,6 +365,81 @@ console.log(token,'token');
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       }).then(res => res.json())
+      ,
+       getByStudentId: async (studentId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/Subjects/student/${studentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error('Error fetching student subjects:', error);
+      return { ok: false, data: null, error: error.message };
+    }
+  }
+  , 
+   getMySubjects: async () => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/my-subjects`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        console.error("❌ Failed to fetch my subjects, status:", res.status);
+        return { ok: false, data: null, error: `HTTP ${res.status}` };
+      }
+      
+      const data = await res.json();
+      console.log("✅ My subjects fetched:", data);
+      
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching my subjects:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // جلب تفاصيل مادة محددة
+  getSubjectDetails: async (subjectId) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/my-subjects/${subjectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching subject details:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  }
+  
+  // جلب تفاصيل مادة محددة
+ 
   },
 
   // TimeTables endpoints
@@ -400,6 +502,47 @@ console.log(token,'token');
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       }).then(res => res.json())
+      ,
+  getStudentWeeklySchedule: async (weekStartDate = null) => {
+    const token = localStorage.getItem('token');
+    
+    let url = `${API_BASE_URL}/student/timetable/weekly`;
+    if (weekStartDate) {
+      const formatted = weekStartDate instanceof Date
+        ? weekStartDate.toISOString()
+        : weekStartDate;
+      url += `?weekStartDate=${encodeURIComponent(formatted)}`;
+    }
+
+    console.log("📅 Fetching schedule from:", url);
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!res.ok) {
+        console.error("❌ Failed to fetch weekly schedule, status:", res.status);
+        return { ok: false, data: null };
+      }
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      
+      console.log("✅ Weekly Schedule API Response:", data);
+      
+      return {
+        ok: true,
+        data: data?.data || null
+      };
+    } catch (error) {
+      console.error("❌ Error in getStudentWeeklySchedule:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  }
   },
 
 //   // Attendance endpoints
@@ -627,7 +770,25 @@ attendance: {
       data
     };
   },
-
+// أضف هذا إلى attendance object في api.js
+getStudentActiveSession: async () => {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`${API_BASE_URL}/Attendance/student-active-session`, {
+      headers: getHeaders()
+    });
+    
+    if (!res.ok) {
+      return { ok: false, data: null };
+    }
+    
+    const data = await res.json();
+    return { ok: true, data: data?.data };
+  } catch (error) {
+    console.error('Error in getStudentActiveSession:', error);
+    return { ok: false, data: null, error: error.message };
+  }
+},
 }
   ,
   homeworks: {
@@ -710,6 +871,167 @@ attendance: {
     const data = text ? JSON.parse(text) : null;
     return { ok: res.ok, data };
   },
+   // جلب جميع الواجبات للطالب الحالي
+  getHomeworks: async (status = null) => {
+    const token = localStorage.getItem('token');
+    let url = `${API_BASE_URL}/student/homework`;
+    
+    if (status) {
+      url += `?status=${encodeURIComponent(status)}`;
+    }
+    
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        console.error("❌ Failed to fetch homeworks");
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching homeworks:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // جلب تفاصيل واجب محدد
+  getHomeworkDetails: async (homeworkId) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching homework details:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // جلب تسليمي لواجب محدد
+  getMySubmission: async (homeworkId) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/my-submission`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching my submission:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // جلب جميع تسليماتي
+  getAllMySubmissions: async () => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/my-submissions`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        return { ok: false, data: null };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error fetching all submissions:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // ==================== Commands (POST) ====================
+  
+  // رفع ملف مرفق
+  uploadAttachment: async (homeworkId, file) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/upload-attachment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        return { ok: false, data: null, error: error?.messages?.EN || 'Upload failed' };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error uploading attachment:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  
+  // تسليم الواجب
+  submitHomework: async (homeworkId, submissionData) => {
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          submissionText: submissionData.submissionText,
+          attachmentUrl: submissionData.attachmentUrl
+        })
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        return { ok: false, data: null, error: error?.messages?.EN || 'Submission failed' };
+      }
+      
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      console.error("Error submitting homework:", error);
+      return { ok: false, data: null, error: error.message };
+    }
+  }
 },
   // Exams endpoints
 // Exams endpoints
@@ -2128,6 +2450,148 @@ uploadFile: async (file, entityType, entityId) => {
       headers: getHeaders()
     }).then(res => res.json()),
 },
+studentHomework: {
+  // جلب كل الـ homeworks (status اختياري: 'Pending', 'Submitted', 'Late', etc.)
+  getAll: async (status = null) => {
+    const token = localStorage.getItem('token');
+    const url = status
+      ? `${API_BASE_URL}/student/homework?status=${status}`
+      : `${API_BASE_URL}/student/homework`;
+    try {
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // تفاصيل homework معين
+  getById: async (homeworkId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // submit homework (text + attachmentUrl)
+  submit: async (homeworkId, { submissionText, attachmentUrl }) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ submissionText, attachmentUrl })
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // رفع ملف attachment قبل الـ submit
+  uploadAttachment: async (homeworkId, file) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/upload-attachment`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }, // ❌ متحطش Content-Type مع FormData
+        body: formData
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data }; // { attachmentUrl: "..." }
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // الـ submission بتاعتي لـ homework معين
+  getMySubmission: async (homeworkId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/my-submission`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // كل الـ submissions بتاعتي
+  getMySubmissions: async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/homework/my-submissions`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data }; // { Total, Submissions: [...] }
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+  // رفع ملف
+uploadAttachment: async (homeworkId, file) => {
+  const token = localStorage.getItem('token');
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/upload-attachment`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }, // ❌ لا تضيف Content-Type مع FormData
+      body: formData
+    });
+    if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+    const data = await res.json();
+    return { ok: true, data: data?.data }; // { attachmentUrl: "..." }
+  } catch (error) {
+    return { ok: false, data: null, error: error.message };
+  }
+},
+
+// submit الواجب
+submit: async (homeworkId, { submissionText, attachmentUrl }) => {
+  const token = localStorage.getItem('token');
+  try {
+    const res = await fetch(`${API_BASE_URL}/student/homework/${homeworkId}/submit`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ submissionText, attachmentUrl })
+    });
+    if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+    const data = await res.json();
+    return { ok: true, data: data?.data };
+  } catch (error) {
+    return { ok: false, data: null, error: error.message };
+  }
+},
+},
 helpSupport: {
 
   // GET: api/HelpSupport/faqs?category=&search=
@@ -2194,5 +2658,24 @@ helpSupport: {
   },
 
 },
+studentGrades: {
+  getDashboard: async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/grades/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (!res.ok) return { ok: false, data: null, error: `HTTP ${res.status}` };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  }
+},
+
 
 };

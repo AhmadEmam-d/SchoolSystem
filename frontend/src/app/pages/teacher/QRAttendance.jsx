@@ -16,7 +16,7 @@ export function QRAttendance() {
   const className = searchParams.get('className') || 'Class A1';
 
   const [students, setStudents] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(5); // 5 Minutes
+  const [timeLeft, setTimeLeft] = useState(50); // 5 Minutes
   
   // ✅ Ref to prevent duplicate end session calls and toasts
   const hasEndedRef = useRef(false);
