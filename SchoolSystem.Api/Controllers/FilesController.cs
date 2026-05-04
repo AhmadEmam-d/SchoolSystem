@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SchoolSystem.Application.Features.Materials.Commands;
 using SchoolSystem.Application.Interfaces.Services;
+using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Interfaces.Common;
 
 namespace SchoolSystem.API.Controllers
 {
@@ -14,11 +16,12 @@ namespace SchoolSystem.API.Controllers
     {
         private readonly IFileService _fileService;
         private readonly IMediator _mediator;
-
-        public FilesController(IFileService fileService, IMediator mediator)
+        private readonly IGenericRepository<Material> _materialRepo;
+        public FilesController(IFileService fileService, IMediator mediator, IGenericRepository<Material> materialRepo)
         {
             _fileService = fileService;
             _mediator = mediator;
+            _materialRepo = materialRepo;
         }
 
         [HttpPost("upload/{entityType}/{entityId:guid}")]
@@ -36,7 +39,6 @@ namespace SchoolSystem.API.Controllers
 
                 switch (entityType.ToLower())
                 {
-
                     case "lesson":
                         await _mediator.Send(new AddMaterialCommand
                         {
@@ -50,29 +52,29 @@ namespace SchoolSystem.API.Controllers
                         break;
 
                     case "exams":
-                case "exam":
-                    await _mediator.Send(new AddMaterialCommand
-                    {
-                        ExamOid = entityId,
-                        EntityType = "exam",
-                        Name = result.Name,
-                        FileUrl = result.FileUrl,
-                        FileType = result.FileType,
-                        FileSize = result.FileSize
-                    });
-                    break;
+                    case "exam":
+                        await _mediator.Send(new AddMaterialCommand
+                        {
+                            ExamOid = entityId,
+                            EntityType = "exam",
+                            Name = result.Name,
+                            FileUrl = result.FileUrl,
+                            FileType = result.FileType,
+                            FileSize = result.FileSize
+                        });
+                        break;
 
-                case "homework":
-                    await _mediator.Send(new AddMaterialCommand
-                    {
-                        HomeworkOid = entityId,
-                        EntityType = "homework",
-                        Name = result.Name,
-                        FileUrl = result.FileUrl,
-                        FileType = result.FileType,
-                        FileSize = result.FileSize
-                    });
-                    break;
+                    case "homework":
+                        await _mediator.Send(new AddMaterialCommand
+                        {
+                            HomeworkOid = entityId,
+                            EntityType = "homework",
+                            Name = result.Name,
+                            FileUrl = result.FileUrl,
+                            FileType = result.FileType,
+                            FileSize = result.FileSize
+                        });
+                        break;
                 }
                 return Ok(new { success = true, data = result });
             }
@@ -157,38 +159,110 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        [HttpDelete("delete")]
-        public async Task<IActionResult> Delete([FromQuery] string fileUrl)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(fileUrl))
-                    return BadRequest(new { success = false, error = "File URL is required" });
+        //// Single delete method with optional parameters
+        //[HttpDelete("delete")]
+        //public async Task<IActionResult> Delete(
+        //    [FromQuery] string fileUrl,
+        //    [FromQuery] Guid? entityId = null,
+        //    [FromQuery] string entityType = null)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrWhiteSpace(fileUrl))
+        //            return BadRequest(new { success = false, error = "File URL is required" });
 
-                var deleted = await _fileService.DeleteFileAsync(fileUrl);
-                return Ok(new { success = deleted });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, error = ex.Message });
-            }
-        }
+        //        // Delete physical file from disk
+        //        var fileDeleted = await _fileService.DeleteFileAsync(fileUrl);
 
-        [HttpDelete("delete/{entityType}/{entityId:guid}")]
-        public async Task<IActionResult> DeleteEntityFiles(
-            [FromRoute] string entityType,
-            [FromRoute] Guid entityId)
-        {
-            try
-            {
-                var deleted = await _fileService.DeleteEntityFilesAsync(entityType.ToLower(), entityId);
-                return Ok(new { success = deleted });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, error = ex.Message });
-            }
-        }
+        //        bool dbDeleted = false;
+
+        //        // Delete database record if entity info is provided
+        //        if (fileDeleted && entityId.HasValue && !string.IsNullOrWhiteSpace(entityType))
+        //        {
+        //            switch (entityType.ToLower())
+        //            {
+        //                case "exam":
+        //                case "exams":
+        //                    dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                    {
+        //                        ExamOid = entityId.Value,
+        //                        FileUrl = fileUrl
+        //                    });
+        //                    break;
+        //                case "lesson":
+        //                    dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                    {
+        //                        LessonOid = entityId.Value,
+        //                        FileUrl = fileUrl
+        //                    });
+        //                    break;
+        //                case "homework":
+        //                    dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                    {
+        //                        HomeworkOid = entityId.Value,
+        //                        FileUrl = fileUrl
+        //                    });
+        //                    break;
+        //            }
+        //        }
+
+        //        return Ok(new { success = fileDeleted && (dbDeleted || !entityId.HasValue), fileDeleted, dbDeleted });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { success = false, error = ex.Message });
+        //    }
+        //}
+
+        //[HttpDelete("delete/{entityType}/{entityId:guid}")]
+        //public async Task<IActionResult> DeleteEntityFiles(
+        //    [FromRoute] string entityType,
+        //    [FromRoute] Guid entityId)
+        //{
+        //    try
+        //    {
+        //        // Get all files first to know what to delete
+        //        var files = await _fileService.GetEntityFilesAsync(entityType.ToLower(), entityId);
+
+        //        // Delete physical files from disk
+        //        var filesDeleted = await _fileService.DeleteEntityFilesAsync(entityType.ToLower(), entityId);
+
+        //        // Delete database records
+        //        bool dbDeleted = false;
+
+        //        switch (entityType.ToLower())
+        //        {
+        //            case "exam":
+        //            case "exams":
+        //                dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                {
+        //                    ExamOid = entityId,
+        //                    DeleteAllForEntity = true
+        //                });
+        //                break;
+        //            case "lesson":
+        //                dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                {
+        //                    LessonOid = entityId,
+        //                    DeleteAllForEntity = true
+        //                });
+        //                break;
+        //            case "homework":
+        //                dbDeleted = await _mediator.Send(new DeleteMaterialCommand
+        //                {
+        //                    HomeworkOid = entityId,
+        //                    DeleteAllForEntity = true
+        //                });
+        //                break;
+        //        }
+
+        //        return Ok(new { success = filesDeleted && dbDeleted, filesDeleted, dbDeleted, filesCount = files.Count });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { success = false, error = ex.Message });
+        //    }
+        //}
 
         [HttpGet("{entityType}/{entityId:guid}")]
         public async Task<IActionResult> GetEntityFiles(
@@ -205,15 +279,38 @@ namespace SchoolSystem.API.Controllers
                 return BadRequest(new { success = false, error = ex.Message });
             }
         }
+        [HttpDelete("material/{materialOid:guid}")]
+        public async Task<IActionResult> DeleteMaterial(Guid materialOid)
+        {
+            try
+            {
+                // Get the material to get the file URL for physical deletion
+                var material = await _materialRepo.GetByOidAsync(materialOid);
+                if (material == null)
+                    return NotFound(new { success = false, error = "Material not found" });
+
+                // Delete physical file from disk
+                await _fileService.DeleteFileAsync(material.FileUrl);
+
+                // Delete from database
+                await _materialRepo.DeleteAsync(materialOid);
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
     }
 
     public class FileUploadRequest
     {
-        public IFormFile File { get; set; }
+        public IFormFile? File { get; set; }
     }
 
     public class MultipleFilesUploadRequest
     {
-        public List<IFormFile> Files { get; set; }
+        public List<IFormFile>? Files { get; set; }
     }
 }
