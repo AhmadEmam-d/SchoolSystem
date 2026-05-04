@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
@@ -16,292 +16,409 @@ import {
   BookOpen,
   Calendar,
   User,
-  Link
+  Link,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  BookMarked,
+  Paperclip,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../../lib/api'; // ← عدّل المسار حسب مشروعك
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+const API_BASE_URL = 'https://localhost:7179';
+
+/** نرجع الـ icon المناسب حسب MIME أو اسم الملف */
+function getFileIcon(fileType = '', fileName = '') {
+  const mime = fileType.toLowerCase();
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+
+  if (mime.includes('video') || ['mp4', 'mkv', 'mov', 'avi'].includes(ext))
+    return <FileVideo className="h-5 w-5 text-purple-500" />;
+  if (mime.includes('image') || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext))
+    return <FileImage className="h-5 w-5 text-emerald-500" />;
+  if (mime.includes('pdf') || ext === 'pdf')
+    return <FileText className="h-5 w-5 text-rose-500" />;
+  if (['ppt', 'pptx'].includes(ext))
+    return <FileText className="h-5 w-5 text-orange-500" />;
+  return <File className="h-5 w-5 text-sky-500" />;
+}
+
+function getTypeBadge(fileType = '', fileName = '') {
+  const mime = fileType.toLowerCase();
+  const ext = fileName.split('.').pop()?.toUpperCase() ?? 'FILE';
+
+  if (mime.includes('video')) return { label: 'VIDEO', cls: 'bg-purple-100 text-purple-800' };
+  if (mime.includes('image')) return { label: 'IMAGE', cls: 'bg-emerald-100 text-emerald-800' };
+  if (mime.includes('pdf'))   return { label: 'PDF',   cls: 'bg-rose-100 text-rose-800' };
+  return { label: ext, cls: 'bg-sky-100 text-sky-800' };
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+  });
+}
+
+// ─── component ──────────────────────────────────────────────────────────────
 
 export function StudentSubjectMaterials() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id: subjectId } = useParams(); // id = subjectId
+
+  const [lessons, setLessons]       = useState([]);   // list of lessons
+  const [filesMap, setFilesMap]     = useState({});   // { lessonId: [files] }
+  const [loading, setLoading]       = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [expandedLesson, setExpandedLesson] = useState(null); // oid of expanded lesson
+  const [subjectName, setSubjectName] = useState('Subject');
+  const [teacherName, setTeacherName] = useState('');
 
-  const subject = {
-    id: id || 'sub1',
-    name: 'Mathematics',
-    teacher: 'John Nash',
-  };
+  // ── fetch lessons ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!subjectId) return;
 
-  const materials = [
-    {
-      id: 'm1',
-      title: 'Chapter 1 - Introduction to Calculus',
-      type: 'PDF',
-      size: '2.4 MB',
-      uploadDate: '2026-02-10',
-      description: 'Complete notes on limits, derivatives and their applications.',
-      category: 'notes',
-    },
-    {
-      id: 'm2',
-      title: 'Algebra Fundamentals Slides',
-      type: 'PPT',
-      size: '5.1 MB',
-      uploadDate: '2026-02-15',
-      description: 'Presentation slides covering algebraic structures and equations.',
-      category: 'slides',
-    },
-    {
-      id: 'm3',
-      title: 'Trigonometry Video Lecture',
-      type: 'VIDEO',
-      size: '150 MB',
-      uploadDate: '2026-02-20',
-      description: 'Recorded video lecture explaining trigonometric identities.',
-      category: 'video',
-    },
-    {
-      id: 'm4',
-      title: 'Practice Problems - Set A',
-      type: 'PDF',
-      size: '1.2 MB',
-      uploadDate: '2026-02-25',
-      description: 'Practice problems for exam preparation with solutions.',
-      category: 'exercises',
-    },
-    {
-      id: 'm5',
-      title: 'Geometry Diagrams Reference',
-      type: 'IMAGE',
-      size: '3.8 MB',
-      uploadDate: '2026-03-01',
-      description: 'Visual reference for geometric shapes and their properties.',
-      category: 'reference',
-    },
-    {
-      id: 'm6',
-      title: 'Statistics Worksheet',
-      type: 'PDF',
-      size: '0.9 MB',
-      uploadDate: '2026-03-05',
-      description: 'Worksheet on descriptive and inferential statistics.',
-      category: 'exercises',
-    },
-    {
-      id: 'm7',
-      title: 'Khan Academy - Calculus Link',
-      type: 'LINK',
-      size: null,
-      uploadDate: '2026-03-08',
-      description: 'External resource for additional calculus practice.',
-      category: 'reference',
-    },
-    {
-      id: 'm8',
-      title: 'Chapter 2 - Integration',
-      type: 'PDF',
-      size: '3.0 MB',
-      uploadDate: '2026-03-12',
-      description: 'Detailed notes on integration techniques and applications.',
-      category: 'notes',
-    },
-  ];
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await api.lessons.getBySubjectForStudent(subjectId);
+        // data is an array of lesson objects
+        const list = Array.isArray(data) ? data : [];
+        setLessons(list);
 
-  const filterCategories = [
-    { key: 'all', label: 'All' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'slides', label: 'Slides' },
-    { key: 'video', label: 'Videos' },
-    { key: 'exercises', label: 'Exercises' },
-    { key: 'reference', label: 'References' },
-  ];
+        if (list.length > 0) {
+          setSubjectName(list[0].subjectName ?? 'Subject');
+          setTeacherName(list[0].teacherName ?? '');
+        }
 
-  const getFileIcon = (type) => {
-    switch (type) {
-      case 'VIDEO':
-        return <FileVideo className="h-6 w-6 text-purple-500" />;
-      case 'IMAGE':
-        return <FileImage className="h-6 w-6 text-green-500" />;
-      case 'PPT':
-        return <FileText className="h-6 w-6 text-orange-500" />;
-      case 'LINK':
-        return <Link className="h-6 w-6 text-blue-500" />;
-      case 'PDF':
-      default:
-        return <FileText className="h-6 w-6 text-red-500" />;
+        // ── fetch files for each lesson that has materials ──────────────────
+        const entries = await Promise.all(
+          list
+            .filter((l) => l.materialsCount > 0)
+            .map(async (l) => {
+              try {
+                // GET /api/Files/lesson/{lessonId}
+                const res = await fetch(
+                  `${API_BASE_URL}/api/Files/lesson/${l.oid}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
+                  }
+                );
+                const json = await res.json();
+                const files = json.success
+                  ? Array.isArray(json.data) ? json.data : []
+                  : l.materials ?? []; // fallback to embedded materials
+                return [l.oid, files];
+              } catch {
+                // fallback: use the materials array already in the lesson object
+                return [l.oid, l.materials ?? []];
+              }
+            })
+        );
+
+        const map = {};
+        for (const [oid, files] of entries) map[oid] = files;
+
+        // also seed lessons that already have inline materials but materialsCount==0
+        for (const l of list) {
+          if (!map[l.oid] && l.materials?.length) map[l.oid] = l.materials;
+        }
+
+        setFilesMap(map);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to load materials');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [subjectId]);
+
+  // ── flatten all files for search ──────────────────────────────────────────
+  const allFiles = lessons.flatMap((lesson) =>
+    (filesMap[lesson.oid] ?? []).map((f) => ({ ...f, lesson }))
+  );
+
+  const filteredFiles = searchQuery.trim()
+    ? allFiles.filter(
+        (f) =>
+          f.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          f.lesson?.title?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : null; // null = show grouped view
+
+  // ── actions ───────────────────────────────────────────────────────────────
+const handleView = (file) => {
+  const url = file.fileUrl?.startsWith('http')
+    ? file.fileUrl
+    : `https://localhost:7179${file.fileUrl}`;
+  window.open(url, '_blank');
+};
+
+  const handleDownload = async (file) => {
+    const url = file.fileUrl?.startsWith('http')
+      ? file.fileUrl
+      : `${API_BASE_URL}${file.fileUrl}`;
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = file.name ?? 'download';
+      link.click();
+      toast.success(`Downloading "${file.name}"...`);
+    } catch {
+      toast.error('Download failed');
     }
   };
 
-  const getTypeBadgeColor = (type) => {
-    switch (type) {
-      case 'VIDEO':
-        return 'bg-purple-100 text-purple-800';
-      case 'IMAGE':
-        return 'bg-green-100 text-green-800';
-      case 'PPT':
-        return 'bg-orange-100 text-orange-800';
-      case 'LINK':
-        return 'bg-blue-100 text-blue-800';
-      case 'PDF':
-      default:
-        return 'bg-red-100 text-red-800';
-    }
-  };
+  const toggleLesson = (oid) =>
+    setExpandedLesson((prev) => (prev === oid ? null : oid));
 
-  const filteredMaterials = materials.filter((material) => {
-    const matchesSearch =
-      material.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      material.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter =
-      activeFilter === 'all' || material.category === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleView = (material) => {
-    if (material.type === 'LINK') {
-      toast.info('Opening external link...');
-    } else {
-      navigate(
-        `/student/subjects/${id}/document-viewer?title=${encodeURIComponent(material.title)}&type=${material.type}&size=${material.size || ''}`
-      );
-    }
-  };
-
-  const handleDownload = (material) => {
-    toast.success(`Downloading "${material.title}"...`);
-  };
+  // ── render ────────────────────────────────────────────────────────────────
+  const totalMaterials = Object.values(filesMap).reduce((s, a) => s + a.length, 0);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div>
         <Button
           variant="ghost"
-          onClick={() => navigate(`/student/subjects/${id}`)}
+          onClick={() => navigate(`/student/subjects/${subjectId}`)}
           className="mb-2 -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Subject
         </Button>
+
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <BookOpen className="h-7 w-7 text-indigo-600" />
-              <h1 className="text-3xl font-bold text-gray-900">
-                {subject.name} — Materials
+              <h1 className="text-3xl font-bold text-gray-900 capitalize">
+                {subjectName} — Materials
               </h1>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-500">
-              <User className="h-4 w-4" />
-              <span>{subject.teacher}</span>
+              {teacherName && (
+                <>
+                  <User className="h-4 w-4" />
+                  <span>{teacherName}</span>
+                  <span className="mx-2">•</span>
+                </>
+              )}
+              <span>{lessons.length} lessons</span>
               <span className="mx-2">•</span>
-              <span>{materials.length} resources</span>
+              <span>{totalMaterials} resources</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search */}
+      {/* ── Search ── */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          placeholder="Search materials..."
+          placeholder="Search materials or lessons..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
         />
       </div>
 
-      {/* Category Filter Pills */}
-      <div className="flex flex-wrap gap-2">
-        {filterCategories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveFilter(cat.key)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              activeFilter === cat.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Materials Grid */}
-      {filteredMaterials.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 flex flex-col items-center justify-center text-center text-gray-500">
-            <File className="h-12 w-12 mb-4 text-gray-300" />
-            <p className="font-medium">No materials found</p>
-            <p className="text-sm mt-1">Try adjusting your search or filter criteria.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMaterials.map((material) => (
-            <Card
-              key={material.id}
-              className="hover:shadow-md transition-shadow flex flex-col"
-            >
-              <CardContent className="p-5 flex flex-col h-full gap-3">
-                <div className="flex items-start justify-between">
-                  <div className="p-2 bg-gray-50 rounded-lg">
-                    {getFileIcon(material.type)}
-                  </div>
-                  <Badge className={getTypeBadgeColor(material.type)}>
-                    {material.type}
-                  </Badge>
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1 leading-snug">
-                    {material.title}
-                  </h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {material.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    <span>{material.uploadDate}</span>
-                  </div>
-                  {material.size && <span>• {material.size}</span>}
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => handleView(material)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-                  {material.type !== 'LINK' && (
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                      onClick={() => handleDownload(material)}
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* ── Loading ── */}
+      {loading && (
+        <div className="flex items-center justify-center py-20 text-gray-400">
+          <Loader2 className="h-8 w-8 animate-spin mr-3" />
+          <span>Loading materials...</span>
         </div>
       )}
 
-      <div className="text-sm text-gray-500 text-center">
-        Showing {filteredMaterials.length} of {materials.length} materials
+      {/* ── No data ── */}
+      {!loading && lessons.length === 0 && (
+        <Card>
+          <CardContent className="p-12 flex flex-col items-center justify-center text-center text-gray-500">
+            <File className="h-12 w-12 mb-4 text-gray-300" />
+            <p className="font-medium">No lessons found for this subject</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Search Results (flat list) ── */}
+      {!loading && filteredFiles !== null && (
+        <>
+          {filteredFiles.length === 0 ? (
+            <Card>
+              <CardContent className="p-10 text-center text-gray-500">
+                <p>No results for "{searchQuery}"</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredFiles.map((file) => (
+                <FileCard
+                  key={file.oid}
+                  file={file}
+                  lessonTitle={file.lesson?.title}
+                  onView={handleView}
+                  onDownload={handleDownload}
+                />
+              ))}
+            </div>
+          )}
+          <div className="text-sm text-gray-500 text-center">
+            Showing {filteredFiles.length} result(s)
+          </div>
+        </>
+      )}
+
+      {/* ── Grouped by Lesson ── */}
+      {!loading && filteredFiles === null && lessons.length > 0 && (
+        <div className="space-y-4">
+          {lessons.map((lesson) => {
+            const files = filesMap[lesson.oid] ?? [];
+            const isExpanded = expandedLesson === lesson.oid;
+
+            return (
+              <Card key={lesson.oid} className="overflow-hidden">
+                {/* Lesson header — clickable */}
+                <button
+                  onClick={() => toggleLesson(lesson.oid)}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-lg bg-indigo-50 shrink-0">
+                      <BookMarked className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">
+                        {lesson.title || '(Untitled Lesson)'}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5 flex-wrap">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(lesson.date)}</span>
+                        <span>•</span>
+                        <span className="capitalize">{lesson.type}</span>
+                        <span>•</span>
+                        <LessonStatusBadge status={lesson.status} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 ml-3 shrink-0">
+                    <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      <Paperclip className="h-3 w-3" />
+                      {files.length} file{files.length !== 1 ? 's' : ''}
+                    </span>
+                    {isExpanded
+                      ? <ChevronDown className="h-4 w-4 text-gray-400" />
+                      : <ChevronRight className="h-4 w-4 text-gray-400" />
+                    }
+                  </div>
+                </button>
+
+                {/* Files grid */}
+                {isExpanded && (
+                  <div className="border-t px-5 py-4">
+                    {files.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-4">
+                        No materials for this lesson
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {files.map((file) => (
+                          <FileCard
+                            key={file.oid}
+                            file={file}
+                            onView={handleView}
+                            onDownload={handleDownload}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {!loading && lessons.length > 0 && filteredFiles === null && (
+        <div className="text-sm text-gray-500 text-center">
+          {totalMaterials} total resource{totalMaterials !== 1 ? 's' : ''} across {lessons.length} lesson{lessons.length !== 1 ? 's' : ''}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── sub-components ──────────────────────────────────────────────────────────
+
+function FileCard({ file, lessonTitle, onView, onDownload }) {
+  const { label, cls } = getTypeBadge(file.fileType, file.name);
+  const icon = getFileIcon(file.fileType, file.name);
+
+  return (
+    <div className="border rounded-xl p-4 flex flex-col gap-3 bg-white hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between">
+        <div className="p-2 bg-gray-50 rounded-lg">{icon}</div>
+        <Badge className={`${cls} text-xs`}>{label}</Badge>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-gray-900 text-sm leading-snug truncate" title={file.name}>
+          {file.name}
+        </p>
+        {lessonTitle && (
+          <p className="text-xs text-indigo-500 mt-0.5 truncate">{lessonTitle}</p>
+        )}
+        {file.fileSize && (
+          <p className="text-xs text-gray-400 mt-1">{formatBytes(file.fileSize)}</p>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1" onClick={() => onView(file)}>
+          <Eye className="h-4 w-4 mr-1" />
+          View
+        </Button>
+        <Button
+          size="sm"
+          className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+          onClick={() => onDownload(file)}
+        >
+          <Download className="h-4 w-4 mr-1" />
+          Download
+        </Button>
       </div>
     </div>
+  );
+}
+
+function LessonStatusBadge({ status }) {
+  const map = {
+    Completed: 'text-emerald-600',
+    Upcoming:  'text-amber-500',
+    Cancelled: 'text-red-500',
+  };
+  return (
+    <span className={`font-medium ${map[status] ?? 'text-gray-500'}`}>
+      {status}
+    </span>
   );
 }

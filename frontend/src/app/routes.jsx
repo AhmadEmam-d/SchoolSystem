@@ -116,7 +116,8 @@ import EditLesson from "./pages/teacher/EditLesson.jsx";
 import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 import {StudentSendMessage} from "./pages/student/StudentSendMessage.jsx";
 
-
+import {StudentExams} from "./pages/student/Exam.jsx"
+import {StudentExamDetails} from "./pages/student/StudentExamsDetails.jsx"
 
 export const router = createBrowserRouter([
   {
@@ -294,7 +295,10 @@ export const router = createBrowserRouter([
       { path: "student/settings", Component: StudentSettings },
       { path: "student/notifications", Component: StudentNotifications },
        { path: "student/messages/new", Component: StudentSendMessage },
+       { path: "student/exams", Component: StudentExams  },
+       { path: "student/exams/:examId", Component: StudentExamDetails  },
        
+
 
       // Parent Routes
       { path: "parent/dashboard", Component: ParentDashboard },

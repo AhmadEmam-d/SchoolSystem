@@ -1,284 +1,312 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bell, Check, Trash2, Clock, AlertCircle, Info, CheckCircle } from 'lucide-react';
+import {
+  Bell, Check, Trash2, Clock, AlertCircle, Info, CheckCircle
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-
-const mockNotifications = [
-  {
-    id: '1',
-    title: 'New Homework Assigned',
-    message: 'Math homework for Chapter 5 has been assigned. Due date: March 5, 2026',
-    type: 'info',
-    date: '2026-03-01',
-    time: '10:30 AM',
-    read: false,
-    category: 'Homework'
-  },
-  {
-    id: '2',
-    title: 'Exam Grade Published',
-    message: 'Your Mid-term Math exam grade is now available: 92/100',
-    type: 'success',
-    date: '2026-03-01',
-    time: '09:15 AM',
-    read: false,
-    category: 'Grades'
-  },
-  {
-    id: '3',
-    title: 'Assignment Due Soon',
-    message: 'Physics lab report is due tomorrow at 11:59 PM',
-    type: 'warning',
-    date: '2026-02-28',
-    time: '04:45 PM',
-    read: true,
-    category: 'Homework'
-  },
-  {
-    id: '4',
-    title: 'Attendance Warning',
-    message: 'You have been absent for 2 days this week. Please submit excuse note.',
-    type: 'error',
-    date: '2026-02-28',
-    time: '02:20 PM',
-    read: true,
-    category: 'Attendance'
-  },
-  {
-    id: '5',
-    title: 'New Study Material',
-    message: 'Chemistry Chapter 7 study guide has been uploaded by Dr. Ahmed',
-    type: 'info',
-    date: '2026-02-27',
-    time: '11:00 AM',
-    read: true,
-    category: 'Materials'
-  },
-  {
-    id: '6',
-    title: 'Schedule Change',
-    message: "Tomorrow's English class has been moved from Room 101 to Room 205",
-    type: 'warning',
-    date: '2026-02-26',
-    time: '03:30 PM',
-    read: true,
-    category: 'Schedule'
-  }
-];
+import { api } from '../../lib/api';
 
 export function StudentNotifications() {
   const { t } = useTranslation();
-  const [notifications, setNotifications] = useState(mockNotifications);
+
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // ================= FETCH =================
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const filteredNotifications = filter === 'unread'
-    ? notifications.filter(n => !n.read)
-    : notifications;
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // جلب الملخص (total, unread, read)
+      const summaryData = await api.notifications.getSummary();
+      setSummary(summaryData);
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
+      // جلب كل الإشعارات (الـ API بيرجع للطالب اشعاراته بس)
+      const list = await api.notifications.getAll();
+      setNotifications(list || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  // ================= COUNTS =================
+  const unreadCount = summary?.unreadCount || notifications.filter(n => !n.isRead).length;
+  const totalCount = summary?.totalCount || notifications.length;
+  const readCount = summary?.readCount || (totalCount - unreadCount);
+
+  // ================= FILTER =================
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'unread') return !n.isRead;
+    return true;
+  });
+
+  // ================= ACTIONS =================
+  const markAsRead = async (oid) => {
+    try {
+      await api.notifications.markAsRead(oid);
+      setNotifications(prev =>
+        prev.map(n =>
+          n.oid === oid ? { ...n, isRead: true } : n
+        )
+      );
+      // تحديث الملخص
+      const newSummary = await api.notifications.getSummary();
+      setSummary(newSummary);
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  const markAllAsRead = async () => {
+    try {
+      await api.notifications.markAllAsRead();
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, isRead: true }))
+      );
+      // تحديث الملخص
+      const newSummary = await api.notifications.getSummary();
+      setSummary(newSummary);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
+  const deleteNotification = async (oid) => {
+    try {
+      await api.notifications.delete(oid);
+      setNotifications(prev =>
+        prev.filter(n => n.oid !== oid)
+      );
+      // تحديث الملخص
+      const newSummary = await api.notifications.getSummary();
+      setSummary(newSummary);
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  // ================= UI HELPERS =================
+  const getIcon = (type) => {
+    switch (type?.toLowerCase()) {
       case 'info':
         return <Info className="h-5 w-5 text-blue-600" />;
       case 'warning':
         return <AlertCircle className="h-5 w-5 text-yellow-600" />;
       case 'success':
         return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'error':
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
       default:
-        return <Bell className="h-5 w-5 text-gray-600" />;
+        return <Bell className="h-5 w-5 text-gray-500" />;
     }
   };
 
-  const getNotificationBg = (type, read) => {
-    if (read) return 'bg-white dark:bg-gray-800';
-    switch (type) {
-      case 'info':
-        return 'bg-blue-50 dark:bg-blue-900/20';
-      case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-900/20';
-      case 'success':
-        return 'bg-green-50 dark:bg-green-900/20';
-      case 'error':
-        return 'bg-red-50 dark:bg-red-900/20';
+  const getBg = (n) => {
+    if (n.isRead) return 'bg-white dark:bg-gray-800';
+    return 'bg-blue-50 dark:bg-blue-900/20';
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case 'urgent':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      case 'normal':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
       default:
-        return 'bg-gray-50 dark:bg-gray-700';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'Homework':
-        return 'bg-blue-100 text-blue-800';
-      case 'Grades':
-        return 'bg-green-100 text-green-800';
-      case 'Schedule':
-        return 'bg-purple-100 text-purple-800';
-      case 'Attendance':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Materials':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'Exams':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // ================= LOADING =================
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-12rem)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">{t('loading') || 'Loading notifications...'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('notificationsPage')}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {t('notificationsPage') || 'Notifications'}
+          </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {t('notificationsPageDesc')}
+            {t('notificationsPageDesc') || 'Stay updated with your latest notifications'}
           </p>
         </div>
-        <div className="flex gap-3">
-          {unreadCount > 0 && (
-            <Button variant="outline" onClick={markAllAsRead}>
-              <Check className="h-4 w-4 mr-2" />
-              {t('markAllAsRead')}
-            </Button>
-          )}
-        </div>
+
+        {unreadCount > 0 && (
+          <Button variant="outline" onClick={markAllAsRead} className="gap-2">
+            <Check className="h-4 w-4" />
+            {t('markAllAsRead') || 'Mark All as Read'}
+          </Button>
+        )}
       </div>
 
-      {/* Statistics */}
+      {/* STATS - نفس ديزاين الادمن */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('totalNotifications')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('totalNotifications') || 'Total'}
+            </CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{notifications.length}</div>
+            <div className="text-2xl font-bold text-purple-600">
+              {totalCount}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('unreadNotifications')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('unreadNotifications') || 'Unread'}
+            </CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{unreadCount}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {unreadCount}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('readNotifications')}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('readNotifications') || 'Read'}
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {notifications.length - unreadCount}
+              {readCount}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* FILTERS - نفس ديزاين الادمن */}
       <div className="flex gap-2">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
           onClick={() => setFilter('all')}
-          className={filter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+          className={filter === 'all' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
         >
-          {t('all')} ({notifications.length})
+          {t('all') || 'All'} ({totalCount})
         </Button>
+
         <Button
           variant={filter === 'unread' ? 'default' : 'outline'}
           onClick={() => setFilter('unread')}
-          className={filter === 'unread' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+          className={filter === 'unread' ? 'bg-indigo-600 hover:bg-indigo-700' : ''}
         >
-          {t('unread')} ({unreadCount})
+          {t('unread') || 'Unread'} ({unreadCount})
         </Button>
       </div>
 
-      {/* Notifications List */}
+      {/* LIST - نفس ديزاين الادمن */}
       <div className="space-y-3">
         {filteredNotifications.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center">
-              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">{t('noNotifications')}</p>
+            <CardContent className="py-12 text-center text-gray-500">
+              <Bell className="h-12 w-12 mx-auto mb-3 opacity-40" />
+              <p className="font-medium">{t('noNotifications') || 'No notifications'}</p>
+              <p className="text-sm mt-1">
+                {t('noNotificationsDesc') || 'You\'re all caught up!'}
+              </p>
             </CardContent>
           </Card>
         ) : (
-          filteredNotifications.map((notification) => (
+          filteredNotifications.map((n) => (
             <Card
-              key={notification.id}
-              className={`transition-all hover:shadow-md ${getNotificationBg(notification.type, notification.read)}`}
+              key={n.oid}
+              className={`transition hover:shadow-md ${getBg(n)}`}
             >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1">
-                    {getNotificationIcon(notification.type)}
+              <CardContent className="p-5 flex gap-4">
+                {/* ICON */}
+                <div className="flex-shrink-0 mt-1">
+                  {getIcon(n.type)}
+                </div>
+
+                {/* CONTENT */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+                    <h3 className={`font-semibold ${!n.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {n.title}
+                    </h3>
+
+                    {n.priority && (
+                      <Badge className={getPriorityColor(n.priority)}>
+                        {n.priority}
+                      </Badge>
+                    )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className={`font-semibold ${!notification.read ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {notification.title}
-                      </h3>
-                      <Badge className={getCategoryColor(notification.category)}>
-                        {notification.category}
-                      </Badge>
-                    </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    {n.message}
+                  </p>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {notification.message}
-                    </p>
-
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                    {n.timeAgo && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {notification.time}
+                        {n.timeAgo}
                       </span>
-                      <span>{new Date(notification.date).toLocaleDateString('ar-EG')}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {!notification.read && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => markAsRead(notification.id)}
-                        title={t('markAsRead')}
-                      >
-                        <Check className="h-4 w-4 text-green-600" />
-                      </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteNotification(notification.id)}
-                      title={t('delete')}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
+                    {n.createdAt && !n.timeAgo && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {new Date(n.createdAt).toLocaleString()}
+                      </span>
+                    )}
+                    {n.type && (
+                      <span className="capitalize">Type: {n.type}</span>
+                    )}
                   </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!n.isRead && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => markAsRead(n.oid)}
+                      title={t('markAsRead') || 'Mark as read'}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  )}
+
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deleteNotification(n.oid)}
+                    title={t('delete') || 'Delete'}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>

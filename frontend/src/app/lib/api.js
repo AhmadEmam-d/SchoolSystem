@@ -1364,7 +1364,7 @@ helpSupport: {
       headers: getHeaders()
     }).then(res => res.json()),
 }
-// ,
+
 // attendance: {
 
 //   // ✅ Get today attendance
@@ -1678,7 +1678,6 @@ users: {
        return { success: true, data: response.data };
     }
   }
-
 ,
 announcements: {
   getSummary: () =>
@@ -1934,53 +1933,7 @@ reports: {
       headers: getHeaders()
     }).then(res => res.json())
 },
-// Profile endpoints
-  // profile: {
-  //   // GET: api/Profile
-  //   get: () =>
-  //     fetch(`${API_BASE_URL}/Profile`, {
-  //       headers: getHeaders()
-  //     }).then(res => res.json()),
 
-  //   // PUT: api/Profile
-  //   update: (data) =>
-  //     fetch(`${API_BASE_URL}/Profile`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         ...getHeaders(),
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify(data)
-  //     }).then(res => res.json()),
-
-  //   // POST: api/Profile/change-password
-  //   changePassword: (data) =>
-  //     fetch(`${API_BASE_URL}/Profile/change-password`, {
-  //       method: 'POST',
-  //       headers: {
-  //         ...getHeaders(),
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify(data)
-  //     }).then(res => res.json()),
-
-  //   // GET: api/Profile/activity
-  //   getActivity: () =>
-  //     fetch(`${API_BASE_URL}/Profile/activity`, {
-  //       headers: getHeaders()
-  //     }).then(res => res.json()),
-
-  //   // Upload Avatar (Optional - if you decide to uncomment it later)
-  //   uploadAvatar: (formData) =>
-  //     fetch(`${API_BASE_URL}/Profile/upload-avatar`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Authorization': `Bearer ${localStorage.getItem('token')}`
-  //         // Note: Don't set Content-Type, fetch will set it automatically for FormData
-  //       },
-  //       body: formData
-  //     }).then(res => res.json())
-  // }
   profile: {
   // GET: api/Profile
   getProfile: async () => {
@@ -2317,6 +2270,80 @@ settings: {
 }
 ,
 lessons: {
+    getBySubjectForStudent: async (subjectId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/lessons/subject/${subjectId}`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      console.log('📚 Lessons by subject:', data);
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+      return [];
+    }
+  },
+  
+  // جلب درس معين بالتفاصيل الكاملة
+  getById: async (lessonId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/lessons/${lessonId}`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Error fetching lesson:', error);
+      return null;
+    }
+  },
+
+  // جلب دروس اليوم للطالب
+  getTodayLessons: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/lessons/today`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error('Error fetching today lessons:', error);
+      return [];
+    }
+  },
+
+  // جلب الدروس القادمة
+  getUpcomingLessons: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/lessons/upcoming`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error('Error fetching upcoming lessons:', error);
+      return [];
+    }
+  },
+
+  // جلب كل دروس الطالب (مع فلتر بالتاريخ)
+  getAllMyLessons: async (fromDate, toDate) => {
+    try {
+      let url = `${API_BASE_URL}/student/lessons`;
+      const params = new URLSearchParams();
+      if (fromDate) params.append('fromDate', fromDate);
+      if (toDate) params.append('toDate', toDate);
+      if (params.toString()) url += `?${params.toString()}`;
+      
+      const response = await fetch(url, { headers: getHeaders() });
+      const data = await response.json();
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error('Error fetching all lessons:', error);
+      return [];
+    }
+  }
+,
 
   // ✅ Get All
   getAll: () =>
@@ -2673,6 +2700,80 @@ studentGrades: {
       return { ok: true, data: data?.data };
     } catch (error) {
       return { ok: false, data: null, error: error.message };
+    }
+  }
+},
+// exams للطالب
+studentExams: {
+  // GET: api/student/exams — جلب كل امتحانات الطالب
+  getMyExams: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/exams`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      console.log('📋 My exams:', data);
+      return data.success ? data.data : [];
+    } catch (error) {
+      console.error('Error fetching exams:', error);
+      return [];
+    }
+  },
+
+  // GET: api/student/exams/{examId} — جلب تفاصيل امتحان معين
+  getExamDetails: async (examId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/exams/${examId}`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      console.log('📖 Exam details:', data);
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Error fetching exam details:', error);
+      return null;
+    }
+  },
+
+  // POST: api/student/exams/{examId}/upload-solution — رفع ملف الحل
+  uploadSolution: async (examId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch(`${API_BASE_URL}/student/exams/${examId}/upload-solution`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+      const data = await response.json();
+      console.log('📤 Upload solution response:', data);
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Error uploading solution:', error);
+      return null;
+    }
+  },
+
+  // POST: api/student/exams/{examId}/submit — تقديم الامتحان
+  submitExam: async (examId, submissionData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/student/exams/${examId}/submit`, {
+        method: 'POST',
+        headers: {
+          ...getHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submissionData)
+      });
+      const data = await response.json();
+      console.log('📤 Submit exam response:', data);
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Error submitting exam:', error);
+      return null;
     }
   }
 },
