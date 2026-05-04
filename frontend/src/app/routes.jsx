@@ -118,6 +118,8 @@ import {StudentSendMessage} from "./pages/student/StudentSendMessage.jsx";
 
 import {StudentExams} from "./pages/student/Exam.jsx"
 import {StudentExamDetails} from "./pages/student/StudentExamsDetails.jsx"
+import { StudentHomeworkSubmission } from "./pages/student/StudentHomeworkSubmission.jsx";
+import { HomeworkGradeSubmission } from "./pages/teacher/HomeworkGradeSubmission.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -266,6 +268,9 @@ export const router = createBrowserRouter([
       { path: "teacher/homework/:id", Component: HomeworkDetails },
       { path: "teacher/homework/:id/submissions", Component: HomeworkSubmissions },
       { path: "teacher/homework/:id/grades", Component: HomeworkGrades },
+      { path: "teacher/homework/:homeworkId/grade", Component: HomeworkGradeSubmission },
+
+
       { path: "teacher/exams/:id", Component: ExamDetails },
       { path: "teacher/exams/:id/submissions", Component: ExamSubmissions },
       { path: "teacher/exams/:id/grades", Component: ExamGrades },
@@ -297,6 +302,8 @@ export const router = createBrowserRouter([
        { path: "student/messages/new", Component: StudentSendMessage },
        { path: "student/exams", Component: StudentExams  },
        { path: "student/exams/:examId", Component: StudentExamDetails  },
+       { path: "student/homework/:homeworkId/submission", Component: StudentHomeworkSubmission  },
+
        
 
 

@@ -801,16 +801,25 @@ getStudentActiveSession: async () => {
     }).then(res => res.json()),
 
   /** جلب تفاصيل واجب معين عن طريق معرفه */
-  getById: (id) =>
-    fetch(`${API_BASE_URL}/Homeworks/${id}`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
+getById: async (id) => {
+  const res = await fetch(`${API_BASE_URL}/Homeworks/${id}`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) return { success: false, data: null };
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  return data;
+},
 
-  /** جلب قائمة التسليمات الخاصة بواجب معين */
-  getSubmissions: (id) =>
-    fetch(`${API_BASE_URL}/Homeworks/${id}/submissions`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
+getSubmissions: async (id) => {
+  const res = await fetch(`${API_BASE_URL}/Homeworks/${id}/submissions`, {
+    headers: getHeaders()
+  });
+  if (!res.ok) return { success: false, data: [] };
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  return data;
+},
 
   /** جلب تقرير الدرجات الخاص بواجب معين */
   getGradeReport: (id) =>

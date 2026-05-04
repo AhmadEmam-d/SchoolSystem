@@ -33,11 +33,17 @@ export function StudentHomeworkDetails() {
       setError(null);
       try {
         const result = await api.studentHomework.getById(id);
-        if (!result.ok || !result.data) { setError('Failed to load homework.'); return; }
+        if (!result.ok || !result.data) { 
+          setError('Failed to load homework.'); 
+          return; 
+        }
         setHomework(result.data);
         // Pre-fill if already submitted
         if (result.data.mySubmission?.content) {
           setSubmissionText(result.data.mySubmission.content);
+        }
+        if (result.data.mySubmission?.attachmentUrl) {
+          setAttachmentUrl(result.data.mySubmission.attachmentUrl);
         }
       } catch (err) {
         setError('An unexpected error occurred.');
@@ -50,7 +56,12 @@ export function StudentHomeworkDetails() {
   }, [id]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-  const normalizeStatus = (s) => s?.toLowerCase() ?? 'pending';
+  const normalizeStatus = (s) => {
+    if (!s) return 'pending';
+    const status = s.toLowerCase();
+    if (status === 'active') return 'pending';
+    return status;
+  };
 
   const getStatusBadge = (status) => {
     const s = normalizeStatus(status);
@@ -76,7 +87,7 @@ export function StudentHomeworkDetails() {
     return Math.ceil((new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24));
   };
 
-  // Parse instructions — API returns newline-separated string
+  // Parse instructions — API returns string
   const parseInstructions = (raw) => {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
@@ -105,8 +116,14 @@ export function StudentHomeworkDetails() {
     }
     setSubmitting(true);
     try {
-      const result = await api.studentHomework.submit(id, { submissionText, attachmentUrl });
-      if (!result.ok) { toast.error('Submission failed'); return; }
+      const result = await api.studentHomework.submit(id, { 
+        content: submissionText, 
+        attachmentUrl 
+      });
+      if (!result.ok) { 
+        toast.error(result.message || 'Submission failed'); 
+        return; 
+      }
       toast.success('Homework submitted successfully!');
       navigate('/student/homework');
     } catch { toast.error('Submission failed'); }
@@ -114,17 +131,27 @@ export function StudentHomeworkDetails() {
   };
 
   // ── Download / View ──────────────────────────────────────────────────────
-  const handleDownload = (file) => {
-    const a = document.createElement('a');
-    a.href = file.fileUrl;
-    a.download = file.fileName;
-    a.target = '_blank';
-    a.click();
-    toast.success(`Downloading ${file.fileName}...`);
+  const handleDownload = (material) => {
+    const baseUrl = 'https://localhost:7179';
+    const fileUrl = material.fileUrl.startsWith('http') 
+      ? material.fileUrl 
+      : `${baseUrl}${material.fileUrl}`;
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = material.fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Downloading ${material.fileName}...`);
   };
 
-  const handleView = (file) => {
-    window.open(file.fileUrl, '_blank');
+  const handleView = (material) => {
+    const baseUrl = 'https://localhost:7179';
+    const fileUrl = material.fileUrl.startsWith('http') 
+      ? material.fileUrl 
+      : `${baseUrl}${material.fileUrl}`;
+    window.open(fileUrl, '_blank');
   };
 
   // ── Loading / Error ──────────────────────────────────────────────────────
@@ -156,9 +183,10 @@ export function StudentHomeworkDetails() {
   const daysUntilDue = getDaysUntilDue(homework.dueDate);
   const isOverdue = homework.isOverdue ?? (daysUntilDue !== null && daysUntilDue < 0);
   const instructions = parseInstructions(homework.instructions);
-  const attachments = homework.attachments ?? [];
+  const materials = homework.materials ?? [];  // ✅ changed from attachments to materials
   const isPending = status === 'pending' || status === 'late';
   const mySubmission = homework.mySubmission;
+  const canSubmit = isPending && (!mySubmission || mySubmission.canResubmit !== false);
 
   return (
     <div className="space-y-6">
@@ -220,40 +248,40 @@ export function StudentHomeworkDetails() {
             </Card>
           )}
 
-          {/* Attachments */}
-          {attachments.length > 0 && (
+          {/* Materials (attachments from teacher) */}
+          {materials.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <FileText className="h-8 w-8 text-indigo-600" />
-                <h2 className="text-2xl font-bold text-gray-900">Attachments</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Materials</h2>
               </div>
               <div className="space-y-4">
-                {attachments.map((file, idx) => (
+                {materials.map((material, idx) => (
                   <div key={idx} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-5 bg-white border border-gray-200 rounded-2xl hover:shadow-lg transition-shadow gap-4">
                     <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                       <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
                         <FileText className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 truncate">{file.fileName}</h4>
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2 truncate">{material.fileName}</h4>
                         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                           <Badge variant="outline" className="text-xs font-medium">
-                            {file.fileType?.split('/')[1]?.toUpperCase() ?? 'FILE'}
+                            {material.fileType?.split('/')[1]?.toUpperCase() ?? 'FILE'}
                           </Badge>
-                          <span className="text-xs sm:text-sm text-gray-500">{file.sizeText}</span>
+                          <span className="text-xs sm:text-sm text-gray-500">{material.sizeText || formatFileSize(material.fileSize)}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
                       <Button variant="ghost" size="default"
                         className="flex-1 sm:flex-initial gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                        onClick={() => handleView(file)}>
+                        onClick={() => handleView(material)}>
                         <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="font-medium text-sm sm:text-base">View</span>
                       </Button>
                       <Button size="default"
                         className="flex-1 sm:flex-initial bg-indigo-600 hover:bg-indigo-700 gap-2 px-4 sm:px-8 rounded-full"
-                        onClick={() => handleDownload(file)}>
+                        onClick={() => handleDownload(material)}>
                         <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="font-medium text-sm sm:text-base">Download</span>
                       </Button>
@@ -265,7 +293,7 @@ export function StudentHomeworkDetails() {
           )}
 
           {/* My previous submission (read-only) */}
-          {mySubmission && !isPending && (
+          {mySubmission && !canSubmit && (
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -278,7 +306,7 @@ export function StudentHomeworkDetails() {
                   <p className="text-gray-700 whitespace-pre-wrap">{mySubmission.content}</p>
                 )}
                 {mySubmission.attachmentUrl && (
-                  <a href={mySubmission.attachmentUrl} target="_blank" rel="noreferrer"
+                  <a href={`https://localhost:7179${mySubmission.attachmentUrl}`} target="_blank" rel="noreferrer"
                     className="inline-flex items-center gap-2 text-indigo-600 hover:underline text-sm">
                     <FileText className="h-4 w-4" />View submitted file
                   </a>
@@ -288,12 +316,19 @@ export function StudentHomeworkDetails() {
                     Submitted: {new Date(mySubmission.submittedAt).toLocaleString()}
                   </p>
                 )}
+                {mySubmission.grade != null && (
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-100 text-green-800">
+                      Grade: {mySubmission.grade}/{homework.totalMarks}
+                    </Badge>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
 
           {/* Submission area */}
-          {isPending && (
+          {canSubmit && (
             <Card>
               <CardHeader><CardTitle>Your Submission</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -341,7 +376,7 @@ export function StudentHomeworkDetails() {
           )}
 
           {/* Teacher feedback */}
-          {(status === 'graded' || status === 'grading') && mySubmission?.feedback && (
+          {mySubmission?.feedback && (
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -433,4 +468,12 @@ export function StudentHomeworkDetails() {
       </div>
     </div>
   );
+}
+
+// Helper function for file size
+function formatFileSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }

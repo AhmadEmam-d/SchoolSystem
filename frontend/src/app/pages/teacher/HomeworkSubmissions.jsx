@@ -180,12 +180,13 @@ export function HomeworkSubmissions() {
                             <Download className="h-4 w-4" />
                           </Button>
                         )}
-                        <Button 
-                          className="bg-slate-900 hover:bg-black text-white rounded-lg h-8 px-4 text-xs font-bold"
-                          onClick={() => navigate(`/teacher/homework/grade/${submission.id}`)}
-                        >
-                          Grade Now
-                        </Button>
+                      <Button 
+  className="bg-slate-900 hover:bg-black text-white rounded-lg h-8 px-4 text-xs font-bold"
+onClick={() => navigate(`/teacher/homework/${id}/grade`)}
+
+>
+  Grade Now
+                      </Button>
                       </div>
                     </td>
                   </tr>
