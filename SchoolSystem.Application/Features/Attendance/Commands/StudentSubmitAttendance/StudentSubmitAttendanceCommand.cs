@@ -1,5 +1,4 @@
-﻿// Application/Features/Attendance/Commands/StudentSubmitAttendance/StudentSubmitAttendanceCommand.cs
-using MediatR;
+﻿using MediatR;
 using SchoolSystem.Application.Features.Attendance.DTOs;
 
 namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAttendance
@@ -7,6 +6,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
     public class StudentSubmitAttendanceCommand : IRequest<StudentSubmitAttendanceResponseDto>
     {
         public StudentSubmitAttendanceDto Dto { get; set; }
-        public Guid StudentId { get; set; }   // Extracted from JWT
+        public Guid StudentId { get; set; }   
     }
 }

@@ -1,5 +1,4 @@
-﻿// Application/Features/Attendance/Commands/SubmitAttendanceSession/SubmitAttendanceSessionCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Attendance.DTOs;
 using SchoolSystem.Domain.Entities;
@@ -33,7 +32,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
             if (session.IsCompleted)
                 throw new Exception("Session already completed");
 
-            // التحقق من طريقة الأرقام
             if (session.Method == (int)AttendanceMethod.NumberSelection)
             {
                 if (!request.Dto.SelectedNumber.HasValue)
@@ -43,7 +41,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
                     throw new Exception("Invalid number selected");
             }
 
-            // تسجيل الحضور لكل طالب
             foreach (var attendance in request.Dto.Attendances)
             {
                 var attendanceRecord = new SchoolSystem.Domain.Entities.Attendance
@@ -63,7 +60,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
                 await _attendanceRepo.AddAsync(attendanceRecord);
             }
 
-            // تحديث حالة الجلسة
             session.IsCompleted = true;
             session.CompletedAt = DateTime.UtcNow;
             await _sessionRepo.UpdateAsync(session);

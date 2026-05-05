@@ -158,14 +158,14 @@ namespace SchoolSystem.Application.Features.Attendance.DTOs
     public class StudentSubmitAttendanceDto
     {
         public Guid SessionId { get; set; }
-        public int? SelectedNumber { get; set; }  // Required for NumberSelection method only
+        public int? SelectedNumber { get; set; }  
         public string? Remarks { get; set; }
     }
 
     public class StudentSubmitAttendanceResponseDto
     {
         public bool Success { get; set; }
-        public string Status { get; set; }        // "Present" or error reason
+        public string Status { get; set; }     
         public string CheckInTime { get; set; }
         public string Message { get; set; }
     }

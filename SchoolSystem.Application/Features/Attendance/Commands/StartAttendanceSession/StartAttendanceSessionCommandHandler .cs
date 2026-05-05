@@ -1,5 +1,4 @@
-﻿// Application/Features/Attendance/Commands/StartAttendanceSession/StartAttendanceSessionCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using SchoolSystem.Application.Features.Attendance.DTOs;
@@ -63,31 +62,25 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
                 ExpiresAt = DateTime.UtcNow.AddMinutes(30)
             };
 
-            // حسب الطريقة المختارة
             if (request.Dto.Method == AttendanceMethod.QRCode)
             {
                 response.QrCodeBase64 = GenerateQRCode(sessionId.ToString());
             }
             else if (request.Dto.Method == AttendanceMethod.NumberSelection)
             {
-                var correctNum = request.Dto.CorrectNumber!.Value; // e.g. 7
+                var correctNum = request.Dto.CorrectNumber!.Value; 
                 var random = new Random();
                 var numbers = new List<int> { correctNum };
 
-                // Generate 2 unique wrong numbers
                 while (numbers.Count < 3)
                 {
-                    var num = random.Next(1, 101); // wider range looks better
+                    var num = random.Next(1, 101); 
                     if (!numbers.Contains(num))
                         numbers.Add(num);
                 }
 
-                // Shuffle so correct number isn't always first
                 response.RandomNumbers = numbers.OrderBy(_ => random.Next()).ToList();
             }
-
-            // حفظ الجلسة في قاعدة البيانات
-            // حفظ الجلسة في قاعدة البيانات
             var session = new AttendanceSession
             {
                 Oid = sessionId,
@@ -97,15 +90,13 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
                 StartTime = DateTime.UtcNow,
                 ExpiresAt = response.ExpiresAt,
                 CorrectNumber = request.Dto.Method == AttendanceMethod.NumberSelection
-                        ? request.Dto.CorrectNumber   // ✅ Teacher's chosen number
+                        ? request.Dto.CorrectNumber   
                         : null,
 
-                // ✅ FIX: save QR code so students can retrieve it
                 QrCode = request.Dto.Method == AttendanceMethod.QRCode
                     ? response.QrCodeBase64
                     : null,
 
-                // ✅ FIX: save all random numbers as JSON so students see all 3 options
                 RandomNumbersJson = request.Dto.Method == AttendanceMethod.NumberSelection
                     ? System.Text.Json.JsonSerializer.Serialize(response.RandomNumbers)
                     : null,

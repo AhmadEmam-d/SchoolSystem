@@ -1,5 +1,4 @@
-﻿// Application/Features/Attendance/Commands/StudentSubmitAttendance/StudentSubmitAttendanceCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Attendance.DTOs;
 using SchoolSystem.Domain.Entities;
@@ -29,7 +28,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             StudentSubmitAttendanceCommand request,
             CancellationToken cancellationToken)
         {
-            // 1. Load and validate session
             var session = await _sessionRepo
                 .GetAllQueryable()
                 .FirstOrDefaultAsync(s => s.Oid == request.Dto.SessionId, cancellationToken);
@@ -43,7 +41,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             if (DateTime.UtcNow > session.ExpiresAt)
                 throw new Exception("This attendance session has expired.");
 
-            // 2. Verify the student belongs to this class
             var student = await _studentRepo
                 .GetAllQueryable()
                 .FirstOrDefaultAsync(
@@ -53,7 +50,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             if (student == null)
                 throw new Exception("You are not enrolled in the class this session belongs to.");
 
-            // 3. Prevent duplicate submission
             var alreadySubmitted = await _attendanceRepo
                 .GetAllQueryable()
                 .AnyAsync(
@@ -65,7 +61,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             if (alreadySubmitted)
                 throw new Exception("You have already submitted attendance for this session.");
 
-            // 4. Method-specific validation
             var method = (AttendanceMethod)session.Method;
 
             AttendanceStatus attendanceStatus = AttendanceStatus.Present;
@@ -75,7 +70,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 if (request.Dto.SelectedNumber == null)
                     throw new Exception("You must provide the selected number for this session.");
 
-                // ✅ Compare against the ONE correct number the teacher chose
                 attendanceStatus = request.Dto.SelectedNumber == session.CorrectNumber
                     ? AttendanceStatus.Present
                     : AttendanceStatus.Absent;
@@ -84,7 +78,6 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             if (method == AttendanceMethod.Manual)
                 throw new Exception("Manual sessions are recorded by the teacher only.");
 
-            // 5. Record attendance
             var checkInTime = DateTime.UtcNow.TimeOfDay;
             var attendance = new SchoolSystem.Domain.Entities.Attendance
             {
@@ -92,7 +85,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 StudentOid = student.Oid,
                 ClassOid = session.ClassOid,
                 Date = DateTime.UtcNow.Date,
-                Status = attendanceStatus,  // ✅ Present or Absent
+                Status = attendanceStatus,
                 Remarks = request.Dto.Remarks ?? $"Self-submitted via {method}",
                 CheckInTime = checkInTime,
                 CreatedAt = DateTime.UtcNow
