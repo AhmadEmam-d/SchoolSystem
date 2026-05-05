@@ -68,16 +68,19 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             // 4. Method-specific validation
             var method = (AttendanceMethod)session.Method;
 
+            AttendanceStatus attendanceStatus = AttendanceStatus.Present;
+
             if (method == AttendanceMethod.NumberSelection)
             {
                 if (request.Dto.SelectedNumber == null)
                     throw new Exception("You must provide the selected number for this session.");
 
-                if (request.Dto.SelectedNumber != session.CorrectNumber)
-                    throw new Exception("Incorrect number selected. Please try again.");
+                // ✅ Compare against the ONE correct number the teacher chose
+                attendanceStatus = request.Dto.SelectedNumber == session.CorrectNumber
+                    ? AttendanceStatus.Present
+                    : AttendanceStatus.Absent;
             }
-            // QRCode: scanning provides the correct sessionId — no extra validation needed.
-            // Manual: students cannot self-submit for manual sessions.
+
             if (method == AttendanceMethod.Manual)
                 throw new Exception("Manual sessions are recorded by the teacher only.");
 
@@ -89,7 +92,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 StudentOid = student.Oid,
                 ClassOid = session.ClassOid,
                 Date = DateTime.UtcNow.Date,
-                Status = AttendanceStatus.Present,
+                Status = attendanceStatus,  // ✅ Present or Absent
                 Remarks = request.Dto.Remarks ?? $"Self-submitted via {method}",
                 CheckInTime = checkInTime,
                 CreatedAt = DateTime.UtcNow
@@ -100,9 +103,11 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
             return new StudentSubmitAttendanceResponseDto
             {
                 Success = true,
-                Status = "Present",
+                Status = attendanceStatus.ToString(),
                 CheckInTime = checkInTime.ToString(@"hh\:mm"),
-                Message = "Attendance recorded successfully."
+                Message = attendanceStatus == AttendanceStatus.Present
+                    ? "Attendance recorded successfully."
+                    : "Wrong number selected. Marked as Absent."
             };
         }
     }

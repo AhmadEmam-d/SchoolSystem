@@ -139,6 +139,7 @@ namespace SchoolSystem.Application.Features.Attendance.DTOs
         public Guid ClassOid { get; set; }
         public Guid LessonOid { get; set; }
         public AttendanceMethod Method { get; set; }
+        public int? CorrectNumber { get; set; }
     }
     public class SubmitAttendanceSessionDto
     {

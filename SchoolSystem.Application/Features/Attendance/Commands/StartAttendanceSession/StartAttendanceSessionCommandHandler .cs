@@ -70,15 +70,20 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
             }
             else if (request.Dto.Method == AttendanceMethod.NumberSelection)
             {
+                var correctNum = request.Dto.CorrectNumber!.Value; // e.g. 7
                 var random = new Random();
-                var numbers = new List<int>();
+                var numbers = new List<int> { correctNum };
+
+                // Generate 2 unique wrong numbers
                 while (numbers.Count < 3)
                 {
-                    var num = random.Next(1, 10);
+                    var num = random.Next(1, 101); // wider range looks better
                     if (!numbers.Contains(num))
                         numbers.Add(num);
                 }
-                response.RandomNumbers = numbers;
+
+                // Shuffle so correct number isn't always first
+                response.RandomNumbers = numbers.OrderBy(_ => random.Next()).ToList();
             }
 
             // حفظ الجلسة في قاعدة البيانات
@@ -92,8 +97,8 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
                 StartTime = DateTime.UtcNow,
                 ExpiresAt = response.ExpiresAt,
                 CorrectNumber = request.Dto.Method == AttendanceMethod.NumberSelection
-                    ? response.RandomNumbers?.First()
-                    : null,
+                        ? request.Dto.CorrectNumber   // ✅ Teacher's chosen number
+                        : null,
 
                 // ✅ FIX: save QR code so students can retrieve it
                 QrCode = request.Dto.Method == AttendanceMethod.QRCode
