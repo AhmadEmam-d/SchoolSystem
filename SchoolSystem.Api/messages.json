@@ -1266,6 +1266,124 @@
   "GradesFetchFailed": {
     "EN": "An error occurred while fetching grades",
     "AR": "حدث خطأ أثناء جلب الدرجات"
-  }
+  },
+  "NoFileProvided": {
+    "EN": "No file provided",
+    "AR": "لم يتم توفير ملف"
+  },
+  "FileUploadedSuccessfully": {
+    "EN": "File uploaded successfully",
+    "AR": "تم رفع الملف بنجاح"
+  },
+  "FileUploadFailed": {
+    "EN": "An error occurred while uploading the file",
+    "AR": "حدث خطأ أثناء رفع الملف"
+  },
+  "UnsupportedEntityType": {
+    "EN": "Unsupported entity type, valid types are: lesson, exam, homework",
+    "AR": "نوع الكيان غير مدعوم، الأنواع الصحيحة هي: درس، امتحان، واجب"
+  },
+  "NoFilesProvided": {
+    "EN": "No files provided",
+    "AR": "لم يتم توفير ملفات"
+  },
+  "FilesUploadedSuccessfully": {
+    "EN": "Files uploaded successfully",
+    "AR": "تم رفع الملفات بنجاح"
+  },
+  "FilesUploadFailed": {
+    "EN": "An error occurred while uploading the files",
+    "AR": "حدث خطأ أثناء رفع الملفات"
+  },
+  "FilesFetchedSuccessfully": {
+    "EN": "Files fetched successfully",
+    "AR": "تم جلب الملفات بنجاح"
+  },
+  "FilesFetchFailed": {
+    "EN": "An error occurred while fetching the files",
+    "AR": "حدث خطأ أثناء جلب الملفات"
+  },
+  "MaterialNotFound": {
+    "EN": "Material not found",
+    "AR": "المادة التعليمية غير موجودة"
+  },
+  "MaterialDeletedSuccessfully": {
+    "EN": "Material deleted successfully",
+    "AR": "تم حذف المادة التعليمية بنجاح"
+  },
+  "MaterialDeleteFailed": {
+    "EN": "An error occurred while deleting the material",
+    "AR": "حدث خطأ أثناء حذف المادة التعليمية"
+  },
+  "MySubjectsFetchedSuccessfully": {
+    "EN": "My subjects fetched successfully",
+    "AR": "تم جلب موادي بنجاح"
+  },
+  "MySubjectsFetchFailed": {
+    "EN": "An error occurred while fetching my subjects",
+    "AR": "حدث خطأ أثناء جلب موادي"
+  },
+  "SubjectDetailsFetchedSuccessfully": {
+    "EN": "Subject details fetched successfully",
+    "AR": "تم جلب تفاصيل المادة بنجاح"
+  },
+  "SubjectDetailsFetchFailed": {
+    "EN": "An error occurred while fetching subject details",
+    "AR": "حدث خطأ أثناء جلب تفاصيل المادة"
+  },
+  "ChildrenFetchedSuccessfully": {
+    "EN": "Children data fetched successfully",
+    "AR": "تم جلب بيانات الأبناء بنجاح"
+  },
+  "ChildrenFetchFailed": {
+    "EN": "An error occurred while fetching children data",
+    "AR": "حدث خطأ أثناء جلب بيانات الأبناء"
+  },
+  "TodayLessonsFetchedSuccessfully": {
+    "EN": "Today's lessons fetched successfully",
+    "AR": "تم جلب دروس اليوم بنجاح"
+  },
 
+  "UpcomingLessonsFetchedSuccessfully": {
+    "EN": "Upcoming lessons fetched successfully",
+    "AR": "تم جلب الدروس القادمة بنجاح"
+  },
+
+  "SubjectLessonsFetchedSuccessfully": {
+    "EN": "Subject lessons fetched successfully",
+    "AR": "تم جلب دروس المادة بنجاح"
+  },
+
+  "LessonsFetchFailed": {
+    "EN": "An error occurred while fetching lessons",
+    "AR": "حدث خطأ أثناء جلب الدروس"
+  },
+  "HomeworkDetailsFetchedSuccessfully": {
+    "EN": "Homework details fetched successfully",
+    "AR": "تم جلب تفاصيل الواجب بنجاح"
+  },
+  "HomeworkDetailsFetchFailed": {
+    "EN": "An error occurred while fetching homework details",
+    "AR": "حدث خطأ أثناء جلب تفاصيل الواجب"
+  },
+  "HomeworkSubmittedSuccessfully": {
+    "EN": "Homework submitted successfully",
+    "AR": "تم تسليم الواجب بنجاح"
+  },
+  "HomeworkSubmissionFailed": {
+    "EN": "An error occurred while submitting homework",
+    "AR": "حدث خطأ أثناء تسليم الواجب"
+  },
+  "InvalidFile": {
+    "EN": "Invalid file",
+    "AR": "الملف غير صالح"
+  },
+  "SubmissionFetchedSuccessfully": {
+    "EN": "Submission fetched successfully",
+    "AR": "تم جلب التسليم بنجاح"
+  },
+  "FetchFailed": {
+    "EN": "An error occurred while fetching data",
+    "AR": "حدث خطأ أثناء جلب البيانات"
+  }
 }

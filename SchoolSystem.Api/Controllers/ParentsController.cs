@@ -27,6 +27,7 @@ namespace SchoolSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    
     public class ParentsController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -185,17 +186,19 @@ namespace SchoolSystem.Api.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
-                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                    return Unauthorized();
                 }
 
                 var query = new GetParentDashboardQuery { ParentUserId = userId };
                 var dashboard = await _mediator.Send(query);
 
-                return Ok(new { success = true, data = dashboard });
+                return Ok(ApiResponseFactory.Success(dashboard, "ParentDashboardFetchedSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, error = ex.Message });
+                return BadRequest(ApiResponseFactory.Failure<object>(
+            "ParentDashboardFetchFailed", _messageService,
+            new List<string> { ex.Message }));
             }
         }
         [HttpGet("my-children")]
@@ -206,17 +209,19 @@ namespace SchoolSystem.Api.Controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                 {
-                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                    return Unauthorized();
                 }
 
                 var query = new GetMyChildrenQuery { ParentUserId = userId };
                 var result = await _mediator.Send(query);
 
-                return Ok(new { success = true, data = result });
+                return Ok(ApiResponseFactory.Success(result, "ChildrenFetchedSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, error = ex.Message });
+                return BadRequest(ApiResponseFactory.Failure<object>(
+            "ChildrenFetchFailed", _messageService,
+            new List<string> { ex.Message }));
             }
         }
         [HttpGet("Children-Attendance")]
