@@ -36,12 +36,16 @@ namespace SchoolSystem.Api.Controllers
         private readonly IMediator _mediator;
         private readonly IMessageService _messageService;
         private readonly IGenericRepository<AttendanceSession> _sessionRepo;
+        private readonly IGenericRepository<Student> _studentRepo;                          // ✅ add
+        private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
 
-        public AttendanceController(IMediator mediator, IMessageService messageService, IGenericRepository<AttendanceSession> sessionRepo)
+        public AttendanceController(IMediator mediator, IMessageService messageService, IGenericRepository<AttendanceSession> sessionRepo, IGenericRepository<Student> studentRepo, IGenericRepository<Domain.Entities.Attendance> attendanceRepo)
         {
             _mediator = mediator;
             _messageService = messageService;
             _sessionRepo = sessionRepo;
+            _studentRepo = studentRepo;
+            _attendanceRepo = attendanceRepo;
         }
 
         [HttpGet("today")]
@@ -209,8 +213,112 @@ namespace SchoolSystem.Api.Controllers
                 ));
             }
         }
-       
+        [HttpGet("sessions")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GetAllSessions([FromQuery] Guid? classOid)
+        {
+            try
+            {
+                var sessions = _sessionRepo
+                    .GetAllQueryable()
+                    .Cast<AttendanceSession>()
+                    .Where(s => !s.IsDeleted);
 
+                if (classOid.HasValue)
+                    sessions = sessions.Where(s => s.ClassOid == classOid.Value);
+
+                var result = await sessions
+                    .OrderByDescending(s => s.StartTime)
+                    .Select(s => new
+                    {
+                        sessionId = s.Oid,
+                        classOid = s.ClassOid,
+                        method = ((AttendanceMethod)s.Method).ToString(),
+                        startTime = s.StartTime,
+                        expiresAt = s.ExpiresAt,
+                        isCompleted = s.IsCompleted,
+                        completedAt = s.CompletedAt,
+                        isExpired = DateTime.UtcNow > s.ExpiresAt && !s.IsCompleted
+                    })
+                    .ToListAsync();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    total = result.Count,
+                    sessions = result
+                }, "SessionsFetchedSuccessfully", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SessionsFetchFailed", _messageService,
+                    new List<string> { ex.Message }));
+            }
+        }
+        [HttpGet("session/{sessionId:guid}")]
+        [Authorize(Roles = "Teacher,Admin")]
+        public async Task<IActionResult> GetSessionAttendance(Guid sessionId)
+        {
+            try
+            {
+                // 1. Load the session
+                var session = await _sessionRepo.GetByOidAsync(sessionId);
+                if (session == null)
+                    return NotFound(ApiResponseFactory.Failure<object>(
+                        "SessionNotFound", _messageService, null));
+
+                // 2. Get all students in the class
+                var students = await _studentRepo
+                    .GetAllQueryable()
+                    .Cast<Student>()
+                    .Where(s => s.ClassOid == session.ClassOid && !s.IsDeleted)
+                    .Select(s => new { s.Oid, s.User.FullName })
+                    .ToListAsync();
+
+                // 3. Get attendance records for this session's date and class
+                var records = await _attendanceRepo
+                    .GetAllQueryable()
+                    .Cast<Domain.Entities.Attendance>()
+                    .Where(a => a.ClassOid == session.ClassOid
+                             && a.Date.Date == session.StartTime.Date
+                             && !a.IsDeleted)
+                    .ToListAsync();
+
+                // 4. Merge — every student gets a row whether they attended or not
+                var result = students.Select(s =>
+                {
+                    var record = records.FirstOrDefault(r => r.StudentOid == s.Oid);
+                    return new
+                    {
+                        studentOid = s.Oid,
+                        studentName = s.FullName,
+                        status = record != null ? record.Status.ToString() : "NotRecorded",
+                        checkInTime = record?.CheckInTime?.ToString(@"hh\:mm"),
+                        remarks = record?.Remarks
+                    };
+                }).ToList();
+
+                return Ok(ApiResponseFactory.Success(new
+                {
+                    sessionId = session.Oid,
+                    classOid = session.ClassOid,
+                    date = session.StartTime.Date,
+                    method = ((AttendanceMethod)session.Method).ToString(),
+                    totalStudents = students.Count,
+                    presentCount = result.Count(r => r.status == "Present"),
+                    absentCount = result.Count(r => r.status == "Absent"),
+                    lateCount = result.Count(r => r.status == "Late"),
+                    notRecorded = result.Count(r => r.status == "NotRecorded"),
+                    students = result
+                }, "SessionAttendanceFetched", _messageService));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "SessionAttendanceFetchFailed", _messageService,
+                    new List<string> { ex.Message }));
+            }
+        }
         // في AttendanceController.cs أضف:
 
         [HttpPost("start-session")]
