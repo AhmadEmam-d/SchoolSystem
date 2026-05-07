@@ -1385,5 +1385,13 @@
   "FetchFailed": {
     "EN": "An error occurred while fetching data",
     "AR": "حدث خطأ أثناء جلب البيانات"
+  },
+  "TeacherAssignedSuccessfully": {
+    "EN": "Teacher assigned successfully",
+    "AR": "تم تعيين المدرس بنجاح"
+  },
+  "TeacherAssignFailed": {
+    "EN": "Failed to assign teacher",
+    "AR": "فشل في تعيين المدرس"
   }
 }
