@@ -51,12 +51,10 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 throw new Exception("You are not enrolled in the class this session belongs to.");
 
             var alreadySubmitted = await _attendanceRepo
-                .GetAllQueryable()
-                .AnyAsync(
-                    a => a.StudentOid == student.Oid
-                      && a.Date.Date == DateTime.UtcNow.Date
-                      && a.ClassOid == session.ClassOid,
-                    cancellationToken);
+                 .GetAllQueryable()
+                 .AnyAsync(
+                            a => a.StudentOid == student.Oid && a.SessionOid == session.Oid,
+                            cancellationToken);
 
             if (alreadySubmitted)
                 throw new Exception("You have already submitted attendance for this session.");
@@ -84,6 +82,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 Oid = Guid.NewGuid(),
                 StudentOid = student.Oid,
                 ClassOid = session.ClassOid,
+                SessionOid = session.Oid,  // Add this line
                 Date = DateTime.UtcNow.Date,
                 Status = attendanceStatus,
                 Remarks = request.Dto.Remarks ?? $"Self-submitted via {method}",

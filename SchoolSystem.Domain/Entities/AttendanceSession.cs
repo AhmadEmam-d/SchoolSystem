@@ -16,6 +16,8 @@ namespace SchoolSystem.Domain.Entities
         public int? CorrectNumber { get; set; }
         public string? QrCode { get; set; }
         public string? RandomNumbersJson { get; set; }
+        public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+
 
     }
 }

@@ -245,7 +245,12 @@ namespace SchoolSystem.Persistence.Contexts
                       .WithMany(s => s.AttendanceRecords)
                       .HasForeignKey(e => e.StudentOid)
                       .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(a => a.Session)
+                       .WithMany(s => s.Attendances)  // You may need to add this collection to AttendanceSession
+                       .HasForeignKey(a => a.SessionOid)
+                       .OnDelete(DeleteBehavior.Restrict);
 
+                entity.HasIndex(a => a.SessionOid);
                 entity.HasOne(e => e.Class)
                       .WithMany()
                       .HasForeignKey(e => e.ClassOid)

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SchoolSystem.Persistence.Contexts;
 
@@ -11,9 +12,11 @@ using SchoolSystem.Persistence.Contexts;
 namespace SchoolSystem.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507181854_AddSessionOidToAttendance")]
+    partial class AddSessionOidToAttendance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -469,9 +472,6 @@ namespace SchoolSystem.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<Guid?>("SessionOid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -486,8 +486,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.HasIndex("ClassOid");
 
                     b.HasIndex("Date");
-
-                    b.HasIndex("SessionOid");
 
                     b.HasIndex("Status");
 
@@ -2248,11 +2246,6 @@ namespace SchoolSystem.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SchoolSystem.Domain.Entities.AttendanceSession", "Session")
-                        .WithMany("Attendances")
-                        .HasForeignKey("SessionOid")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("SchoolSystem.Domain.Entities.Student", "Student")
                         .WithMany("AttendanceRecords")
                         .HasForeignKey("StudentOid")
@@ -2260,8 +2253,6 @@ namespace SchoolSystem.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
-
-                    b.Navigation("Session");
 
                     b.Navigation("Student");
                 });
@@ -2653,11 +2644,6 @@ namespace SchoolSystem.Persistence.Migrations
                     b.Navigation("Results");
 
                     b.Navigation("Submissions");
-                });
-
-            modelBuilder.Entity("SchoolSystem.Domain.Entities.AttendanceSession", b =>
-                {
-                    b.Navigation("Attendances");
                 });
 
             modelBuilder.Entity("SchoolSystem.Domain.Entities.Class", b =>

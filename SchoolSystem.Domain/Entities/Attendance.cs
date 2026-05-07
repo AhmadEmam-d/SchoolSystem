@@ -11,7 +11,8 @@ namespace SchoolSystem.Domain.Entities
 
         public Guid ClassOid { get; set; }
         public Class Class { get; set; }
-
+        public Guid? SessionOid { get; set; }  // Track which session this attendance belongs to
+        public virtual AttendanceSession? Session { get; set; }
         public DateTime Date { get; set; }
         public AttendanceStatus Status { get; set; }
         public string? Remarks { get; set; }
