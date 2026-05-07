@@ -87,6 +87,23 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
 
             foreach (var subject in subjects)
             {
+                //var teacherSubject = await _teacherSubjectRepo.GetAllQueryable()
+                //    .Where(ts => ts.SubjectOid == subject.Oid)
+                //    .Include(ts => ts.Teacher)
+                //        .ThenInclude(t => t.User)
+                //    .FirstOrDefaultAsync(cancellationToken);
+
+                //var teacherName = teacherSubject?.Teacher?.User?.FullName;
+                var teacherSubject = await _lessonRepo.GetAllQueryable()
+                    .Where(l => l.SubjectOid == subject.Oid
+                             && l.ClassOid == student.ClassOid
+                             && l.TeacherOid != null
+                             && !l.IsDeleted)
+                    .Include(l => l.Teacher)
+                        .ThenInclude(t => t.User)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var teacherName = teacherSubject?.Teacher?.User?.FullName;
                 // Get lessons
                 var lessons = await _lessonRepo.GetAllQueryable()
                     .Where(l => !l.IsDeleted && l.SubjectOid == subject.Oid && l.ClassOid == student.ClassOid)
@@ -117,6 +134,7 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
                 {
                     SubjectId = subject.Oid,
                     SubjectName = subject.Name,
+                    TeacherName = teacherName,
                     LessonsCount = lessons.Count,
                     HomeworksCount = homeworks.Count,
                     ExamsCount = exams.Count,
@@ -147,7 +165,7 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
                         Name = e.Name,
                         Date = e.Date,
                         MaxScore = e.MaxScore,
-                        Status = GetExamStatus(e.Date),
+                        Status = examResults.ContainsKey(e.Oid) ? "Graded" : GetExamStatus(e.Date),  // ✅
                         MyScore = examResults.ContainsKey(e.Oid) ? examResults[e.Oid].Score : null
                     }).ToList()
                 });
@@ -186,11 +204,17 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
                     .Where(s => !s.IsDeleted && classIds.Contains(s.ClassOid))
                     .Include(s => s.User)
                     .ToListAsync(cancellationToken);
+                var teacher = await _teacherRepo.GetAllQueryable()
+                    .Where(t => t.Oid == teacherId)
+                    .Include(t => t.User)
+                    .FirstOrDefaultAsync(cancellationToken);
 
+                var teacherName = teacher?.User?.FullName;
                 result.Add(new MySubjectDto
                 {
                     SubjectId = subject.Oid,
                     SubjectName = subject.Name,
+                    TeacherName = teacherName,
                     Students = students.Select(s => new StudentInSubjectDto
                     {
                         StudentId = s.Oid,

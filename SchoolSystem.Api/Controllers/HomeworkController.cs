@@ -160,12 +160,24 @@ namespace SchoolSystem.API.Controllers
         {
             try
             {
-                // Verify homework exists
                 var homework = await _mediator.Send(new GetHomeworkByIdQuery(id));
                 if (homework == null)
                     return NotFound(ApiResponseFactory.Failure<object>(
                         "HomeworkNotFound", _messageService,
                         new List<string> { "Homework not found" }
+                    ));
+
+                // ✅ ADD — validate score does not exceed totalMarks
+                if (dto.Grade < 0)
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "InvalidGrade", _messageService,
+                        new List<string> { "Grade cannot be negative." }
+                    ));
+
+                if (dto.Grade > homework.TotalMarks)
+                    return BadRequest(ApiResponseFactory.Failure<object>(
+                        "InvalidGrade", _messageService,
+                        new List<string> { $"Grade {dto.Grade} cannot exceed total marks ({homework.TotalMarks})." }
                     ));
 
                 var command = new GradeSubmissionCommand
@@ -176,7 +188,6 @@ namespace SchoolSystem.API.Controllers
                 };
 
                 var result = await _mediator.Send(command);
-
                 return Ok(ApiResponseFactory.Success(result, "GradeSavedSuccessfully", _messageService));
             }
             catch (Exception ex)
