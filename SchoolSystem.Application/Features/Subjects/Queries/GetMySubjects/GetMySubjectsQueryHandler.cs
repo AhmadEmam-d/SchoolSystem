@@ -87,23 +87,14 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
 
             foreach (var subject in subjects)
             {
-                //var teacherSubject = await _teacherSubjectRepo.GetAllQueryable()
-                //    .Where(ts => ts.SubjectOid == subject.Oid)
-                //    .Include(ts => ts.Teacher)
-                //        .ThenInclude(t => t.User)
-                //    .FirstOrDefaultAsync(cancellationToken);
-
-                //var teacherName = teacherSubject?.Teacher?.User?.FullName;
-                var teacherSubject = await _lessonRepo.GetAllQueryable()
-                    .Where(l => l.SubjectOid == subject.Oid
-                             && l.ClassOid == student.ClassOid
-                             && l.TeacherOid != null
-                             && !l.IsDeleted)
-                    .Include(l => l.Teacher)
+                var teacherSubject = await _teacherSubjectRepo.GetAllQueryable()
+                    .Where(ts => ts.SubjectOid == subject.Oid)
+                    .Include(ts => ts.Teacher)
                         .ThenInclude(t => t.User)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 var teacherName = teacherSubject?.Teacher?.User?.FullName;
+
                 // Get lessons
                 var lessons = await _lessonRepo.GetAllQueryable()
                     .Where(l => !l.IsDeleted && l.SubjectOid == subject.Oid && l.ClassOid == student.ClassOid)
