@@ -277,12 +277,10 @@ namespace SchoolSystem.Api.Controllers
 
                 // 3. Get attendance records for this session's date and class
                 var records = await _attendanceRepo
-                    .GetAllQueryable()
-                    .Cast<Domain.Entities.Attendance>()
-                    .Where(a => a.ClassOid == session.ClassOid
-                             && a.Date.Date == session.StartTime.Date
-                             && !a.IsDeleted)
-                    .ToListAsync();
+                        .GetAllQueryable()
+                        .Cast<Domain.Entities.Attendance>()
+                        .Where(a => a.SessionOid == sessionId && !a.IsDeleted)
+                        .ToListAsync();
 
                 // 4. Merge — every student gets a row whether they attended or not
                 var result = students.Select(s =>
