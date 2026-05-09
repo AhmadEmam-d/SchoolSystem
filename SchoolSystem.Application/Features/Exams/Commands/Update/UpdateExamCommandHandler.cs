@@ -27,17 +27,10 @@ namespace SchoolSystem.Application.Features.Exams.Commands.Update
             if (exam == null)
                 throw new Exception("Exam not found");
 
-            if (!string.IsNullOrEmpty(request.Dto.Name))
-                exam.Name = request.Dto.Name;
-
-            if (!string.IsNullOrEmpty(request.Dto.Description))
-                exam.Description = request.Dto.Description;
+            _mapper.Map(request.Dto, exam);
 
             if (!string.IsNullOrEmpty(request.Dto.Type))
                 exam.Type = (ExamType)Enum.Parse(typeof(ExamType), request.Dto.Type);
-
-            if (request.Dto.Date.HasValue)
-                exam.Date = request.Dto.Date.Value;
 
             if (!string.IsNullOrEmpty(request.Dto.StartTime))
                 exam.StartTime = TimeSpan.Parse(request.Dto.StartTime);
@@ -45,20 +38,8 @@ namespace SchoolSystem.Application.Features.Exams.Commands.Update
             if (!string.IsNullOrEmpty(request.Dto.Duration))
                 exam.Duration = TimeSpan.Parse(request.Dto.Duration);
 
-            if (request.Dto.MaxScore.HasValue)
-                exam.MaxScore = request.Dto.MaxScore.Value;
-
-            if (request.Dto.PassingScore.HasValue)
-                exam.PassingScore = request.Dto.PassingScore.Value;
-
             if (!string.IsNullOrEmpty(request.Dto.Status))
                 exam.Status = (ExamStatus)Enum.Parse(typeof(ExamStatus), request.Dto.Status);
-
-            if (!string.IsNullOrEmpty(request.Dto.Room))
-                exam.Room = request.Dto.Room;
-
-            if (!string.IsNullOrEmpty(request.Dto.Instructions))
-                exam.Instructions = request.Dto.Instructions;
 
             await _examRepo.UpdateAsync(exam);
             return true;

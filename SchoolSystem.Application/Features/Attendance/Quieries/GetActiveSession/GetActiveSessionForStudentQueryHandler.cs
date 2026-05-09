@@ -63,7 +63,7 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetActiveSession
                     ? session.QrCode
                     : null,
 
-                // ✅ FIX: deserialize the stored numbers back into a list
+                // deserialize the stored numbers back into a list
                 RandomNumbers = session.Method == (int)AttendanceMethod.NumberSelection
                         && session.RandomNumbersJson != null
                     ? System.Text.Json.JsonSerializer.Deserialize<List<int>>(session.RandomNumbersJson)

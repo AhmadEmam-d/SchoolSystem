@@ -1393,5 +1393,29 @@
   "TeacherAssignFailed": {
     "EN": "Failed to assign teacher",
     "AR": "فشل في تعيين المدرس"
+  },
+  "SessionStartedSuccessfully": {
+    "EN": "Session started successfully",
+    "AR": "تم بدء الجلسة بنجاح"
+  },
+  "SessionStartFailed": {
+    "EN": "An error occurred while starting the session",
+    "AR": "حدث خطأ أثناء بدء الجلسة"
+  },
+  "AttendanceSubmittedSuccessfully": {
+    "EN": "Attendance submitted successfully",
+    "AR": "تم تسجيل الحضور بنجاح"
+  },
+  "AttendanceSubmitFailed": {
+    "EN": "An error occurred while submitting attendance",
+    "AR": "حدث خطأ أثناء تسجيل الحضور"
+  },
+  "ActiveSessionFetched": {
+    "EN": "Active session fetched successfully",
+    "AR": "تم جلب الجلسة النشطة بنجاح"
+  },
+  "ActiveSessionFetchFailed": {
+    "EN": "An error occurred while fetching the active session",
+    "AR": "حدث خطأ أثناء جلب الجلسة النشطة"
   }
 }

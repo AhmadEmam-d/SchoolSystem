@@ -1,4 +1,5 @@
 ﻿// Application/Features/HelpSupport/Commands/CreateTicket/CreateTicketCommandHandler.cs
+using AutoMapper;
 using MediatR;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Enums;
@@ -9,25 +10,21 @@ namespace SchoolSystem.Application.Features.HelpSupport.Commands.CreateTicket
     public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, Guid>
     {
         private readonly IGenericRepository<SupportTicket> _ticketRepo;
+        private readonly IMapper _mapper;
 
-        public CreateTicketCommandHandler(IGenericRepository<SupportTicket> ticketRepo)
+        public CreateTicketCommandHandler(IGenericRepository<SupportTicket> ticketRepo, IMapper mapper)
         {
             _ticketRepo = ticketRepo;
+            _mapper = mapper;
         }
 
         public async Task<Guid> Handle(CreateTicketCommand request, CancellationToken cancellationToken)
         {
-            var ticket = new SupportTicket
-            {
-                Oid = Guid.NewGuid(),
-                Subject = request.Ticket.Subject,
-                Category = request.Ticket.Category,
-                Message = request.Ticket.Message,
-                UserId = request.UserId,
-                UserRole = request.UserRole,
-                Status = TicketStatus.Open,
-                CreatedAt = DateTime.UtcNow
-            };
+            var ticket = _mapper.Map<SupportTicket>(request.Ticket);
+
+            ticket.UserId = request.UserId;
+            ticket.UserRole = request.UserRole;
+            ticket.Status = TicketStatus.Open;
 
             await _ticketRepo.AddAsync(ticket);
             return ticket.Oid;

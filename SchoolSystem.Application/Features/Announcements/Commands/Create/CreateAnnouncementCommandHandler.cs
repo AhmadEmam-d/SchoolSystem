@@ -29,20 +29,14 @@ namespace SchoolSystem.Application.Features.Announcements.Commands.Create
 
         public async Task<Guid> Handle(CreateAnnouncementCommand request, CancellationToken cancellationToken)
         {
-            var announcement = new Announcement
-            {
-                Title = request.Dto.Title,
-                ContentAr = request.Dto.ContentAr,
-                ContentEn = request.Dto.ContentEn,
-                Target = (AnnouncementTarget)Enum.Parse(typeof(AnnouncementTarget), request.Dto.Target),
-                Priority = (AnnouncementPriority)Enum.Parse(typeof(AnnouncementPriority), request.Dto.Priority),
-                PublishDate = request.Dto.PublishDate ?? DateTime.UtcNow,
-                ExpiryDate = request.Dto.ExpiryDate,
-                AuthorName = _currentUser?.Name ?? "System Administrator",
-                IsPublished = true,
-                IsActive = true,
-                ViewCount = 0
-            };
+            var announcement = _mapper.Map<Announcement>(request.Dto);
+
+            announcement.Target = (AnnouncementTarget)Enum.Parse(typeof(AnnouncementTarget), request.Dto.Target);
+            announcement.Priority = (AnnouncementPriority)Enum.Parse(typeof(AnnouncementPriority), request.Dto.Priority);
+            announcement.AuthorName = _currentUser?.Name ?? "System Administrator";
+            announcement.IsPublished = true;
+            announcement.IsActive = true;
+            announcement.ViewCount = 0;
 
             await _announcementRepo.AddAsync(announcement);
             return announcement.Oid;

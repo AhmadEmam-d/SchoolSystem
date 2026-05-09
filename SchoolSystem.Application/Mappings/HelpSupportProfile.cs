@@ -13,6 +13,11 @@ namespace SchoolSystem.Application.Mapping
             CreateMap<KnowledgeBaseArticle, KnowledgeBaseDto>();
             CreateMap<SupportTicket, TicketResponseDto>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+            CreateMap<CreateTicketDto, SupportTicket>()
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.UserRole, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
         }
     }
 }

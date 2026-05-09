@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace SchoolSystem.Application.Features.Classes.Commands.Delete
 {
     public class DeleteClassCommandHandler
-        : IRequestHandler<DeleteClassCommand>  // بدون Unit
+        : IRequestHandler<DeleteClassCommand>  
     {
         private readonly IGenericRepository<Class> _repo;
 
@@ -24,7 +24,6 @@ namespace SchoolSystem.Application.Features.Classes.Commands.Delete
                 throw new Exception("Class not found");
 
             await _repo.DeleteAsync(entity.Oid);
-            // لا ترجع Unit.Value - احذف هذه السطر
         }
     }
 }

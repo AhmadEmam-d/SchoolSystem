@@ -55,13 +55,7 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetToday
             var recentAbsentees = attendances
                 .Where(a => a.Status == AttendanceStatus.Absent)
                 .Take(5)
-                .Select(a => new StudentAttendanceDto
-                {
-                    StudentOid = a.StudentOid,
-                    StudentName = a.Student.FullName,
-                    ClassName = a.Student.Class?.Name ?? "N/A",
-                    Status = a.Status.ToString()
-                })
+                .Select(a => _mapper.Map<StudentAttendanceDto>(a))
                 .ToList();
 
             return new TodayAttendanceDto

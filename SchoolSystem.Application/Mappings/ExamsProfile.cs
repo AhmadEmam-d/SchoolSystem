@@ -24,9 +24,13 @@ namespace SchoolSystem.Application.Mappings
 
             // Update mapping
             CreateMap<UpdateExamDto, Exam>()
-                .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+               .ForMember(dest => dest.Type, opt => opt.Ignore())
+               .ForMember(dest => dest.StartTime, opt => opt.Ignore())
+               .ForMember(dest => dest.Duration, opt => opt.Ignore())
+               .ForMember(dest => dest.Status, opt => opt.Ignore())
+               .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
+               .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+               .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
             // Response mapping
             CreateMap<Exam, ExamDto>()

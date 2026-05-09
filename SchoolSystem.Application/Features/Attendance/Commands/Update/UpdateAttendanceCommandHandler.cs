@@ -29,8 +29,11 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.Update
             if (attendance == null)
                 throw new Exception("Attendance record not found");
 
-            attendance.Status = (AttendanceStatus)Enum.Parse(typeof(AttendanceStatus), request.Dto.Status);
-            attendance.Remarks = request.Dto.Remarks;
+            _mapper.Map(request.Dto, attendance);
+
+            if (!Enum.TryParse<AttendanceStatus>(request.Dto.Status, out var status))
+                throw new ArgumentException($"Invalid status: {request.Dto.Status}");
+            attendance.Status = status;
 
             if (!string.IsNullOrEmpty(request.Dto.CheckInTime))
                 attendance.CheckInTime = TimeSpan.Parse(request.Dto.CheckInTime);
