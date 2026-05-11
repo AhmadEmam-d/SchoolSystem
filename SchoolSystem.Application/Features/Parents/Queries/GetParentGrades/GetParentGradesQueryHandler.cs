@@ -126,7 +126,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
 
                 var gpa = Math.Round(overallAvg / 25, 2);
 
-]                string letterGrade = GetLetterGrade(overallAvg);
+                string letterGrade = GetLetterGrade(overallAvg);
 
                 var gradeTrend = examResults
                     .Where(er => er.Percentage.HasValue)

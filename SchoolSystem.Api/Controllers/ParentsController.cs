@@ -12,6 +12,7 @@ using SchoolSystem.Application.Features.Parents.DTOs.Update;
 using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Features.Parents.Queries.GetAll;
 using SchoolSystem.Application.Features.Parents.Queries.GetById;
+using SchoolSystem.Application.Features.Parents.Queries.GetChildSchedule;
 using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard;
@@ -291,6 +292,38 @@ namespace SchoolSystem.Api.Controllers
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "GradesFetchFailed", _messageService,
+                    new List<string> { ex.Message }));
+            }
+        }
+        [HttpGet("{childId}/schedule")]
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> GetChildSchedule(Guid childId)
+        {
+            try
+            {
+                var parentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (parentIdClaim == null || !Guid.TryParse(parentIdClaim.Value, out var parentId))
+                {
+                    return Unauthorized(ApiResponseFactory.Failure<object>(
+                        "Unauthorized", _messageService,
+                        new List<string> { "Invalid user identifier" }));
+                }
+
+                var query = new GetChildScheduleQuery(childId, parentId.ToString());
+                var result = await _mediator.Send(query);
+
+                return Ok(ApiResponseFactory.Success(result, "ScheduleFetchedSuccessfully", _messageService));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponseFactory.Failure<object>(
+                    "UnauthorizedAccess", _messageService,
+                    new List<string> { ex.Message }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseFactory.Failure<object>(
+                    "ScheduleFetchFailed", _messageService,
                     new List<string> { ex.Message }));
             }
         }

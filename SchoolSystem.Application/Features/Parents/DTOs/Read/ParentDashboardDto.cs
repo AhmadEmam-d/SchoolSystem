@@ -116,4 +116,43 @@ namespace SchoolSystem.Application.Features.Parents.DTOs
         public decimal? Grade { get; set; }
         public decimal TotalMarks { get; set; }
     }
+    public class ChildScheduleDto
+    {
+        public Guid ChildId { get; set; }
+        public string ChildName { get; set; }
+        public List<ScheduleDayDto> WeeklySchedule { get; set; }
+        public List<UpcomingClassDto> TodayClasses { get; set; }
+        public List<UpcomingClassDto> TomorrowClasses { get; set; }
+    }
+
+    public class ScheduleDayDto
+    {
+        public string DayName { get; set; }  // Monday, Tuesday, etc.
+        public string DayNameAr { get; set; } // الإثنين, الثلاثاء, etc.
+        public List<ClassScheduleDto> Classes { get; set; }
+    }
+
+    public class ClassScheduleDto
+    {
+        public string SubjectName { get; set; }
+        public string SubjectNameAr { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string RoomNumber { get; set; }
+        public string TeacherName { get; set; }
+        public string Period { get; set; } // 1st Period, 2nd Period, etc.
+    }
+
+    public class UpcomingClassDto
+    {
+        public Guid SubjectId { get; set; }
+        public string SubjectName { get; set; }
+        public string SubjectNameAr { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string RoomNumber { get; set; }
+        public string TeacherName { get; set; }
+        public DateTime ClassDate { get; set; }
+        public string Status { get; set; } // Upcoming, In Progress, Completed
+    }
 }
