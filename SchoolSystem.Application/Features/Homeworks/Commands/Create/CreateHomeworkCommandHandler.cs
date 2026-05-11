@@ -11,13 +11,13 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Create
     {
         private readonly IGenericRepository<Homework> _homeworkRepo;
         private readonly IGenericRepository<HomeworkAttachment> _attachmentRepo;
-        private readonly IGenericRepository<Teacher> _teacherRepo;  // ✅ أضف هذا
+        private readonly IGenericRepository<Teacher> _teacherRepo;
         private readonly IMapper _mapper;
 
         public CreateHomeworkCommandHandler(
             IGenericRepository<Homework> homeworkRepo,
             IGenericRepository<HomeworkAttachment> attachmentRepo,
-            IGenericRepository<Teacher> teacherRepo,  // ✅ أضف هذا
+            IGenericRepository<Teacher> teacherRepo,
             IMapper mapper)
         {
             _homeworkRepo = homeworkRepo;
@@ -28,7 +28,7 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Create
 
         public async Task<Guid> Handle(CreateHomeworkCommand request, CancellationToken cancellationToken)
         {
-            // ✅ الحصول على Teacher من UserId
+           
             var teacher = await _teacherRepo
                 .GetAllQueryable()
                 .FirstOrDefaultAsync(t => t.UserId == request.TeacherId, cancellationToken);
@@ -38,7 +38,7 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Create
 
             var homework = _mapper.Map<Homework>(request.Dto);
             homework.Oid = Guid.NewGuid();
-            homework.TeacherOid = teacher.Oid;  // ✅ استخدم TeacherOid من جدول Teachers
+            homework.TeacherOid = teacher.Oid; 
             homework.AssignedDate = DateTime.UtcNow;
             homework.Status = HomeworkStatus.Active;
             homework.CreatedAt = DateTime.UtcNow;

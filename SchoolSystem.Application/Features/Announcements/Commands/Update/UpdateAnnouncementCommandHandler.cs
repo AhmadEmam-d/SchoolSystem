@@ -27,26 +27,13 @@ namespace SchoolSystem.Application.Features.Announcements.Commands.Update
             if (announcement == null)
                 throw new Exception("Announcement not found");
 
-            if (!string.IsNullOrEmpty(request.Dto.Title))
-                announcement.Title = request.Dto.Title;
-
-            if (!string.IsNullOrEmpty(request.Dto.ContentAr))
-                announcement.ContentAr = request.Dto.ContentAr;
-
-            if (!string.IsNullOrEmpty(request.Dto.ContentEn))
-                announcement.ContentEn = request.Dto.ContentEn;
+            _mapper.Map(request.Dto, announcement);
 
             if (!string.IsNullOrEmpty(request.Dto.Target))
                 announcement.Target = (AnnouncementTarget)Enum.Parse(typeof(AnnouncementTarget), request.Dto.Target);
 
             if (!string.IsNullOrEmpty(request.Dto.Priority))
                 announcement.Priority = (AnnouncementPriority)Enum.Parse(typeof(AnnouncementPriority), request.Dto.Priority);
-
-            if (request.Dto.PublishDate.HasValue)
-                announcement.PublishDate = request.Dto.PublishDate.Value;
-
-            if (request.Dto.ExpiryDate.HasValue)
-                announcement.ExpiryDate = request.Dto.ExpiryDate.Value;
 
             if (request.Dto.IsActive.HasValue)
                 announcement.IsActive = request.Dto.IsActive.Value;

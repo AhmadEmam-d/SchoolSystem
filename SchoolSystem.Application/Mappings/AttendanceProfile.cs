@@ -24,6 +24,11 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.CheckInTime, opt => opt.Ignore())
                 .ForMember(dest => dest.CheckOutTime, opt => opt.Ignore());
+
+            CreateMap<SchoolSystem.Domain.Entities.Attendance, StudentAttendanceDto>()
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName))
+                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Student.Class != null ? src.Student.Class.Name : "N/A"))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
         }
     }
 }

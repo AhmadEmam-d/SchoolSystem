@@ -15,20 +15,20 @@ namespace SchoolSystem.Application.Features.Exams.Commands.CreateResult
     public class CreateExamResultCommandHandler : IRequestHandler<CreateExamResultCommand, Guid>
     {
         private readonly IGenericRepository<ExamResult> _examResultRepo;
-        private readonly IGenericRepository<ExamSubmission> _submissionRepo;  // ✅ add
+        private readonly IGenericRepository<ExamSubmission> _submissionRepo;
         private readonly IGenericRepository<Exam> _examRepo;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IMapper _mapper;
 
         public CreateExamResultCommandHandler(
             IGenericRepository<ExamResult> examResultRepo,
-            IGenericRepository<ExamSubmission> submissionRepo,              // ✅ add
+            IGenericRepository<ExamSubmission> submissionRepo,
             IGenericRepository<Exam> examRepo,
             IGenericRepository<Student> studentRepo,
             IMapper mapper)
         {
             _examResultRepo = examResultRepo;
-            _submissionRepo = submissionRepo;                              // ✅ add
+            _submissionRepo = submissionRepo;
             _examRepo = examRepo;
             _studentRepo = studentRepo;
             _mapper = mapper;
@@ -63,7 +63,7 @@ namespace SchoolSystem.Application.Features.Exams.Commands.CreateResult
 
             await _examResultRepo.AddAsync(result);
 
-            // ✅ UPDATE the submission so isGraded/score/status reflect correctly
+            // UPDATE the submission so isGraded/score/status reflect correctly
             var submission = await _submissionRepo
                 .GetAllQueryable()
                 .Cast<ExamSubmission>()

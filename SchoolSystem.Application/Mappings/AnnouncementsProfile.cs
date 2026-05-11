@@ -15,11 +15,16 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => GetTimeAgo(src.PublishDate)));
 
             CreateMap<CreateAnnouncementDto, Announcement>()
+                .ForMember(dest => dest.Target, opt => opt.Ignore())
+                .ForMember(dest => dest.Priority, opt => opt.Ignore())
                 .ForMember(dest => dest.PublishDate,
-                    opt => opt.MapFrom(src => src.PublishDate ?? DateTime.UtcNow))
+                 opt => opt.MapFrom(src => src.PublishDate ?? DateTime.UtcNow))
                 .ForMember(dest => dest.CreatedAt,
-                    opt => opt.MapFrom(src => DateTime.UtcNow));
-            CreateMap<UpdateAnnouncementDto, Announcement>();
+                 opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<UpdateAnnouncementDto, Announcement>()
+                .ForMember(dest => dest.Target, opt => opt.Ignore())
+                .ForMember(dest => dest.Priority, opt => opt.Ignore())
+                .ForMember(dest => dest.IsActive, opt => opt.Ignore());
         }
 
         private static string GetTimeAgo(DateTime dateTime)
