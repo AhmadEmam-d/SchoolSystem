@@ -27,7 +27,6 @@ namespace SchoolSystem.Application.Features.Exams.Commands.Delete
             if (exam is null)
                 return false;
 
-            // Delete related ExamResults
             var results = await _examResultRepo
                 .GetAllQueryable()
                 .Where(r => r.ExamOid == request.Oid)
@@ -36,7 +35,6 @@ namespace SchoolSystem.Application.Features.Exams.Commands.Delete
             foreach (var result in results)
                 await _examResultRepo.DeleteAsync(result.Oid);
 
-            // Delete related Materials
             var materials = await _materialRepo
                 .GetAllQueryable()
                 .Where(m => m.ExamOid == request.Oid)

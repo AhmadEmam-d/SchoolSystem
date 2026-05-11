@@ -29,7 +29,6 @@ namespace SchoolSystem.Application.Features.Homeworks.Queries.GetTeacherHomework
 
         public async Task<List<HomeworkListResponseDto>> Handle(GetTeacherHomeworksQuery request, CancellationToken cancellationToken)
         {
-            // ✅ تحويل UserId (من Token) إلى TeacherOid (من جدول Teachers)
             var teacher = await _teacherRepo
                 .GetAllQueryable()
                 .FirstOrDefaultAsync(t => t.UserId == request.TeacherId, cancellationToken);
@@ -39,27 +38,28 @@ namespace SchoolSystem.Application.Features.Homeworks.Queries.GetTeacherHomework
 
             var homeworks = await _homeworkRepo
                 .GetAllQueryable()
+                .Where(h => h.TeacherOid == teacher.Oid && !h.IsDeleted)
                 .Include(h => h.Class)
+                    .ThenInclude(c => c.Students.Where(s => !s.IsDeleted)) 
                 .Include(h => h.Subject)
                 .Include(h => h.Submissions)
-                .Where(h => h.TeacherOid == teacher.Oid && !h.IsDeleted)
-               .Include(e => e.Materials)
+                .Include(h => h.Materials)
                 .OrderByDescending(h => h.CreatedAt)
                 .ToListAsync(cancellationToken);
 
-            var result = new List<HomeworkListResponseDto>();
-            foreach (var homework in homeworks)
+            var result = homeworks.Select(homework =>
             {
-                var totalStudents = await _classRepo
-                    .GetAllQueryable()
-                    .Where(c => c.Oid == homework.ClassOid)
-                    .SelectMany(c => c.Students)
-                    .CountAsync(s => !s.IsDeleted, cancellationToken);
-
                 var dto = _mapper.Map<HomeworkListResponseDto>(homework);
-                dto.TotalStudents = totalStudents;
-                result.Add(dto);
-            }
+
+                dto.TotalStudents = homework.Class.Students.Count;
+                dto.SubmittedCount = homework.Submissions
+                    .Where(s => homework.Class.Students.Any(st => st.Oid == s.StudentOid))
+                    .Select(s => s.StudentOid)
+                    .Distinct()
+                    .Count();
+
+                return dto;
+            }).ToList();
 
             return result;
         }

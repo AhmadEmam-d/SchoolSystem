@@ -224,29 +224,25 @@ namespace SchoolSystem.Persistence.Contexts
             {
                 entity.HasKey(e => e.Oid);
 
-                // ✅ إضافة تحويل الـ Enum إلى int
                 entity.Property(e => e.Status)
                       .HasConversion<int>()
                       .IsRequired();
 
-                // ✅ تعيين طول أقصى للـ Remarks
                 entity.Property(e => e.Remarks)
                       .HasMaxLength(500);
 
-                // ✅ تعيين دقة للـ TimeSpan
                 entity.Property(e => e.CheckInTime)
                       .HasPrecision(0);
 
                 entity.Property(e => e.CheckOutTime)
                       .HasPrecision(0);
 
-                // العلاقات
                 entity.HasOne(e => e.Student)
                       .WithMany(s => s.AttendanceRecords)
                       .HasForeignKey(e => e.StudentOid)
                       .OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(a => a.Session)
-                       .WithMany(s => s.Attendances)  // You may need to add this collection to AttendanceSession
+                       .WithMany(s => s.Attendances)  
                        .HasForeignKey(a => a.SessionOid)
                        .OnDelete(DeleteBehavior.Restrict);
 
@@ -256,11 +252,9 @@ namespace SchoolSystem.Persistence.Contexts
                       .HasForeignKey(e => e.ClassOid)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // ✅ Index فريد لمنع تكرار الحضور لنفس الطالب في نفس اليوم
                 entity.HasIndex(e => new { e.StudentOid, e.Date })
                       .IsUnique();
 
-                // ✅ Indexes إضافية للتحسين
                 entity.HasIndex(e => e.Date);
                 entity.HasIndex(e => e.Status);
             });
@@ -378,7 +372,6 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
                 entity.Property(e => e.PaidAmount).HasPrecision(18, 2);
 
-                // Relationship from FeeInvoice to PaymentTransaction
                 entity.HasMany(f => f.Payments)
                       .WithOne(p => p.Invoice)
                       .HasForeignKey(p => p.InvoiceId)
@@ -390,7 +383,6 @@ namespace SchoolSystem.Persistence.Contexts
                 entity.HasKey(e => e.Oid);
                 entity.Property(e => e.Amount).HasPrecision(18, 2);
 
-                // Relationship from PaymentTransaction to FeeInvoice
                 entity.HasOne(p => p.Invoice)
                       .WithMany(f => f.Payments)
                       .HasForeignKey(p => p.InvoiceId)
