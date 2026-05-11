@@ -230,21 +230,17 @@ namespace SchoolSystem.Api.Controllers
         {
             try
             {
-                // سحب الـ ID من التوكن (Claims)
                 var parentIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (parentIdClaim == null || !Guid.TryParse(parentIdClaim.Value, out var parentId))
                     return Unauthorized();
 
-                // إرسال الـ ParentOid للـ Handler لجلب بيانات الأب وأبنائه
-                var query = new GetParentAttendanceQuery { ParentOid = parentId };
+                var query = new GetParentAttendanceQuery(parentId);
                 var result = await _mediator.Send(query);
 
-                // رسالة النجاح المطلوبة
                 return Ok(ApiResponseFactory.Success(result, "ParentDashboardFetchedSuccessfully", _messageService));
             }
             catch (Exception ex)
             {
-                // رسالة الفشل المطلوبة مع تفاصيل الخطأ
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "ParentDashboardFetchFailed", _messageService,
                     new List<string> { ex.Message }
@@ -257,13 +253,11 @@ namespace SchoolSystem.Api.Controllers
         {
             try
             {
-                // استخراج معرف المستخدم من الـ Token
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
                     return Unauthorized();
                 
 
-                // إرسال الطلب للـ Handler الذي أنشأناه
                 var query = new GetStudentHomeworkQuery { ParentUserId = userId };
                 var result = await _mediator.Send(query);
 

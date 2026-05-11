@@ -1,24 +1,21 @@
-﻿using MediatR;
+﻿// Application/Features/Parents/Queries/GetParentAttendance/GetParentAttendanceQueryHandler.cs
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Parents.DTOs;
-using SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrades; 
+using SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrades;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Enums;
 using SchoolSystem.Domain.Interfaces.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
 {
-    public class GetParentAttendanceQueryHandler : IRequestHandler<GetParentAttendanceQuery, ParentFullDashboardDto>
+    public class GetParentAttendanceQueryHandler
+        : IRequestHandler<GetParentAttendanceQuery, ParentFullDashboardDto>
     {
         private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<User> _userRepo;
-        private readonly IMediator _mediator; // لإرسال GetStudentGradesQuery
+        private readonly IMediator _mediator;
 
         public GetParentAttendanceQueryHandler(
             IGenericRepository<Domain.Entities.Attendance> attendanceRepo,
@@ -32,13 +29,23 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
             _mediator = mediator;
         }
 
-        public async Task<ParentFullDashboardDto> Handle(GetParentAttendanceQuery request, CancellationToken cancellationToken)
+        public async Task<ParentFullDashboardDto> Handle(
+            GetParentAttendanceQuery request,
+            CancellationToken cancellationToken)
         {
             var parentUser = await _userRepo.GetByOidAsync(request.ParentOid);
 
             var students = await _studentRepo.GetAllQueryable()
                 .Include(s => s.Class)
-                .Where(s => s.ParentOid == request.ParentOid || s.Parent.UserId == request.ParentOid)
+                .Include(s => s.Parent)
+                .Where(s => s.ParentOid == request.ParentOid)
+                .ToListAsync(cancellationToken);
+
+            var studentIds = students.Select(s => s.Oid).ToList();
+
+            var allRecords = await _attendanceRepo.GetAllQueryable()
+                .Where(a => studentIds.Contains(a.StudentOid))
+                .OrderByDescending(a => a.Date)
                 .ToListAsync(cancellationToken);
 
             var response = new ParentFullDashboardDto
@@ -49,65 +56,102 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
 
             foreach (var student in students)
             {
-                // 1. جلب سجلات الحضور
-                var records = await _attendanceRepo.GetAllQueryable()
+                var records = allRecords
                     .Where(a => a.StudentOid == student.Oid)
-                    .ToListAsync(cancellationToken);
+                    .ToList();
 
-                // 2. جلب بيانات الدرجات (تعريف المتغيرات المفقودة في صورتك)
-                var gradesQuery = new GetStudentGradesQuery(student.Oid);
-                var gradesData = await _mediator.Send(gradesQuery, cancellationToken);
+                var dailyRecords = records
+                    .GroupBy(a => a.Date.Date)
+                    .Select(g => new
+                    {
+                        Date = g.Key,
+                        Status = g.Any(a => a.Status == AttendanceStatus.Absent)
+                            ? AttendanceStatus.Absent
+                            : g.Any(a => a.Status == AttendanceStatus.Late)
+                                ? AttendanceStatus.Late
+                                : AttendanceStatus.Present
+                    })
+                    .OrderByDescending(x => x.Date)
+                    .ToList();
 
-                // --- حل خطأ CS0103 بتعريف المتغيرات هنا ---
+                int totalDays = dailyRecords.Count;
+                int presentDays = dailyRecords.Count(d => d.Status == AttendanceStatus.Present);
+                int absentDays = dailyRecords.Count(d => d.Status == AttendanceStatus.Absent);
+                int lateDays = dailyRecords.Count(d => d.Status == AttendanceStatus.Late);
+
+                double attendancePerc = totalDays > 0
+                    ? (double)presentDays / totalDays * 100
+                    : 0;
+
+                var gradesData = await _mediator.Send(
+                    new GetStudentGradesQuery(student.Oid), cancellationToken);
+
                 double gpaValue = gradesData?.OverallGPA?.GPA ?? 0.0;
-                int subjectsCountValue = gradesData?.SubjectPerformance?.Subjects?.Count ?? 0;
+                int subjectsCount = gradesData?.SubjectPerformance?.Subjects?.Count ?? 0;
 
-                int present = records.Count(a => a.Status == AttendanceStatus.Present);
-                int total = records.Count;
-                double attendancePerc = total > 0 ? (double)present / total * 100 : 0;
+                var recentRecords = dailyRecords
+                    .Take(5)
+                    .Select(d => new AttendanceHistoryDto
+                    {
+                        Date = d.Date,
+                        DayName = d.Date.DayOfWeek.ToString(),
+                        Status = d.Status.ToString()
+                    })
+                    .ToList();
+
+                var monthlyTrend = dailyRecords
+                    .GroupBy(d => new { d.Date.Year, d.Date.Month })
+                    .Select(g => new AttendanceChartItemDto
+                    {
+                        Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
+                        Percentage = Math.Round((double)g.Count(d => d.Status == AttendanceStatus.Present) / g.Count() * 100, 1)
+                    })
+                    .OrderBy(m => m.Month)
+                    .ToList();
 
                 response.Children.Add(new StudentDashboardDetailDto
                 {
                     StudentOid = student.Oid,
                     StudentName = student.FullName,
-                    GradeLevel = GetGradeLevelFromClass(student.Class),
+                    GradeLevel = FormatGradeLevel(student.Class?.Name),
                     GPA = Math.Round(gpaValue, 1),
                     Attendance = Math.Round(attendancePerc, 0),
-                    SubjectsCount = subjectsCountValue,
+                    SubjectsCount = subjectsCount,
                     AttendanceStats = new ParentAttendanceDashboardDto
                     {
                         OverallAttendancePercentage = Math.Round(attendancePerc, 1),
-                        TotalPresentDays = present,
-                        TotalAbsentDays = records.Count(a => a.Status == AttendanceStatus.Absent),
-                        TotalLateDays = records.Count(a => a.Status == AttendanceStatus.Late),
-                        RecentRecords = records.OrderByDescending(x => x.Date)
-                            .Take(5)
-                            .Select(a => new AttendanceHistoryDto
-                            {
-                                Date = a.Date,
-                                DayName = a.Date.DayOfWeek.ToString(), // سيتم حل CS0200 بتعديل الـ DTO
-                                Status = a.Status.ToString()
-                            }).ToList()
+                        TotalPresentDays = presentDays,
+                        TotalAbsentDays = absentDays,
+                        TotalLateDays = lateDays,
+                        RecentRecords = recentRecords,
+                        MonthlyTrend = monthlyTrend, 
+                        WarningMessage = attendancePerc < 75 ? "Attendance below 75% - Please ensure regular attendance" : null
                     }
                 });
             }
             return response;
         }
-        
 
-        // --- أضف هاتين الميثودين قبل القوس الأخير في الكلاس ---
-        private string GetGradeLevelFromClass(Class studentClass)
+        private string FormatGradeLevel(string className)
         {
-            if (studentClass == null) return "N/A";
-            var words = (studentClass.Name ?? "").Split(' ', '-', '_');
-            foreach (var word in words)
+            if (string.IsNullOrEmpty(className)) return "N/A";
+
+            if (System.Text.RegularExpressions.Regex.IsMatch(className, @"^\d+(st|nd|rd|th)$"))
+                return className;
+
+            var match = System.Text.RegularExpressions.Regex.Match(className, @"(\d+)");
+            if (match.Success && int.TryParse(match.Groups[1].Value, out int grade))
             {
-                if (word.Contains("th") && int.TryParse(word.Replace("th", ""), out int g)) return $"{g}{GetOrdinal(g)}";
-                if (int.TryParse(word, out int gn) && gn >= 1 && gn <= 12) return $"{gn}{GetOrdinal(gn)}";
+                return $"{grade}{GetOrdinal(grade)}";
             }
-            return studentClass.Name ?? "N/A";
+
+            return className;
         }
 
-        private string GetOrdinal(int n) => (n % 100) switch { 11 or 12 or 13 => "th", _ => (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" } };
+        private string GetOrdinal(int n) => (n % 100) switch
+        {
+            11 or 12 or 13 => "th",
+            _ => (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" }
+        };
     }
 }

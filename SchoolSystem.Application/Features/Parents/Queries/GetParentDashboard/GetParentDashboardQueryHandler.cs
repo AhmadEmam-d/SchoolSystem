@@ -1,8 +1,9 @@
 ﻿// Application/Features/Parents/Queries/GetParentDashboard/GetParentDashboardQueryHandler.cs
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Parents.DTOs;
+using SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrades;
 using SchoolSystem.Domain.Entities;
-using SchoolSystem.Domain.Enums;
 using SchoolSystem.Domain.Interfaces.Common;
 
 namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
@@ -14,85 +15,65 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
         private readonly IGenericRepository<Class> _classRepo;
         private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
         private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
+        private readonly IGenericRepository<ExamResult> _examResultRepo;
+        private readonly IMediator _mediator;
 
         public GetParentDashboardQueryHandler(
             IGenericRepository<Parent> parentRepo,
             IGenericRepository<Student> studentRepo,
             IGenericRepository<Class> classRepo,
             IGenericRepository<Domain.Entities.Attendance> attendanceRepo,
-            IGenericRepository<HomeworkSubmission> submissionRepo)
+            IGenericRepository<HomeworkSubmission> submissionRepo,
+            IGenericRepository<ExamResult> examResultRepo,
+            IMediator mediator)
         {
             _parentRepo = parentRepo;
             _studentRepo = studentRepo;
             _classRepo = classRepo;
             _attendanceRepo = attendanceRepo;
             _submissionRepo = submissionRepo;
+            _examResultRepo = examResultRepo;
+            _mediator = mediator;
         }
 
         public async Task<ParentDashboardDto> Handle(GetParentDashboardQuery request, CancellationToken cancellationToken)
         {
-            // Get parent by UserId
-            var allParents = await _parentRepo.GetAllAsync();
-            var parent = allParents.FirstOrDefault(p => p.UserId == request.ParentUserId);
+            var parent = await _parentRepo.GetAllQueryable()
+                .FirstOrDefaultAsync(p => p.UserId == request.ParentUserId, cancellationToken);
 
             if (parent == null)
                 throw new Exception("Parent not found");
 
-            // Get all students for this parent
-            var allStudents = await _studentRepo.GetAllAsync();
-            var students = allStudents.Where(s => s.ParentOid == parent.Oid).ToList();
-
-            // Get all classes
-            var allClasses = await _classRepo.GetAllAsync();
-
-            // Get all attendances
-            var allAttendances = await _attendanceRepo.GetAllAsync();
-
-            // Get all submissions
-            var allSubmissions = await _submissionRepo.GetAllAsync();
+            var students = await _studentRepo.GetAllQueryable()
+                .Include(s => s.Class)
+                .Where(s => s.ParentOid == parent.Oid)
+                .ToListAsync(cancellationToken);
 
             var childrenList = new List<ChildInfoDto>();
             var allSubjectScores = new List<SubjectGradeDto>();
+            var allRecentActivities = new List<RecentActivityDto>();
 
             foreach (var student in students)
             {
-                // Get student's class (handle null)
-                var studentClass = allClasses.FirstOrDefault(c => c.Oid == student.ClassOid);
+                var gradesQuery = new GetStudentGradesQuery(student.Oid);
+                var gradesData = await _mediator.Send(gradesQuery, cancellationToken);
 
-                // Safe null checks for class properties
-                var className = studentClass?.Name ?? "N/A";
-                var gradeLevel = ExtractGradeLevel(className);
+                var gradeLevel = FormatGradeLevel(student.Class?.Name);
 
-                // Calculate GPA from homework submissions (handle null)
-                var studentSubmissions = allSubmissions
-                    .Where(s => s.StudentOid == student.Oid && s.Grade.HasValue)
-                    .ToList();
+                double gpa = 0;
+                if (gradesData?.OverallGPA != null)
+                {
+                    var gpaProperty = gradesData.OverallGPA.GetType().GetProperty("GPA");
+                    if (gpaProperty != null)
+                    {
+                        gpa = Convert.ToDouble(gpaProperty.GetValue(gradesData.OverallGPA) ?? 0);
+                    }
+                }
 
-                var averageGrade = studentSubmissions.Any()
-                    ? studentSubmissions.Average(s => (double)s.Grade.Value)
-                    : 0;
-                var gpa = averageGrade / 25;
+                var attendancePercentage = await CalculateAttendancePercentage(student.Oid, cancellationToken);
 
-                // Calculate attendance (handle null)
-                var studentAttendances = allAttendances
-                    .Where(a => a.StudentOid == student.Oid)
-                    .ToList();
+                var subjectsCount = await GetSubjectsCount(student.Oid, cancellationToken);
 
-                var presentCount = studentAttendances.Count(a => a.Status == AttendanceStatus.Present);
-                var attendancePercentage = studentAttendances.Any()
-                    ? (double)presentCount / studentAttendances.Count * 100
-                    : 0; // Default to 0 instead of null
-
-                // Get unique subjects count
-                var subjectsCount = studentSubmissions
-                    .Select(s => s.Homework?.SubjectOid)
-                    .Where(id => id.HasValue)
-                    .Distinct()
-                    .Count();
-
-                if (subjectsCount == 0) subjectsCount = 4; // Default fallback
-
-                // Add child info
                 childrenList.Add(new ChildInfoDto
                 {
                     Name = student.FullName ?? "Unknown",
@@ -102,31 +83,13 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                     SubjectsCount = subjectsCount
                 });
 
-                // Add subject scores from actual grades if available
-                foreach (var submission in studentSubmissions)
-                {
-                    var subjectName = submission.Homework?.Subject?.Name ?? "Unknown";
-                    allSubjectScores.Add(new SubjectGradeDto
-                    {
-                        Name = subjectName,
-                        Percentage = (double)submission.Grade.Value
-                    });
-                }
+                var subjectScores = await GetStudentSubjectScores(student.Oid, cancellationToken);
+                allSubjectScores.AddRange(subjectScores);
+
+                var recentActivities = await GetRecentActivities(student, cancellationToken);
+                allRecentActivities.AddRange(recentActivities);
             }
 
-            // If no subject scores, add default subjects
-            if (!allSubjectScores.Any())
-            {
-                allSubjectScores.AddRange(new List<SubjectGradeDto>
-                {
-                    new SubjectGradeDto { Name = "Mathematics", Percentage = 78 },
-                    new SubjectGradeDto { Name = "Science", Percentage = 82 },
-                    new SubjectGradeDto { Name = "History", Percentage = 75 },
-                    new SubjectGradeDto { Name = "English", Percentage = 80 }
-                });
-            }
-
-            // Get subject performance
             var subjectPerformance = allSubjectScores
                 .GroupBy(s => s.Name)
                 .Select(g => new SubjectGradeDto
@@ -136,60 +99,25 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                 })
                 .ToList();
 
-            // Get upcoming events
-            var upcomingEvents = new List<UpcomingEventDto>();
-
-            // Add some default events
-            upcomingEvents.Add(new UpcomingEventDto
+            if (!subjectPerformance.Any())
             {
-                Title = "Math Mid-Term Exam",
-                Date = DateTime.Today.AddDays(15).ToString("MMMM dd"),
-                Type = "Exams",
-                Link = "/exams"
-            });
-
-            upcomingEvents.Add(new UpcomingEventDto
-            {
-                Title = "Science Project Due",
-                Date = DateTime.Today.AddDays(18).ToString("MMMM dd"),
-                Type = "Homework",
-                Link = "/homework"
-            });
-
-            upcomingEvents.Add(new UpcomingEventDto
-            {
-                Title = "Parent-Teacher Meeting",
-                Date = DateTime.Today.AddDays(22).ToString("MMMM dd"),
-                Type = "Meeting",
-                Link = "/meeting"
-            });
-
-            // Get recent activities
-            var recentActivities = new List<RecentActivityDto>();
-
-            // Add recent homework submissions
-            var recentSubmissions = allSubmissions
-                .Where(s => s.StudentOid != null && s.CreatedAt >= DateTime.Today.AddDays(-7))
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(3)
-                .ToList();
-
-            foreach (var submission in recentSubmissions)
-            {
-                var student = students.FirstOrDefault(s => s.Oid == submission.StudentOid);
-                var daysAgo = (DateTime.Today - submission.CreatedAt.Date).Days;
-                recentActivities.Add(new RecentActivityDto
+                subjectPerformance.Add(new SubjectGradeDto
                 {
-                    Activity = $"Submitted {submission.Homework?.Title ?? "Homework"}",
-                    TimeAgo = daysAgo == 0 ? "Today" : $"{daysAgo} days ago",
-                    Status = "Completed"
+                    Name = "No subjects available",
+                    Percentage = 0
                 });
             }
 
-            // Add default activities if none
-            if (!recentActivities.Any())
+            var upcomingEvents = await GetUpcomingEvents(cancellationToken);
+
+            var topRecentActivities = allRecentActivities
+                .OrderByDescending(a => a.TimeAgo)
+                .Take(3)
+                .ToList();
+
+            if (!topRecentActivities.Any())
             {
-                recentActivities.Add(new RecentActivityDto
+                topRecentActivities.Add(new RecentActivityDto
                 {
                     Activity = "No recent activities",
                     TimeAgo = "",
@@ -206,16 +134,209 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                     ViewFullReportLink = "/api/reports/full-report"
                 },
                 UpcomingEvents = upcomingEvents,
-                RecentActivities = recentActivities.Take(3).ToList()
+                RecentActivities = topRecentActivities
             };
         }
 
-        private string ExtractGradeLevel(string className)
+        private async Task<List<SubjectGradeDto>> GetStudentSubjectScores(Guid studentOid, CancellationToken cancellationToken)
+        {
+            var subjectScores = new List<SubjectGradeDto>();
+            var subjectPercentages = new Dictionary<string, List<double>>();
+
+            var examResults = await _examResultRepo.GetAllQueryable()
+                .Include(er => er.Exam)
+                .ThenInclude(e => e.Subject)
+                .Where(er => er.StudentOid == studentOid && er.Percentage.HasValue)
+                .ToListAsync(cancellationToken);
+
+            foreach (var exam in examResults)
+            {
+                var subjectName = exam.Exam?.Subject?.Name ?? "Unknown";
+                if (!subjectPercentages.ContainsKey(subjectName))
+                    subjectPercentages[subjectName] = new List<double>();
+
+                subjectPercentages[subjectName].Add(exam.Percentage.Value);
+            }
+
+            var submissions = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Homework)
+                .ThenInclude(h => h.Subject)
+                .Where(s => s.StudentOid == studentOid && s.Grade.HasValue && s.Homework.TotalMarks > 0)
+                .ToListAsync(cancellationToken);
+
+            foreach (var submission in submissions)
+            {
+                var subjectName = submission.Homework?.Subject?.Name ?? "Unknown";
+                var percentage = (double)(submission.Grade.Value / submission.Homework.TotalMarks * 100);
+
+                if (!subjectPercentages.ContainsKey(subjectName))
+                    subjectPercentages[subjectName] = new List<double>();
+
+                subjectPercentages[subjectName].Add(percentage);
+            }
+
+            foreach (var subject in subjectPercentages)
+            {
+                subjectScores.Add(new SubjectGradeDto
+                {
+                    Name = subject.Key,
+                    Percentage = Math.Round(subject.Value.Average(), 0)
+                });
+            }
+
+            return subjectScores;
+        }
+
+        private async Task<double> CalculateAttendancePercentage(Guid studentOid, CancellationToken cancellationToken)
+        {
+            var attendances = await _attendanceRepo.GetAllQueryable()
+                .Where(a => a.StudentOid == studentOid)
+                .ToListAsync(cancellationToken);
+
+            if (!attendances.Any())
+                return 0;
+
+            var dailyAttendance = attendances
+                .GroupBy(a => a.Date.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Status = g.Any(a => a.Status == Domain.Enums.AttendanceStatus.Absent)
+                        ? Domain.Enums.AttendanceStatus.Absent
+                        : g.Any(a => a.Status == Domain.Enums.AttendanceStatus.Late)
+                            ? Domain.Enums.AttendanceStatus.Late
+                            : Domain.Enums.AttendanceStatus.Present
+                })
+                .ToList();
+
+            var presentDays = dailyAttendance.Count(d => d.Status == Domain.Enums.AttendanceStatus.Present);
+            return dailyAttendance.Any() ? (double)presentDays / dailyAttendance.Count * 100 : 0;
+        }
+
+        private async Task<int> GetSubjectsCount(Guid studentOid, CancellationToken cancellationToken)
+        {
+            var examSubjects = await _examResultRepo.GetAllQueryable()
+                .Include(er => er.Exam)
+                .Where(er => er.StudentOid == studentOid)
+                .Select(er => er.Exam.SubjectOid)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var homeworkSubjects = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Homework)
+                .Where(s => s.StudentOid == studentOid && !s.IsDeleted)
+                .Select(s => s.Homework.SubjectOid)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return examSubjects.Union(homeworkSubjects).Distinct().Count();
+        }
+
+        private async Task<List<RecentActivityDto>> GetRecentActivities(Student student, CancellationToken cancellationToken)
+        {
+            var activities = new List<RecentActivityDto>();
+
+            var recentSubmissions = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Homework)
+                .Where(s => s.StudentOid == student.Oid && s.CreatedAt >= DateTime.Today.AddDays(-14))
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(3)
+                .ToListAsync(cancellationToken);
+
+            foreach (var submission in recentSubmissions)
+            {
+                activities.Add(new RecentActivityDto
+                {
+                    Activity = $"{student.FullName} submitted {submission.Homework?.Title ?? "homework"}",
+                    TimeAgo = GetTimeAgo(submission.CreatedAt),
+                    Status = submission.Grade.HasValue ? $"Graded: {submission.Grade}/{submission.Homework?.TotalMarks}" : "Pending review"
+                });
+            }
+
+            var upcomingDeadlines = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Homework)
+                .Where(s => s.StudentOid == student.Oid &&
+                           s.Homework.DueDate >= DateTime.Today &&
+                           s.Homework.DueDate <= DateTime.Today.AddDays(7))
+                .Take(2)
+                .ToListAsync(cancellationToken);
+
+            foreach (var deadline in upcomingDeadlines)
+            {
+                activities.Add(new RecentActivityDto
+                {
+                    Activity = $"{deadline.Homework?.Title} due for {student.FullName}",
+                    TimeAgo = $"Due {deadline.Homework.DueDate:MMM dd}",
+                    Status = "Upcoming"
+                });
+            }
+
+            return activities;
+        }
+
+        private async Task<List<UpcomingEventDto>> GetUpcomingEvents(CancellationToken cancellationToken)
+        {
+            var events = new List<UpcomingEventDto>();
+
+            var upcomingExams = await _examResultRepo.GetAllQueryable()
+                .Include(er => er.Exam)
+                .ThenInclude(e => e.Subject)
+                .Where(er => er.Exam.Date >= DateTime.Today && er.Exam.Date <= DateTime.Today.AddDays(30))
+                .OrderBy(er => er.Exam.Date)
+                .Take(3)
+                .ToListAsync(cancellationToken);
+
+            foreach (var exam in upcomingExams)
+            {
+                events.Add(new UpcomingEventDto
+                {
+                    Title = $"{exam.Exam.Subject?.Name} {exam.Exam.Name}",
+                    Date = exam.Exam.Date.ToString("MMMM dd"),
+                    Type = "Exams",
+                    Link = "/exams"
+                });
+            }
+
+            if (!events.Any())
+            {
+                events.AddRange(new[]
+                {
+                    new UpcomingEventDto
+                    {
+                        Title = "Math Mid-Term Exam",
+                        Date = DateTime.Today.AddDays(15).ToString("MMMM dd"),
+                        Type = "Exams",
+                        Link = "/exams"
+                    },
+                    new UpcomingEventDto
+                    {
+                        Title = "Science Project Due",
+                        Date = DateTime.Today.AddDays(18).ToString("MMMM dd"),
+                        Type = "Homework",
+                        Link = "/homework"
+                    },
+                    new UpcomingEventDto
+                    {
+                        Title = "Parent-Teacher Meeting",
+                        Date = DateTime.Today.AddDays(22).ToString("MMMM dd"),
+                        Type = "Meeting",
+                        Link = "/meeting"
+                    }
+                });
+            }
+
+            return events;
+        }
+
+        private string FormatGradeLevel(string className)
         {
             if (string.IsNullOrEmpty(className)) return "N/A";
 
-            var match = System.Text.RegularExpressions.Regex.Match(className, @"\d+");
-            if (match.Success && int.TryParse(match.Value, out int grade))
+            if (System.Text.RegularExpressions.Regex.IsMatch(className, @"^\d+(st|nd|rd|th)$"))
+                return className;
+
+            var match = System.Text.RegularExpressions.Regex.Match(className, @"(\d+)");
+            if (match.Success && int.TryParse(match.Groups[1].Value, out int grade))
             {
                 return $"{grade}{GetOrdinal(grade)}";
             }
@@ -236,6 +357,22 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                     _ => "th"
                 }
             };
+        }
+
+        private string GetTimeAgo(DateTime date)
+        {
+            var timeSpan = DateTime.Now - date;
+
+            if (timeSpan.Days > 7)
+                return $"{timeSpan.Days / 7} weeks ago";
+            if (timeSpan.Days > 0)
+                return $"{timeSpan.Days} days ago";
+            if (timeSpan.Hours > 0)
+                return $"{timeSpan.Hours} hours ago";
+            if (timeSpan.Minutes > 0)
+                return $"{timeSpan.Minutes} minutes ago";
+
+            return "Just now";
         }
     }
 }

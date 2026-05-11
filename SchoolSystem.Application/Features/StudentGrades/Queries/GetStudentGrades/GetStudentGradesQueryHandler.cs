@@ -4,11 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.StudentGrades.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrades
 {
@@ -16,21 +11,18 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
     {
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
-        private readonly IGenericRepository<Homework> _homeworkRepo;
-        private readonly IGenericRepository<Subject> _subjectRepo;
+        private readonly IGenericRepository<ExamResult> _examResultRepo;
         private readonly IMapper _mapper;
 
         public GetStudentGradesQueryHandler(
             IGenericRepository<Student> studentRepo,
             IGenericRepository<HomeworkSubmission> submissionRepo,
-            IGenericRepository<Homework> homeworkRepo,
-            IGenericRepository<Subject> subjectRepo,
+            IGenericRepository<ExamResult> examResultRepo,
             IMapper mapper)
         {
             _studentRepo = studentRepo;
             _submissionRepo = submissionRepo;
-            _homeworkRepo = homeworkRepo;
-            _subjectRepo = subjectRepo;
+            _examResultRepo = examResultRepo;
             _mapper = mapper;
         }
 
@@ -40,48 +32,50 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             if (student == null)
                 throw new Exception("Student not found");
 
-            // Get all subjects for student's class
-            var subjects = await _subjectRepo
-                .GetAllQueryable()
-                .Where(s => s.IsDeleted == false)
-                .ToListAsync(cancellationToken);
-
-            // Get all submissions with grades
             var submissions = await _submissionRepo
                 .GetAllQueryable()
                 .Include(s => s.Homework)
+                    .ThenInclude(h => h.Subject)
                 .Where(s => s.StudentOid == student.Oid && s.Grade.HasValue && !s.IsDeleted)
                 .ToListAsync(cancellationToken);
 
-            // Calculate subject grades
-            var subjectGrades = new Dictionary<Guid, List<decimal>>();
-            foreach (var submission in submissions)
-            {
-                var subjectId = submission.Homework?.SubjectOid;
-                if (subjectId.HasValue)
-                {
-                    if (!subjectGrades.ContainsKey(subjectId.Value))
-                        subjectGrades[subjectId.Value] = new List<decimal>();
-                    subjectGrades[subjectId.Value].Add(submission.Grade.Value);
-                }
-            }
+            var examResults = await _examResultRepo
+                .GetAllQueryable()
+                .Include(er => er.Exam)
+                    .ThenInclude(e => e.Subject)
+                .Where(er => er.StudentOid == student.Oid)
+                .OrderByDescending(er => er.Exam.Date)
+                .ToListAsync(cancellationToken);
 
-            // Calculate overall grade
-            var allGrades = submissions.Select(s => s.Grade.Value).ToList();
-            var overallGrade = allGrades.Any() ? (double)allGrades.Average() : 0;
-            var gpa = overallGrade / 25; // Convert 0-100 to 0-4 scale
+            var subjectNamesFromExams = examResults
+                .Where(er => er.Exam?.Subject != null)
+                .Select(er => er.Exam.Subject.Name)
+                .Distinct();
 
-            // Grade trend by month
-            var trendData = GetGradeTrend(submissions);
+            var subjectNamesFromHomework = submissions
+                .Where(s => s.Homework?.Subject != null)
+                .Select(s => s.Homework.Subject.Name)
+                .Distinct();
 
-            // Subject performance
-            var subjectPerformance = GetSubjectPerformance(subjects, subjectGrades);
+            var allSubjectNames = subjectNamesFromExams
+                .Union(subjectNamesFromHomework)
+                .ToList();
 
-            // Detailed subject grades
-            var detailedGrades = await GetDetailedSubjectGrades(student.Oid, subjects, cancellationToken);
+            var examPercentages = examResults
+                .Where(er => er.Percentage.HasValue)
+                .Select(er => (double)er.Percentage!.Value)
+                .ToList();
 
-            // Class rank
-            var classRank = await GetClassRank(student.Oid, student.ClassOid, overallGrade, cancellationToken);
+            var overallGrade = examPercentages.Any() ? examPercentages.Average() : 0;
+            var gpa = overallGrade / 25;
+
+            var trendData = GetGradeTrend(examResults);
+
+            var subjectPerformance = GetSubjectPerformance(allSubjectNames, examResults, submissions);
+
+            var detailedGrades = GetDetailedSubjectGrades(allSubjectNames, examResults, submissions);
+
+            var classRank = await GetClassRank(student.Oid, student.ClassOid, cancellationToken);
 
             return new StudentGradesDashboardDto
             {
@@ -99,123 +93,118 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             };
         }
 
-        private GradeTrendDto GetGradeTrend(List<HomeworkSubmission> submissions)
+        private GradeTrendDto GetGradeTrend(List<ExamResult> examResults)
         {
-            var months = new[] { "Sep", "Oct", "Nov", "Dec", "Jan", "Feb" };
-            var monthlyGrades = new List<int>();
+            // ✅ Use actual exam months from data, not hardcoded Sep-Feb
+            var grouped = examResults
+                .Where(er => er.Percentage.HasValue)
+                .GroupBy(er => new { er.Exam.Date.Year, er.Exam.Date.Month })
+                .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+                .ToList();
 
-            foreach (var month in months)
-            {
-                var monthIndex = Array.IndexOf(months, month) + 9; // Sep = 9
-                var monthGrades = submissions
-                    .Where(s => s.GradedAt.HasValue && s.GradedAt.Value.Month == monthIndex)
-                    .Select(s => (int)s.Grade.Value)
-                    .ToList();
+            var months = grouped
+                .Select(g => new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"))
+                .ToList();
 
-                var avg = monthGrades.Any() ? (int)monthGrades.Average() : 0;
-                monthlyGrades.Add(avg);
-            }
+            var values = grouped
+                .Select(g => (int)g.Average(er => (double)er.Percentage!.Value))
+                .ToList();
 
             return new GradeTrendDto
             {
-                Months = months.ToList(),
-                Values = monthlyGrades
+                Months = months,
+                Values = values
             };
         }
 
-        private SubjectPerformanceDto GetSubjectPerformance(List<Subject> subjects, Dictionary<Guid, List<decimal>> subjectGrades)
+        private SubjectPerformanceDto GetSubjectPerformance(
+            List<string> subjectNames,
+            List<ExamResult> examResults,
+            List<HomeworkSubmission> submissions)
         {
-            var subjectNames = new List<string>();
-            var subjectAverages = new List<int>();
+            var names = new List<string>();
+            var averages = new List<int>();
 
-            foreach (var subject in subjects)
+            foreach (var name in subjectNames)
             {
-                if (subjectGrades.ContainsKey(subject.Oid))
+                var examAvg = examResults
+                    .Where(er => er.Exam.Subject.Name == name && er.Percentage.HasValue)
+                    .Select(er => (double)er.Percentage!.Value)
+                    .ToList();
+
+                if (examAvg.Any())
                 {
-                    subjectNames.Add(subject.Name);
-                    var avg = (int)subjectGrades[subject.Oid].Average();
-                    subjectAverages.Add(avg);
+                    names.Add(name);
+                    averages.Add((int)examAvg.Average());
                 }
             }
 
             return new SubjectPerformanceDto
             {
-                Subjects = subjectNames,
-                Grades = subjectAverages
+                Subjects = names,
+                Grades = averages
             };
         }
 
-        private async Task<List<SubjectDetailedGradeDto>> GetDetailedSubjectGrades(Guid studentId, List<Subject> subjects, CancellationToken cancellationToken)
+        private List<SubjectDetailedGradeDto> GetDetailedSubjectGrades(
+            List<string> subjectNames,
+            List<ExamResult> examResults,
+            List<HomeworkSubmission> submissions)
         {
             var result = new List<SubjectDetailedGradeDto>();
 
-            foreach (var subject in subjects)
+            foreach (var subjectName in subjectNames)
             {
-                // Get submissions for this subject
-                var submissions = await _submissionRepo
-                    .GetAllQueryable()
-                    .Include(s => s.Homework)
-                    .Where(s => s.StudentOid == studentId &&
-                                s.Homework.SubjectOid == subject.Oid &&
-                                s.Grade.HasValue &&
-                                !s.IsDeleted)
-                    .ToListAsync(cancellationToken);
+                var subjectExams = examResults
+                    .Where(er => er.Exam.Subject.Name == subjectName)
+                    .ToList();
 
-                if (!submissions.Any())
+                var subjectSubmissions = submissions
+                    .Where(s => s.Homework.Subject.Name == subjectName)
+                    .ToList();
+
+                if (!subjectExams.Any() && !subjectSubmissions.Any())
                     continue;
 
-                // Calculate components
-                var examGrades = submissions
-                    .Where(s => s.Homework.Title.Contains("Exam", StringComparison.OrdinalIgnoreCase))
-                    .Select(s => (double)s.Grade.Value)
-                    .ToList();
+                var examAvg = subjectExams.Any()
+                    ? subjectExams.Where(er => er.Percentage.HasValue)
+                        .Average(er => (double)er.Percentage!.Value)
+                    : 0;
 
-                var assignmentGrades = submissions
-                    .Where(s => !s.Homework.Title.Contains("Exam", StringComparison.OrdinalIgnoreCase))
-                    .Select(s => (double)s.Grade.Value)
-                    .ToList();
+                var assignmentAvg = subjectSubmissions.Any()
+                    ? (double)subjectSubmissions.Average(s => s.Grade!.Value)
+                    : 0;
 
-                var exams = examGrades.Any() ? examGrades.Average() : 0;
-                var assignments = assignmentGrades.Any() ? assignmentGrades.Average() : 0;
-                var participation = 90.0; // Placeholder
-                var attendance = 92.0; // Placeholder
+                var examsList = subjectExams.Select(er => new ExamGradeDto
+                {
+                    Title = er.Exam.Name,
+                    Date = er.SubmittedAt,
+                    Score = er.Score,
+                    TotalMarks = er.Exam.MaxScore,
+                    Percentage = er.Percentage.HasValue ? (double)er.Percentage.Value : 0
+                }).ToList();
 
-                // Get exams list
-                var examsList = submissions
-                    .Where(s => s.Homework.Title.Contains("Exam", StringComparison.OrdinalIgnoreCase))
-                    .Select(s => new ExamGradeDto
-                    {
-                        Title = s.Homework.Title,
-                        Date = s.SubmittedAt,
-                        Score = s.Grade.Value,
-                        TotalMarks = s.Homework.TotalMarks,
-                        Percentage = (double)(s.Grade.Value / s.Homework.TotalMarks * 100)
-                    })
-                    .ToList();
-
-                // Get assignments list
-                var assignmentsList = submissions
-                    .Where(s => !s.Homework.Title.Contains("Exam", StringComparison.OrdinalIgnoreCase))
-                    .Select(s => new AssignmentGradeDto
-                    {
-                        Title = s.Homework.Title,
-                        DueDate = s.Homework.DueDate,
-                        Grade = s.Grade,
-                        TotalMarks = s.Homework.TotalMarks,
-                        Percentage = s.Grade.HasValue ? (double)(s.Grade.Value / s.Homework.TotalMarks * 100) : (double?)null
-                    })
-                    .ToList();
+                var assignmentsList = subjectSubmissions.Select(s => new AssignmentGradeDto
+                {
+                    Title = s.Homework.Title,
+                    DueDate = s.Homework.DueDate,
+                    Grade = s.Grade,
+                    TotalMarks = s.Homework.TotalMarks,
+                    Percentage = s.Grade.HasValue
+                        ? (double)(s.Grade.Value / s.Homework.TotalMarks * 100)
+                        : null
+                }).ToList();
 
                 result.Add(new SubjectDetailedGradeDto
                 {
-                    SubjectName = subject.Name,
+                    SubjectName = subjectName,
                     TeacherName = "Teacher Name",
                     Components = new SubjectGradeComponentsDto
                     {
-                        Exams = Math.Round(exams, 1),
-                        Assignments = Math.Round(assignments, 1),
-                        Participation = participation,
-                        Attendance = attendance
+                        Exams = Math.Round(examAvg, 1),
+                        Assignments = Math.Round(assignmentAvg, 1),
+                        Participation = 0,
+                        Attendance = 0
                     },
                     Exams = examsList,
                     Assignments = assignmentsList
@@ -225,34 +214,43 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             return result;
         }
 
-        private async Task<ClassRankDto> GetClassRank(Guid studentId, Guid classId, double overallGrade, CancellationToken cancellationToken)
+        private async Task<ClassRankDto> GetClassRank(
+            Guid studentId,
+            Guid classId,
+            CancellationToken cancellationToken)
         {
-            // Get all students in class with their average grades
-            var students = await _studentRepo
+            var classStudentIds = await _studentRepo
                 .GetAllQueryable()
                 .Where(s => s.ClassOid == classId && !s.IsDeleted)
+                .Select(s => s.Oid)
                 .ToListAsync(cancellationToken);
 
-            var studentGrades = new Dictionary<Guid, double>();
+            var allClassAverages = await _examResultRepo
+                .GetAllQueryable()
+                .Where(er => classStudentIds.Contains(er.StudentOid) && er.Percentage.HasValue)
+                .GroupBy(er => er.StudentOid)
+                .Select(g => new
+                {
+                    StudentOid = g.Key,
+                    Average = g.Average(er => (double)er.Percentage!.Value)
+                })
+                .ToListAsync(cancellationToken);
 
-            foreach (var student in students)
-            {
-                var submissions = await _submissionRepo
-                    .GetAllQueryable()
-                    .Where(s => s.StudentOid == student.Oid && s.Grade.HasValue && !s.IsDeleted)
-                    .ToListAsync(cancellationToken);
+            var allRanked = classStudentIds
+                .Select(id => new
+                {
+                    StudentOid = id,
+                    Average = allClassAverages.FirstOrDefault(a => a.StudentOid == id)?.Average ?? 0
+                })
+                .OrderByDescending(x => x.Average)
+                .ToList();
 
-                var avg = submissions.Any() ? (double)submissions.Average(s => s.Grade.Value) : 0;
-                studentGrades[student.Oid] = avg;
-            }
-
-            var sorted = studentGrades.OrderByDescending(x => x.Value).ToList();
-            var rank = sorted.FindIndex(x => x.Key == studentId) + 1;
+            var rank = allRanked.FindIndex(x => x.StudentOid == studentId) + 1;
 
             return new ClassRankDto
             {
-                Rank = rank,
-                TotalStudents = students.Count
+                Rank = rank > 0 ? rank : classStudentIds.Count,
+                TotalStudents = classStudentIds.Count
             };
         }
     }

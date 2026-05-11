@@ -8,5 +8,10 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
     public class GetParentAttendanceQuery : IRequest<ParentFullDashboardDto>
     {
         public Guid ParentOid { get; set; }
+        public GetParentAttendanceQuery(Guid parentOid)
+        {
+            ParentOid = parentOid;
+        }
+
     }
 }

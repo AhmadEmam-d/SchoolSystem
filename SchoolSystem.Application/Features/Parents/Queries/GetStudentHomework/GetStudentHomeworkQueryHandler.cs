@@ -1,12 +1,10 @@
-﻿using MediatR;
+﻿// Application/Features/Parents/Queries/GetChildrenHomework/GetChildrenHomeworkQueryHandler.cs
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Parents.DTOs;
 using SchoolSystem.Domain.Entities;
+using SchoolSystem.Domain.Enums;
 using SchoolSystem.Domain.Interfaces.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework
 {
@@ -14,81 +12,86 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetStudentHomework
     {
         private readonly IGenericRepository<Parent> _parentRepo;
         private readonly IGenericRepository<Student> _studentRepo;
-        private readonly IGenericRepository<Homework> _homeworkRepo;
         private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
-        private readonly IGenericRepository<Subject> _subjectRepo;
+        private readonly IGenericRepository<Homework> _homeworkRepo;
 
         public GetStudentHomeworkQueryHandler(
             IGenericRepository<Parent> parentRepo,
             IGenericRepository<Student> studentRepo,
-            IGenericRepository<Homework> homeworkRepo,
             IGenericRepository<HomeworkSubmission> submissionRepo,
-            IGenericRepository<Subject> subjectRepo)
+            IGenericRepository<Homework> homeworkRepo)
         {
             _parentRepo = parentRepo;
             _studentRepo = studentRepo;
-            _homeworkRepo = homeworkRepo;
             _submissionRepo = submissionRepo;
-            _subjectRepo = subjectRepo;
+            _homeworkRepo = homeworkRepo;
         }
 
         public async Task<List<StudentHomeworkDto>> Handle(GetStudentHomeworkQuery request, CancellationToken cancellationToken)
         {
-            // 1. جلب بيانات الوالد من الـ UserId (الخاص بالـ Identity)
-            var allParents = await _parentRepo.GetAllAsync();
-            var parent = allParents.FirstOrDefault(p => p.UserId == request.ParentUserId);
+            var parent = await _parentRepo.GetAllQueryable()
+                .FirstOrDefaultAsync(p => p.UserId == request.ParentUserId, cancellationToken);
 
             if (parent == null)
-                throw new Exception("Parent profile not found.");
+                throw new Exception("Parent not found");
 
-            // 2. جلب جميع الأبناء المرتبطين بهذا الوالد
-            var allStudents = await _studentRepo.GetAllAsync();
-            var studentIds = allStudents
-                  .Where(s => s.ParentOid == parent.Oid)
-                  .Select(s => new { s.Oid, s.ClassOid, s.FullName })
-                  .ToList();
+            var students = await _studentRepo.GetAllQueryable()
+                .Where(s => s.ParentOid == parent.Oid)
+                .ToListAsync(cancellationToken);
 
-            if (!studentIds.Any())
-                return new List<StudentHomeworkDto>();
+            var studentIds = students.Select(s => s.Oid).ToList();
 
-            // 3. جلب البيانات الأساسية (الواجبات، المواد، التسليمات)
-            var allHomeworks = await _homeworkRepo.GetAllAsync();
-            var allSubmissions = await _submissionRepo.GetAllAsync();
-            var allSubjects = await _subjectRepo.GetAllAsync();
+            var submissions = await _submissionRepo.GetAllQueryable()
+                .Include(s => s.Homework)
+                    .ThenInclude(h => h.Subject)
+                .Include(s => s.Student)
+                .Where(s => studentIds.Contains(s.StudentOid))
+                .ToListAsync(cancellationToken);
 
-            var resultList = new List<StudentHomeworkDto>();
+            var distinctSubmissions = submissions
+                .GroupBy(s => new { s.StudentOid, s.HomeworkOid })
+                .Select(g => g.First())
+                .ToList();
 
-            foreach (var student in studentIds)
+            var result = new List<StudentHomeworkDto>();
+
+            foreach (var submission in distinctSubmissions)
             {
-                // جلب واجبات الفصل الدراسي الخاص بالابن
-                var classHomeworks = allHomeworks.Where(h => h.ClassOid == student.ClassOid).ToList();
+                var status = DetermineSubmissionStatus(submission);
 
-                foreach (var homework in classHomeworks)
+                var dueDate = submission.Homework?.DueDate ?? DateTime.Now;
+
+                result.Add(new StudentHomeworkDto
                 {
-                    // جلب تسليم الابن لهذا الواجب تحديداً
-                    var submission = allSubmissions.FirstOrDefault(s =>
-                        s.HomeworkOid == homework.Oid && s.StudentOid == student.Oid);
-
-                    var subject = allSubjects.FirstOrDefault(sub => sub.Oid == homework.SubjectOid);
-
-                    resultList.Add(new StudentHomeworkDto
-                    {
-                        StudentOid = student.Oid,
-                        StudentName = student.FullName,
-                        SubjectName = subject?.Name ?? "General",
-                        Title = homework.Title,
-                        DueDate = homework.DueDate,
-                        Status = submission != null
-                        ? submission.Status.ToString()
-                        : (homework.DueDate < DateTime.Now ? "Overdue" : "Pending"),
-                        Grade = submission?.Grade,
-                        TotalMarks = homework.TotalMarks
-                    });
-                }
+                    StudentOid = submission.StudentOid,
+                    StudentName = submission.Student?.FullName ?? "Unknown",
+                    SubjectName = submission.Homework?.Subject?.Name ?? "Unknown",
+                    Title = submission.Homework?.Title ?? "Untitled",
+                    DueDate = dueDate,
+                    Status = status,
+                    Grade = submission.Grade,
+                    TotalMarks = submission.Homework?.TotalMarks ?? 0
+                });
             }
 
-            // ترتيب الواجبات حسب التاريخ (الأحدث أولاً أو حسب تاريخ الاستحقاق)
-            return resultList.OrderBy(x => x.DueDate).ToList();
+            result = result.OrderBy(r => r.DueDate).ToList();
+
+            return result;
+        }
+
+        private string DetermineSubmissionStatus(HomeworkSubmission submission)
+        {
+            if (submission.Grade.HasValue)
+                return "Graded";
+
+          
+            if (submission.SubmittedAt != DateTime.MinValue)
+                return "Submitted";
+
+            if (submission.Homework != null && submission.Homework.DueDate < DateTime.Now)
+                return "Overdue";
+
+            return "Pending";
         }
     }
 }

@@ -75,7 +75,7 @@ namespace SchoolSystem.Application.Features.Parents.DTOs
         // الرسالة التحذيرية
         public string? WarningMessage { get; set; }
     }
-
+    
     public class AttendanceChartItemDto
     {
         public string Month { get; set; }
