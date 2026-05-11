@@ -1,232 +1,173 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { ArrowLeft, Hash, Users, CheckCircle, Clock } from 'lucide-react';
-import { api } from '../../lib/api'; // افترضنا وجود API لجلب الطلاب الحقيقيين
-import { toast } from 'sonner';
-import { useAttendance } from '../../context/AttendanceContext';
+import { ArrowLeft, Clock, Users } from 'lucide-react';
 
 export function CodeAttendance() {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const [searchParams] = useSearchParams();
-  const { sessions, startSession, endSession } = useAttendance();
+  const location   = useLocation();
 
-  // جلب البيانات من الرابط
-  const classId = searchParams.get('classId') || searchParams.get('classOid');
-  const className = searchParams.get('className') || 'Class';
+  const className     = searchParams.get('className') || 'Class';
 
-  const [students, setStudents] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(50); // 5 دقائق
-  const hasEndedRef = useRef(false);
+  // ✅ بنجيب الـ sessionData + correctNumber + numberOptions من navigation state
+  const sessionData   = location.state?.sessionData;
+ // const correctNumber = location.state?.correctNumber;
+ const correctNumber = location.state?.sessionData?.correctNumber || location.state?.correctNumber;
+  //const numberOptions = location.state?.numberOptions || [];
+  const numberOptions = location.state?.sessionData?.randomNumbers || location.state?.numberOptions || [];
 
-  const session = sessions[classId];
-  const sessionActive = session?.status === 'active';
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [revealed, setRevealed] = useState(false);
 
-  // 1️⃣ تحميل الطلاب المسجلين في هذا الفصل
+  // حساب الوقت المتبقي
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await api.students.getAll();
-        const filtered = res.data.filter(s => s.classOid === classId);
-        setStudents(filtered);
-      } catch (err) {
-        console.error("Error loading students", err);
-      }
-    };
-    if (classId) fetchStudents();
-  }, [classId]);
+    if (!sessionData?.expiresAt) return;
 
-  // 2️⃣ بدء الجلسة تلقائياً بنمط "Number Selection"
-  useEffect(() => {
-    if (classId && !session) {
-      startSession(classId, 'code').catch(() => toast.error("Failed to start session"));
-    }
-  }, [classId, session, startSession]);
+    const interval = setInterval(() => {
+      const diff = Math.max(0, Math.floor((new Date(sessionData.expiresAt) - new Date()) / 1000));
+      setTimeLeft(diff);
+      if (diff === 0) clearInterval(interval);
+    }, 1000);
 
-  // 3️⃣ منطق الإنهاء والتوجه للـ Dashboard
-  const handleEndSession = async () => {
-    if (hasEndedRef.current) return;
-    hasEndedRef.current = true;
+    return () => clearInterval(interval);
+  }, [sessionData]);
 
-    try {
-      await endSession(classId, students);
-      toast.success('Attendance session completed ✅');
-      navigate('/teacher/dashboard');
-    } catch (err) {
-      navigate('/teacher/dashboard');
-    }
+  // لو جه للصفحة من غير state → redirect
+  if (!sessionData || correctNumber === null) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-muted-foreground">No active session found.</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
+      </div>
+    );
+  }
+
+  const formatTime = (secs) => {
+    if (secs === null) return '--:--';
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
-  // 4️⃣ العداد التنازلي
-  useEffect(() => {
-    let timer;
-    if (sessionActive && timeLeft > 0 && !hasEndedRef.current) {
-      timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && sessionActive) {
-      handleEndSession();
-    }
-    return () => clearInterval(timer);
-  }, [timeLeft, sessionActive]);
-
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-  };
+  const isExpired = timeLeft === 0;
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-screen" dir="ltr">
-      
+    <div className="space-y-6 max-w-2xl mx-auto">
+
       {/* HEADER */}
-      <div className="flex flex-col sm:row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Number Attendance</h1>
+          <p className="text-muted-foreground mt-1">{sessionData.className || className}</p>
+        </div>
+      </div>
+
+      {/* MAIN CARD */}
+      <div className="bg-card border rounded-xl shadow-sm p-8 flex flex-col items-center gap-6">
+
+        {/* Timer */}
+        <div className={`flex items-center gap-2 text-lg font-semibold px-4 py-2 rounded-full ${
+          isExpired
+            ? 'bg-red-100 text-red-600'
+            : timeLeft !== null && timeLeft < 60
+              ? 'bg-orange-100 text-orange-600'
+              : 'bg-amber-100 text-amber-600'
+        }`}>
+          <Clock className="h-5 w-5" />
+          {isExpired ? 'Session Expired' : `Expires in ${formatTime(timeLeft)}`}
+        </div>
+
+        {/* Instructions */}
+        <p className="text-center text-muted-foreground text-sm">
+          Show these numbers to your students. They must select the <strong>correct one</strong> to mark attendance.
+        </p>
+
+        {/* Numbers Display */}
+        <div className="grid grid-cols-3 gap-4 w-full">
+          {numberOptions.map((num, idx) => {
+            const isCorrect = num === correctNumber;
+            return (
+              <div
+                key={idx}
+                className={`py-8 rounded-xl border-2 text-4xl font-bold text-center transition-all ${
+                  revealed && isCorrect
+                    ? 'bg-amber-500 text-white border-amber-600 scale-105 shadow-lg'
+                    : revealed && !isCorrect
+                      ? 'bg-gray-50 text-gray-400 border-gray-200'
+                      : 'bg-white border-gray-200'
+                }`}
+              >
+                {num}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Reveal / Hide Button */}
+        <Button
+          variant={revealed ? 'outline' : 'default'}
+          className="w-full"
+          onClick={() => setRevealed(!revealed)}
+          disabled={isExpired}
+        >
+          {revealed ? 'Hide Correct Answer' : 'Reveal Correct Answer'}
+        </Button>
+
+        {revealed && (
+          <p className="text-amber-700 font-semibold text-center">
+            ✓ Correct number: <span className="text-2xl">{correctNumber}</span>
+          </p>
+        )}
+
+        {/* Session Info */}
+        <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Lesson</p>
+            <p className="font-medium text-sm">{sessionData.lessonName}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Students</p>
+            <div className="flex items-center justify-center gap-1">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <p className="font-medium text-sm">{sessionData.students?.length ?? 0}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Students List */}
+        {sessionData.students?.length > 0 && (
+          <div className="w-full">
+            <h3 className="font-semibold mb-3 text-sm">Students ({sessionData.students.length})</h3>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              {sessionData.students.map((s) => (
+                <div
+                  key={s.studentOid}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm"
+                >
+                  <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold">
+                    {s.studentName.charAt(0)}
+                  </div>
+                  <span className="truncate">{s.studentName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 w-full pt-2">
           <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full hover:bg-slate-100"
+            variant="outline"
+            className="flex-1"
             onClick={() => navigate('/teacher/dashboard')}
           >
-            <ArrowLeft className="h-5 w-5" />
+            Back to Dashboard
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Number Selection</h1>
-            <p className="text-slate-400 text-sm font-medium">{className}</p>
-          </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-xl border border-purple-100">
-            <Clock className="text-purple-600 h-4 w-4" />
-            <span className="font-mono font-bold text-purple-700">{formatTime(timeLeft)}</span>
-          </div>
-          {sessionActive && (
-            <Button onClick={handleEndSession} variant="destructive" className="rounded-xl px-6">
-              End Session
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm rounded-2xl">
-          <CardContent className="p-6">
-            <div className="text-sm font-medium text-slate-400 mb-1">Total Students</div>
-            <div className="text-3xl font-black text-slate-800">{students.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-2xl">
-          <CardContent className="p-6">
-            <div className="text-sm font-medium text-slate-400 mb-1">Students Attended</div>
-            <div className="text-3xl font-black text-purple-600">
-              {session?.attendance?.length || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm rounded-2xl">
-          <CardContent className="p-6">
-            <div className="text-sm font-medium text-slate-400 mb-1">Live Status</div>
-            <div>
-              {sessionActive ? (
-                <Badge className="bg-emerald-500 hover:bg-emerald-600 px-3 py-1">Active</Badge>
-              ) : (
-                <Badge variant="outline" className="text-slate-400">Ended</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        
-        {/* NUMBER DISPLAY */}
-        <Card className="lg:col-span-2 border-none shadow-lg rounded-3xl overflow-hidden bg-white">
-          <CardHeader className="border-b border-slate-50 bg-purple-600 text-white py-6">
-            <CardTitle className="flex items-center gap-2 text-lg justify-center">
-              <Hash className="h-5 w-5" />
-              Target Selection
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-10 flex flex-col items-center">
-            {sessionActive ? (
-              <div className="space-y-10 w-full text-center">
-                <div className="bg-purple-50 p-8 rounded-[2.5rem] border-2 border-purple-100 shadow-inner">
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-4">Correct Choice (Teacher)</p>
-                  <div className="bg-purple-600 text-white rounded-2xl px-10 py-8 text-6xl font-black shadow-2xl inline-block">
-                    {session?.correctNumber}
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-400 font-medium italic">Student Screen Options:</p>
-                  <div className="flex gap-4 justify-center">
-                    {session?.numberOptions?.map((num, idx) => (
-                      <div key={idx} className="bg-white text-slate-700 rounded-2xl px-6 py-4 text-2xl font-bold border-2 border-slate-100 shadow-sm">
-                        {num}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center space-y-4 opacity-30">
-                <Hash className="h-20 w-20 text-slate-400" />
-                <p className="text-xl font-bold">Session Finished</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* STUDENT FEED */}
-        <Card className="lg:col-span-3 border-none shadow-lg rounded-3xl overflow-hidden flex flex-col bg-white">
-          <CardHeader className="border-b border-slate-50 bg-white py-6 px-8">
-            <CardTitle className="flex items-center gap-2 text-slate-700">
-              <Users className="h-5 w-5 text-purple-600" />
-              Live Attendance Feed
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 max-h-[450px] overflow-y-auto">
-            {students.length > 0 ? (
-              students.map((student, index) => {
-                const isPresent = session?.attendance?.includes(student.oid);
-                return (
-                  <div
-                    key={student.oid}
-                    className={`flex items-center justify-between p-5 border-b border-slate-50 transition-all ${
-                      isPresent ? 'bg-purple-50/50' : 'bg-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs font-mono text-slate-300">#{String(index + 1).padStart(2, '0')}</span>
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                        isPresent ? 'bg-purple-600 text-white shadow-md shadow-purple-100' : 'bg-slate-100 text-slate-400'
-                      }`}>
-                        {student.fullName.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div className={`font-semibold ${isPresent ? 'text-purple-900' : 'text-slate-600'}`}>
-                        {student.fullName}
-                      </div>
-                    </div>
-                    {isPresent ? (
-                      <div className="flex items-center gap-2 text-purple-600 bg-purple-100 px-3 py-1 rounded-full text-xs font-black">
-                        <CheckCircle className="h-4 w-4" />
-                        PRESENT
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-slate-300 italic uppercase font-bold">Waiting...</span>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="py-20 text-center text-slate-300 italic">No students registered in this class</div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

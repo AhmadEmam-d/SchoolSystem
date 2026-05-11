@@ -753,6 +753,7 @@ attendance: {
 
   // ✅ end / submit session
   submitSession: async (dto) => {
+    
     const res = await fetch(`${API_BASE_URL}/Attendance/submit-session`, {
       method: 'POST',
       headers: { 
@@ -774,7 +775,7 @@ attendance: {
 getStudentActiveSession: async () => {
   const token = localStorage.getItem('token');
   try {
-    const res = await fetch(`${API_BASE_URL}/Attendance/student-active-session`, {
+   const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
       headers: getHeaders()
     });
     
@@ -788,6 +789,21 @@ getStudentActiveSession: async () => {
     console.error('Error in getStudentActiveSession:', error);
     return { ok: false, data: null, error: error.message };
   }
+},
+studentSubmit: async (dto) => {
+  const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders()
+    },
+    body: JSON.stringify(dto)
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  return { ok: res.ok, data };
 },
 }
   ,

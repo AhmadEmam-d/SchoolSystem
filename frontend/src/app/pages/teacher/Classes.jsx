@@ -93,6 +93,7 @@ export function TeacherClasses() {
 
           {weekDays.map((day) => {
             const dayClasses = schedule[day] || [];
+            
 
             return (
               <div key={day} className="border rounded-lg overflow-hidden">
@@ -111,11 +112,15 @@ export function TeacherClasses() {
                   {dayClasses.length > 0 ? (
                     <div className="space-y-3">
 
-                      {dayClasses.map((cls, i) => (
+                      {dayClasses.map((cls, i) =>
+                       (
+                        console.log('cls keys:', Object.keys(cls)),
+                        
                         <div
                           key={i}
                           className="border rounded-lg p-4 bg-gray-50"
                         >
+                          
 
                           {/* Info */}
                           <div className="flex flex-wrap gap-4 mb-3">
@@ -157,8 +162,8 @@ export function TeacherClasses() {
                             <Button
                               size="sm"
                               onClick={() =>
-                     navigate(
-  `/teacher/attendance/method-selection?classOid=${cls.classOid}&className=${cls.className}`
+   navigate(
+  `/teacher/attendance/method-selection?classOid=${cls.classOid}&className=${encodeURIComponent(cls.className)}&lessonOid=${cls.lessonOid}`
 )
                               }
                             >
@@ -186,5 +191,6 @@ export function TeacherClasses() {
 
       </div>
     </div>
+    
   );
 }

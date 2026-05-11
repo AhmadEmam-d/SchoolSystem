@@ -4,9 +4,7 @@ import { Clock, MapPin, User, ChevronLeft, ChevronRight, QrCode, X, CheckCircle,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { format, addDays, startOfWeek } from 'date-fns';
-import { api } from '../../../app/lib/api';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { api } from '../../lib/api';
 
 // ─── Attendance Modal ──────────────────────────────────────────────────────────
 function AttendanceModal({ session, onClose, onSuccess }) {
@@ -17,37 +15,44 @@ function AttendanceModal({ session, onClose, onSuccess }) {
   const isQR = session?.method === 2;
   const isNumber = session?.method === 3;
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/Attendance/submit-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          sessionId: session.sessionId,
-          selectedNumber: isNumber ? selectedNumber : null,
-          remarks: null,
-        }),
+const handleSubmit = async () => {
+  setSubmitting(true);
+  try {
+    const payload = {
+      sessionId: session.sessionId,
+      selectedNumber: isNumber ? selectedNumber : null,
+      attendances: [],
+    };
+
+    console.log("📤 submit payload:", payload);
+
+    //const res = await api.attendance.submitSession(payload);
+    const res = await api.attendance.studentSubmit(payload);
+    console.log("❌ error:", JSON.stringify(res.data, null, 2));
+
+    console.log("📥 submit response:", res);
+
+    if (res.data?.success) {
+      setResult({ 
+        success: true, 
+        message: res.data.messages?.EN || 'Attendance recorded!' 
       });
-      const data = await res.json();
-      if (res.ok && data?.data?.success) {
-        setResult({ success: true, message: data.data.message || 'Attendance recorded!' });
-        setTimeout(() => { 
-          onSuccess(); 
-          onClose(); 
-        }, 1800);
-      } else {
-        setResult({ success: false, message: data?.data?.message || data?.messages?.EN || 'Failed.' });
-      }
-    } catch (e) {
-      setResult({ success: false, message: e.message });
-    } finally {
-      setSubmitting(false);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1800);
+    } else {
+      setResult({
+        success: false,
+        message: res.data?.errors?.[0] || res.data?.messages?.EN || 'Failed.',
+      });
     }
-  };
+  } catch (e) {
+    setResult({ success: false, message: e.message });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div
@@ -158,55 +163,47 @@ function AttendanceModal({ session, onClose, onSuccess }) {
 }
 
 // ─── Attendance Button ─────────────────────────────────────────────────────────
-function AttendanceButton({ lesson }) {
+function AttendanceButton({ lesson, isToday }) {
   const [checking, setChecking] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [attended, setAttended] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
-  const handleClick = async () => {
-    setChecking(true);
-    try {
-      // محاولة جلب الجلسة النشطة من API
-      const response = await fetch(`${API_BASE_URL}/api/Attendance/active-session`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept': 'application/json',
-        },
-      });
+  // ✅ يظهر بس لو اليوم ده هو اليوم الحالي
+  if (!isToday) return null;
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.data) {
-          setActiveSession(data.data);
-          setShowModal(true);
-        } else {
-          alert('لا توجد جلسة حضور نشطة حالياً');
-        }
+ const handleClick = async () => {
+  setChecking(true);
+  try {
+    const response = await api.attendance.getStudentActiveSession();
+
+    console.log("🎯 activeSession:", JSON.stringify(response.data, null, 2));
+
+    if (response.ok && response.data) {
+      setActiveSession(response.data);
+      setShowModal(true);
+    } else {
+      if (lesson.sessionId) {
+        setActiveSession({
+          sessionId: lesson.sessionId,
+          className: lesson.subjectName,
+          method: lesson.attendanceMethod || 1,
+          expiresAt: lesson.expiresAt,
+          qrCodeBase64: lesson.qrCodeBase64,
+          randomNumbers: lesson.randomNumbers,
+        });
+        setShowModal(true);
       } else {
-        // إذا فشل الـ API، نستخدم بيانات من الـ lesson نفسه
-        if (lesson.sessionId) {
-          setActiveSession({
-            sessionId: lesson.sessionId,
-            className: lesson.subjectName,
-            method: lesson.attendanceMethod || 1,
-            expiresAt: lesson.expiresAt,
-            qrCodeBase64: lesson.qrCodeBase64,
-            randomNumbers: lesson.randomNumbers,
-          });
-          setShowModal(true);
-        } else {
-          alert('لا توجد جلسة حضور نشطة لهذه الحصة');
-        }
+        alert('لا توجد جلسة حضور نشطة لهذه الحصة');
       }
-    } catch (error) {
-      console.error('Error fetching active session:', error);
-      alert('حدث خطأ في الاتصال بالخادم');
-    } finally {
-      setChecking(false);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching active session:', error);
+    alert('حدث خطأ في الاتصال بالخادم');
+  } finally {
+    setChecking(false);
+  }
+};
 
   if (attended) {
     return (
@@ -234,12 +231,8 @@ function AttendanceButton({ lesson }) {
           cursor: checking ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s',
         }}
-        onMouseEnter={(e) => {
-          if (!checking) e.currentTarget.style.background = '#e0e7ff';
-        }}
-        onMouseLeave={(e) => {
-          if (!checking) e.currentTarget.style.background = '#eef2ff';
-        }}
+        onMouseEnter={(e) => { if (!checking) e.currentTarget.style.background = '#e0e7ff'; }}
+        onMouseLeave={(e) => { if (!checking) e.currentTarget.style.background = '#eef2ff'; }}
       >
         {checking ? (
           <span style={{
@@ -248,7 +241,7 @@ function AttendanceButton({ lesson }) {
             borderTopColor: 'transparent',
             borderRadius: '50%',
             display: 'inline-block',
-            animation: 'spin .6s linear infinite'
+            animation: 'spin .6s linear infinite',
           }} />
         ) : (
           <QrCode size={12} />
@@ -291,22 +284,19 @@ export function StudentSchedule() {
 
         if (result.ok && result.data) {
           console.log('weeklyTimetable from API:', result.data.weeklyTimetable);
-          
-          // Ensure all days of the week are present
+
           const allDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
           const timetable = result.data.weeklyTimetable || [];
           const completeTimetable = allDays.map(dayName => {
             const existingDay = timetable.find(d => d.dayName === dayName);
-            if (existingDay) {
-              return existingDay;
-            }
+            if (existingDay) return existingDay;
             return {
-              dayName: dayName,
+              dayName,
               date: format(weekDays[allDays.indexOf(dayName)], 'yyyy-MM-dd'),
-              lessons: []
+              lessons: [],
             };
           });
-          
+
           setWeeklyTimetable(completeTimetable);
         } else {
           setError('Failed to load schedule');
@@ -350,6 +340,8 @@ export function StudentSchedule() {
       (d) => d.dayName?.toLowerCase() === dayName.toLowerCase()
     );
 
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+
   return (
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -385,7 +377,7 @@ export function StudentSchedule() {
           {weekDays.map((date, index) => {
             const dayName = format(date, 'EEEE');
             const lessons = getLessonsForDay(dayName);
-            const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+            const isToday = format(date, 'yyyy-MM-dd') === todayStr;
             return (
               <Card key={index} className={`border-none shadow-md ${isToday ? 'ring-2 ring-indigo-600' : ''}`}>
                 <CardContent className="p-4 text-center">
@@ -421,7 +413,7 @@ export function StudentSchedule() {
                   const dayName = format(date, 'EEEE');
                   const dayData = getDayData(dayName);
                   const lessons = dayData?.lessons || [];
-                  const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+                  const isToday = format(date, 'yyyy-MM-dd') === todayStr;
 
                   return (
                     <div key={index} className={`p-4 ${isToday ? 'bg-indigo-50' : ''}`}>
@@ -455,7 +447,8 @@ export function StudentSchedule() {
                                 <span>{lesson.room}</span>
                               </div>
                             </div>
-                            <AttendanceButton lesson={lesson} />
+                            {/* ✅ isToday بيتمرر هنا */}
+                            <AttendanceButton lesson={lesson} isToday={isToday} />
                           </div>
                         ))}
                         {lessons.length === 0 && (

@@ -1,193 +1,157 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { api } from '../../lib/api';
-import { useAttendance } from '../../context/AttendanceContext';
-import { QRCodeSVG } from 'qrcode.react';
-import { Users, QrCode, Clock, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
+import { Button } from '../../components/ui/button';
+import { ArrowLeft, Clock, Users, CheckCircle2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function QRAttendance() {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const [searchParams] = useSearchParams();
-  const { startSession, endSession, sessions } = useAttendance();
+  const location   = useLocation();
 
-  const classOid = searchParams.get('classOid');
-  const className = searchParams.get('className') || 'Class A1';
+  const className  = searchParams.get('className') || 'Class';
 
-  const [students, setStudents] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(50); // 5 Minutes
-  
-  // ✅ Ref to prevent duplicate end session calls and toasts
-  const hasEndedRef = useRef(false);
-  const session = sessions[classOid];
+  // ✅ بنجيب الـ sessionData من navigation state
+  const sessionData = location.state?.sessionData;
+ // console.log("sessionData:", sessionData);
 
-  // 1️⃣ Load Students Data
+  const [timeLeft, setTimeLeft] = useState(null);
+
+  // حساب الوقت المتبقي من expiresAt
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await api.students.getAll();
-        const filtered = res.data.filter(s => s.classOid === classOid);
-        setStudents(filtered);
-      } catch (err) {
-        console.error("Error fetching students", err);
-      }
-    };
-    if (classOid) fetchStudents();
-  }, [classOid]);
+    if (!sessionData?.expiresAt) return;
 
-  // 2️⃣ Auto-start session on mount
-  useEffect(() => {
-    if (classOid && !session) {
-      startSession(classOid, 'qr').catch(() => toast.error("Failed to start session"));
-    }
-  }, [classOid, session, startSession]);
+    const interval = setInterval(() => {
+      const diff = Math.max(0, Math.floor((new Date(sessionData.expiresAt) - new Date()) / 1000));
+      setTimeLeft(diff);
+      if (diff === 0) clearInterval(interval);
+    }, 1000);
 
-  // 3️⃣ Handle End Session Logic (Safe from duplicates)
-  const handleEnd = async () => {
-    if (hasEndedRef.current) return;
-    hasEndedRef.current = true;
+    return () => clearInterval(interval);
+  }, [sessionData]);
 
-    try {
-      await endSession(classOid, students);
-      toast.success("Session ended and attendance saved ✅");
-      navigate('/teacher/dashboard');
-    } catch (error) {
-      console.error("End session error", error);
-      navigate('/teacher/dashboard');
-    }
+  // لو جه للصفحة من غير state → redirect
+  if (!sessionData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-muted-foreground">No active session found.</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>Go Back</Button>
+      </div>
+    );
+  }
+
+  const formatTime = (secs) => {
+    if (secs === null) return '--:--';
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
-  // 4️⃣ Countdown Timer Logic
-  useEffect(() => {
-    let timer;
-    
-    if (session?.status === 'active' && timeLeft > 0 && !hasEndedRef.current) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } 
-    else if (timeLeft === 0 && session?.status === 'active' && !hasEndedRef.current) {
-      handleEnd();
-    }
-
-    return () => clearInterval(timer);
-  }, [timeLeft, session?.status]);
-
-  const formatTime = (s) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-  };
+  const isExpired = timeLeft === 0;
 
   return (
-    <div className="p-6 space-y-6 bg-[#f8fafc] min-h-screen" dir="ltr">
-      
+    <div className="space-y-6 max-w-2xl mx-auto">
+
       {/* HEADER */}
-      <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4">
-             <div className="p-3 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-100">
-                <QrCode size={24} />
-             </div>
-             <div>
-                <h1 className="text-2xl font-bold text-slate-800">QR Attendance</h1>
-                <p className="text-slate-400 text-sm">{className}</p>
-             </div>
-        </div>
-        
-        <div className="flex items-center gap-3 bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
-          <Clock className="text-indigo-400" size={20} />
-          <span className="text-2xl font-mono font-bold text-indigo-700">{formatTime(timeLeft)}</span>
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">QR Code Attendance</h1>
+          <p className="text-muted-foreground mt-1">{sessionData.className || className}</p>
         </div>
       </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm rounded-2xl">
-          <CardContent className="p-6 text-center">
-            <p className="text-slate-500 text-sm mb-1 font-medium">Total Students</p>
-            <h2 className="text-4xl font-black text-slate-800">{students.length}</h2>
-          </CardContent>
-        </Card>
+      {/* QR CARD */}
+      <div className="bg-card border rounded-xl shadow-sm p-8 flex flex-col items-center gap-6">
 
-        <Card className="border-none shadow-sm rounded-2xl text-center">
-          <CardContent className="p-6">
-            <p className="text-slate-500 text-sm mb-1 font-medium">Attended</p>
-            <h2 className="text-4xl font-black text-green-600">{session?.attendance?.length || 0}</h2>
-          </CardContent>
-        </Card>
+        {/* Timer */}
+        <div className={`flex items-center gap-2 text-lg font-semibold px-4 py-2 rounded-full ${
+          isExpired
+            ? 'bg-red-100 text-red-600'
+            : timeLeft !== null && timeLeft < 60
+              ? 'bg-orange-100 text-orange-600'
+              : 'bg-green-100 text-green-600'
+        }`}>
+          <Clock className="h-5 w-5" />
+          {isExpired ? 'Session Expired' : `Expires in ${formatTime(timeLeft)}`}
+        </div>
 
-        <Card className="border-none shadow-sm rounded-2xl text-center">
-          <CardContent className="p-6">
-            <p className="text-slate-500 text-sm mb-1 font-medium">Status</p>
-            <h2 className={`text-xl font-bold ${session?.status === 'active' ? 'text-indigo-600' : 'text-orange-500'}`}>
-              {session?.status === 'active' ? 'Active Now' : 'Stopped'}
-            </h2>
-          </CardContent>
-        </Card>
-      </div>
+        {/* QR Image */}
+        {sessionData.qrCodeBase64 ? (
+          <div className="p-4 bg-white rounded-xl border shadow-inner">
+            <img
+              src={`data:image/png;base64,${sessionData.qrCodeBase64}`}
+              alt="Attendance QR Code"
+              className="w-64 h-64 object-contain"
+            />
+          </div>
+        ) : (
+          <div className="w-64 h-64 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400">
+            QR not available
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* QR BOX */}
-        <Card className="border-none shadow-lg rounded-3xl overflow-hidden bg-white">
-          <CardHeader className="bg-emerald-500 text-white text-center py-4">
-            <CardTitle className="text-lg font-bold">Scan to mark attendance</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center p-12 min-h-[380px]">
-            {session?.status === 'active' ? (
-              <div className="flex flex-col items-center gap-6">
-                <div className="p-6 bg-white border-2 border-slate-50 shadow-2xl rounded-[2.5rem]">
-                    <QRCodeSVG value={session.sessionId} size={240} level="H" />
-                </div>
-                <p className="text-slate-400 font-medium animate-pulse">QR Code is ready for scanning</p>
-              </div>
-            ) : (
-              <div className="text-center space-y-4">
-                <AlertCircle className="mx-auto text-slate-200" size={100} />
-                <p className="text-slate-400 font-bold text-xl">Session Inactive</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <p className="text-sm text-muted-foreground text-center">
+          Ask students to scan this QR code to mark their attendance
+        </p>
 
-        {/* LIST BOX */}
-        <Card className="border-none shadow-lg rounded-3xl overflow-hidden flex flex-col bg-white">
-          <CardHeader className="border-b border-slate-50 py-6 px-8">
-            <CardTitle className="flex items-center gap-3 text-slate-700">
-              <Users className="text-indigo-500" size={24} />
-              Real-time Attendance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 max-h-[380px] overflow-y-auto">
-            {students.length > 0 ? (
-              students.map((s, i) => {
-                const isPresent = session?.attendance?.includes(s.oid);
-                return (
-                  <div key={s.oid} className="flex items-center justify-between px-8 py-4 border-b border-slate-50 hover:bg-slate-50 transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ${isPresent ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                        {s.fullName.charAt(0)}
-                      </div>
-                      <span className={`font-semibold ${isPresent ? 'text-green-700' : 'text-slate-600'}`}>{s.fullName}</span>
-                    </div>
-                    {isPresent && <span className="bg-green-100 text-green-700 text-[10px] px-3 py-1.5 rounded-xl font-black tracking-wider uppercase">Present</span>}
+        {/* Session Info */}
+        <div className="w-full grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Lesson</p>
+            <p className="font-medium text-sm">{sessionData.lessonName}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Students</p>
+            <div className="flex items-center justify-center gap-1">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <p className="font-medium text-sm">{sessionData.students?.length ?? 0}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Students List */}
+        {sessionData.students?.length > 0 && (
+          <div className="w-full">
+            <h3 className="font-semibold mb-3 text-sm">Students ({sessionData.students.length})</h3>
+            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              {sessionData.students.map((s) => (
+                <div
+                  key={s.studentOid}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm"
+                >
+                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                    {s.studentName.charAt(0)}
                   </div>
-                );
-              })
-            ) : (
-              <div className="flex flex-col items-center justify-center p-20 text-slate-300 italic">No students found</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <span className="truncate">{s.studentName}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <div className="flex justify-center pb-8">
-        <button
-          onClick={handleEnd}
-          className="bg-red-500 hover:bg-red-600 text-white font-black py-4 px-20 rounded-2xl shadow-xl shadow-red-100 transition-all active:scale-95"
-        >
-          End Session & Save
-        </button>
+        {/* Actions */}
+        <div className="flex gap-3 w-full pt-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => navigate('/teacher/dashboard')}
+          >
+            Back to Dashboard
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => navigate(
+             `/teacher/attendance/manual?classOid=${sessionData.classOid}&className=${encodeURIComponent(sessionData.className)}&lessonOid=${sessionData.lessonOid}&date=${format(new Date(), 'yyyy-MM-dd')}`,
+              { state: { sessionData } }
+            )}
+          >
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            View Manual List
+          </Button>
+        </div>
       </div>
     </div>
   );
