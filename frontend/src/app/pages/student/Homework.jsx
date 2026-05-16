@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { FileText, Calendar, Clock, CheckCircle, Upload, Loader2, AlertCircle } from 'lucide-react';
+//import { FileText, Calendar, Clock, CheckCircle, Upload, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Calendar, Clock, CheckCircle, Upload, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -144,87 +145,92 @@ export function StudentHomework() {
   };
 
   // ── Card ─────────────────────────────────────────────────────────────────
-  const HomeworkCard = ({ homework }) => {
-    const status = normalizeStatus(homework.status);
-    const daysUntilDue = getDaysUntilDue(homework.dueDate);
-    const isOverdue = homework.isOverdue ?? (daysUntilDue !== null && daysUntilDue < 0 && status === 'pending');
+// ── Card ─────────────────────────────────────────────────────────────────
+const HomeworkCard = ({ homework }) => {
+  const status = normalizeStatus(homework.status);
+  const daysUntilDue = getDaysUntilDue(homework.dueDate);
+  const isOverdue = homework.isOverdue ?? (daysUntilDue !== null && daysUntilDue < 0 && status === 'pending');
 
-    return (
-      <Card className="border-none shadow-md hover:shadow-lg transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-1">{homework.title}</h3>
-              {homework.subjectName && (
-                <Badge variant="outline" className="text-xs">{homework.subjectName}</Badge>
-              )}
-            </div>
-            {homework.priority && (
-              <Badge className={getPriorityColor(homework.priority)}>
-                {homework.priority}
-              </Badge>
+  return (
+    <Card className="border-none shadow-md hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 mb-1">{homework.title}</h3>
+            {homework.subjectName && (
+              <Badge variant="outline" className="text-xs">{homework.subjectName}</Badge>
             )}
           </div>
-
-          {homework.description && (
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">{homework.description}</p>
+          {homework.priority && (
+            <Badge className={getPriorityColor(homework.priority)}>
+              {homework.priority}
+            </Badge>
           )}
+        </div>
 
-          <div className="space-y-2 mb-4">
-            {homework.dueDate && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
-                <span>{t('dueDate')}: {new Date(homework.dueDate).toLocaleDateString()}</span>
-                {isOverdue && <Badge className="bg-red-100 text-red-800 text-xs">{t('overdueText')}</Badge>}
-                {!isOverdue && daysUntilDue !== null && daysUntilDue <= 3 && status === 'pending' && (
-                  <Badge className="bg-orange-100 text-orange-800 text-xs">
-                    {t('dueInText')} {daysUntilDue} {daysUntilDue !== 1 ? t('daysText') : t('dayText')}
-                  </Badge>
-                )}
-              </div>
-            )}
+        {homework.description && (
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">{homework.description}</p>
+        )}
+
+        <div className="space-y-2 mb-4">
+          {homework.dueDate && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              {getStatusIcon(homework.status)}
-              <span>{getStatusLabel(homework.status)}</span>
-              {status === 'graded' && homework.grade != null && (
-                <Badge className="bg-green-100 text-green-800">
-                  {homework.grade}{homework.maxGrade != null ? `/${homework.maxGrade}` : '%'}
+              <Calendar className="h-4 w-4" />
+              <span>{t('dueDate')}: {new Date(homework.dueDate).toLocaleDateString()}</span>
+              {isOverdue && <Badge className="bg-red-100 text-red-800 text-xs">{t('overdueText')}</Badge>}
+              {!isOverdue && daysUntilDue !== null && daysUntilDue <= 3 && status === 'pending' && (
+                <Badge className="bg-orange-100 text-orange-800 text-xs">
+                  {t('dueInText')} {daysUntilDue} {daysUntilDue !== 1 ? t('daysText') : t('dayText')}
                 </Badge>
               )}
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {(status === 'pending' || status === 'late') && (
-              <>
-                <Button size="sm" className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                  onClick={() => openSubmitDialog(homework)}>
-                  <Upload className="h-4 w-4 mr-2" />{t('submitHomeworkBtn')}
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1"
-                  onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}`)}>
-                  {t('viewDetails')}
-                </Button>
-              </>
-            )}
-            {status === 'submitted' && (
-              <Button size="sm" variant="outline" className="w-full"
-                onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}`)}>
-                {t('viewSubmissionBtn')}
-              </Button>
-            )}
-            {status === 'graded' && (
-              <Button size="sm" variant="outline" className="w-full"
-                onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}`)}>
-                {t('viewFeedbackBtn')}
-              </Button>
+          )}
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            {getStatusIcon(homework.status)}
+            <span>{getStatusLabel(homework.status)}</span>
+            {status === 'graded' && homework.grade != null && (
+              <Badge className="bg-green-100 text-green-800">
+                {homework.grade}{homework.maxGrade != null ? `/${homework.maxGrade}` : '%'}
+              </Badge>
             )}
           </div>
-        </CardContent>
-      </Card>
-    );
-  };
+        </div>
 
+        <div className="flex items-center gap-2">
+          {/* Pending / Late - show Submit and View Details */}
+          {(status === 'pending' || status === 'late') && (
+            <>
+              <Button size="sm" className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => openSubmitDialog(homework)}>
+                <Upload className="h-4 w-4 mr-2" />{t('submitHomeworkBtn')}
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1"
+                onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}`)}>
+                {t('viewDetails')}
+              </Button>
+            </>
+          )}
+          
+          {/* Submitted - show View Submission (goes to submission page) */}
+          {status === 'submitted' && (
+            <Button size="sm" variant="outline" className="w-full"
+              onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}/submission`)}>
+              <Eye className="h-4 w-4 mr-2" /> View Submission
+            </Button>
+          )}
+          
+          {/* Graded - show View Feedback (goes to submission page to see grade & feedback) */}
+          {status === 'graded' && (
+            <Button size="sm" variant="outline" className="w-full"
+              onClick={() => navigate(`/student/homework/${homework.homeworkId ?? homework.id}/submission`)}>
+              <CheckCircle className="h-4 w-4 mr-2" /> View Feedback
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
   // ── Loading / Error ──────────────────────────────────────────────────────
   if (loading) {
     return (

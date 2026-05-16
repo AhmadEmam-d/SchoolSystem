@@ -4,9 +4,7 @@ import { Clock, MapPin, User, ChevronLeft, ChevronRight, QrCode, X, CheckCircle,
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { format, addDays, startOfWeek } from 'date-fns';
-import { api } from '../../../app/lib/api';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { api } from '../../lib/api';
 
 // ─── Attendance Modal ──────────────────────────────────────────────────────────
 function AttendanceModal({ session, onClose, onSuccess }) {
@@ -20,27 +18,32 @@ function AttendanceModal({ session, onClose, onSuccess }) {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/Attendance/submit-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          sessionId: session.sessionId,
-          selectedNumber: isNumber ? selectedNumber : null,
-          remarks: null,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data?.data?.success) {
-        setResult({ success: true, message: data.data.message || 'Attendance recorded!' });
-        setTimeout(() => { 
-          onSuccess(); 
-          onClose(); 
+      const payload = {
+        sessionId: session.sessionId,
+        selectedNumber: isNumber ? selectedNumber : null,
+        attendances: [],
+      };
+
+      console.log("📤 submit payload:", payload);
+
+      const res = await api.attendance.studentSubmit(payload);
+
+      console.log("📥 submit response:", res);
+
+      if (res.data?.success) {
+        setResult({
+          success: true,
+          message: res.data.messages?.EN || 'Attendance recorded!',
+        });
+        setTimeout(() => {
+          onSuccess();
+          onClose();
         }, 1800);
       } else {
-        setResult({ success: false, message: data?.data?.message || data?.messages?.EN || 'Failed.' });
+        setResult({
+          success: false,
+          message: res.data?.errors?.[0] || res.data?.messages?.EN || 'Failed.',
+        });
       }
     } catch (e) {
       setResult({ success: false, message: e.message });
@@ -158,34 +161,24 @@ function AttendanceModal({ session, onClose, onSuccess }) {
 }
 
 // ─── Attendance Button ─────────────────────────────────────────────────────────
-function AttendanceButton({ lesson }) {
+function AttendanceButton({ lesson, isToday }) {
   const [checking, setChecking] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [attended, setAttended] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
+  if (!isToday) return null;
+
   const handleClick = async () => {
     setChecking(true);
     try {
-      // محاولة جلب الجلسة النشطة من API
-      const response = await fetch(`${API_BASE_URL}/api/Attendance/active-session`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept': 'application/json',
-        },
-      });
+      const response = await api.attendance.getStudentActiveSession();
+      console.log("🎯 activeSession:", JSON.stringify(response.data, null, 2));
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data?.data) {
-          setActiveSession(data.data);
-          setShowModal(true);
-        } else {
-          alert('لا توجد جلسة حضور نشطة حالياً');
-        }
+      if (response.ok && response.data) {
+        setActiveSession(response.data);
+        setShowModal(true);
       } else {
-        // إذا فشل الـ API، نستخدم بيانات من الـ lesson نفسه
         if (lesson.sessionId) {
           setActiveSession({
             sessionId: lesson.sessionId,
@@ -208,11 +201,23 @@ function AttendanceButton({ lesson }) {
     }
   };
 
+  // ✅ لو سجل حضوره → علامة صح والزرار disabled
   if (attended) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'green', marginTop: 8, fontWeight: 500 }}>
-        <CheckCircle size={13} />
-        Attendance recorded
+      <div style={{
+        marginTop: 8,
+        display: 'flex', alignItems: 'center', gap: 5,
+        padding: '5px 10px',
+        borderRadius: 6,
+        border: '1px solid #16a34a',
+        background: '#f0fdf4',
+        color: '#16a34a',
+        fontSize: 11, fontWeight: 500,
+        cursor: 'not-allowed',
+        opacity: 0.8,
+      }}>
+        <CheckCircle size={12} />
+        Attendance Recorded ✓
       </div>
     );
   }
@@ -234,12 +239,8 @@ function AttendanceButton({ lesson }) {
           cursor: checking ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s',
         }}
-        onMouseEnter={(e) => {
-          if (!checking) e.currentTarget.style.background = '#e0e7ff';
-        }}
-        onMouseLeave={(e) => {
-          if (!checking) e.currentTarget.style.background = '#eef2ff';
-        }}
+        onMouseEnter={(e) => { if (!checking) e.currentTarget.style.background = '#e0e7ff'; }}
+        onMouseLeave={(e) => { if (!checking) e.currentTarget.style.background = '#eef2ff'; }}
       >
         {checking ? (
           <span style={{
@@ -248,7 +249,7 @@ function AttendanceButton({ lesson }) {
             borderTopColor: 'transparent',
             borderRadius: '50%',
             display: 'inline-block',
-            animation: 'spin .6s linear infinite'
+            animation: 'spin .6s linear infinite',
           }} />
         ) : (
           <QrCode size={12} />
@@ -284,43 +285,32 @@ export function StudentSchedule() {
       setError(null);
       try {
         const localDate = weekStart.toLocaleDateString('en-CA');
-        console.log('Fetching week starting:', localDate);
-
         const result = await api.timetable.getStudentWeeklySchedule(localDate);
-        console.log('API result:', result);
 
         if (result.ok && result.data) {
-          console.log('weeklyTimetable from API:', result.data.weeklyTimetable);
-          
-          // Ensure all days of the week are present
           const allDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
           const timetable = result.data.weeklyTimetable || [];
           const completeTimetable = allDays.map(dayName => {
             const existingDay = timetable.find(d => d.dayName === dayName);
-            if (existingDay) {
-              return existingDay;
-            }
+            if (existingDay) return existingDay;
             return {
-              dayName: dayName,
+              dayName,
               date: format(weekDays[allDays.indexOf(dayName)], 'yyyy-MM-dd'),
-              lessons: []
+              lessons: [],
             };
           });
-          
           setWeeklyTimetable(completeTimetable);
         } else {
           setError('Failed to load schedule');
           setWeeklyTimetable([]);
         }
       } catch (err) {
-        console.error('Fetch error:', err);
         setError(err.message);
         setWeeklyTimetable([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSchedule();
   }, [currentWeek]);
 
@@ -341,21 +331,18 @@ export function StudentSchedule() {
   };
 
   const getLessonsForDay = (dayName) =>
-    weeklyTimetable.find(
-      (d) => d.dayName?.toLowerCase() === dayName.toLowerCase()
-    )?.lessons || [];
+    weeklyTimetable.find(d => d.dayName?.toLowerCase() === dayName.toLowerCase())?.lessons || [];
 
   const getDayData = (dayName) =>
-    weeklyTimetable.find(
-      (d) => d.dayName?.toLowerCase() === dayName.toLowerCase()
-    );
+    weeklyTimetable.find(d => d.dayName?.toLowerCase() === dayName.toLowerCase());
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   return (
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('myScheduleTitle')}</h1>
@@ -380,12 +367,11 @@ export function StudentSchedule() {
           </div>
         )}
 
-        {/* Weekly Summary */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {weekDays.map((date, index) => {
             const dayName = format(date, 'EEEE');
             const lessons = getLessonsForDay(dayName);
-            const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+            const isToday = format(date, 'yyyy-MM-dd') === todayStr;
             return (
               <Card key={index} className={`border-none shadow-md ${isToday ? 'ring-2 ring-indigo-600' : ''}`}>
                 <CardContent className="p-4 text-center">
@@ -404,7 +390,6 @@ export function StudentSchedule() {
           })}
         </div>
 
-        {/* Detailed Schedule */}
         <Card className="border-none shadow-md">
           <CardHeader className="border-b bg-gray-50">
             <CardTitle>{t('weeklyTimetable')}</CardTitle>
@@ -421,7 +406,7 @@ export function StudentSchedule() {
                   const dayName = format(date, 'EEEE');
                   const dayData = getDayData(dayName);
                   const lessons = dayData?.lessons || [];
-                  const isToday = format(date, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+                  const isToday = format(date, 'yyyy-MM-dd') === todayStr;
 
                   return (
                     <div key={index} className={`p-4 ${isToday ? 'bg-indigo-50' : ''}`}>
@@ -455,7 +440,7 @@ export function StudentSchedule() {
                                 <span>{lesson.room}</span>
                               </div>
                             </div>
-                            <AttendanceButton lesson={lesson} />
+                            <AttendanceButton lesson={lesson} isToday={isToday} />
                           </div>
                         ))}
                         {lessons.length === 0 && (

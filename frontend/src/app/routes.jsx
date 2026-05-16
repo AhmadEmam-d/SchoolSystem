@@ -80,6 +80,7 @@ import { StudentHomework } from "./pages/student/Homework.jsx";
 import { StudentHomeworkDetails } from "./pages/student/HomeworkDetails.jsx";
 import { StudentGrades } from "./pages/student/Grades.jsx";
 import { StudentMessages } from "./pages/student/Messages.jsx";
+
 import { StudentSupport } from "./pages/student/Support.jsx";
 import { StudentProfile } from "./pages/student/Profile.jsx";
 import { StudentSettings } from "./pages/student/Settings.jsx";
@@ -115,9 +116,12 @@ import EditLesson from "./pages/teacher/EditLesson.jsx";
 //import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 import {StudentSendMessage} from "./pages/student/StudentSendMessage.jsx";
+import {ParentSendMessage} from "./pages/parent/Parentsendmessage.jsx";
 
 import {StudentExams} from "./pages/student/Exam.jsx"
 import {StudentExamDetails} from "./pages/student/StudentExamsDetails.jsx"
+import { StudentHomeworkSubmission } from "./pages/student/StudentHomeworkSubmission.jsx";
+import { HomeworkGradeSubmission } from "./pages/teacher/HomeworkGradeSubmission.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -266,6 +270,9 @@ export const router = createBrowserRouter([
       { path: "teacher/homework/:id", Component: HomeworkDetails },
       { path: "teacher/homework/:id/submissions", Component: HomeworkSubmissions },
       { path: "teacher/homework/:id/grades", Component: HomeworkGrades },
+      { path: "teacher/homework/:homeworkId/grade", Component: HomeworkGradeSubmission },
+
+
       { path: "teacher/exams/:id", Component: ExamDetails },
       { path: "teacher/exams/:id/submissions", Component: ExamSubmissions },
       { path: "teacher/exams/:id/grades", Component: ExamGrades },
@@ -297,6 +304,8 @@ export const router = createBrowserRouter([
        { path: "student/messages/new", Component: StudentSendMessage },
        { path: "student/exams", Component: StudentExams  },
        { path: "student/exams/:examId", Component: StudentExamDetails  },
+       { path: "student/homework/:homeworkId/submission", Component: StudentHomeworkSubmission  },
+
        
 
 
@@ -315,6 +324,7 @@ export const router = createBrowserRouter([
       { path: "parent/calendar", Component: ParentCalendar },
       { path: "parent/schedule", Component: ParentSchedule },
       { path: "parent/receipts", Component: ParentReceipts },
+      { path: "parent/messages/new", Component: ParentSendMessage },
     ],
   },
   {
