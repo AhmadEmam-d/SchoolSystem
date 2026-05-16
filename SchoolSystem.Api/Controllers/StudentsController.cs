@@ -20,7 +20,7 @@ namespace SchoolSystem.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Teacher,Admin")]  // تأكد من وجود هذا
+    [Authorize(Roles = "Teacher,Admin")] 
 
     public class StudentsController : ControllerBase
     {
@@ -103,11 +103,11 @@ namespace SchoolSystem.API.Controllers
 
                 return Ok(ApiResponseFactory.Success(studentOid, "StudentCreatedSuccessfully", _messageService));
             }
-            catch
+            catch (Exception ex)
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "StudentCreationFailed", _messageService,
-                    new List<string> { "An error occurred while creating the student." }
+                    new List<string> { ex.Message, ex.InnerException?.Message ?? "" }
                 ));
             }
         }
