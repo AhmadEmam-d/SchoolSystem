@@ -867,168 +867,293 @@ export function StudentDashboard() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function ParentDashboard() {
-  const [selectedChild, setSelectedChild] = useState('bart');
   const { t } = useTranslation();
   const { currentLanguage } = useLanguage();
   const isRTL = currentLanguage === 'ar';
-
-  const children = [
-    { id: 'bart',   name: 'Bart Simpson',   grade: 'Grade 10',     class: '10-A', avatar: 'B' },
-    { id: 'lisa',   name: 'Lisa Simpson',   grade: 'Grade 8',      class: '8-B',  avatar: 'L' },
-    { id: 'maggie', name: 'Maggie Simpson', grade: 'Kindergarten', class: 'KG-1', avatar: 'M' },
-  ];
-
+ 
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
+  const [selectedChildIdx, setSelectedChildIdx] = useState(0);
+ 
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        const data = await api.parents.getDashboard();
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Failed to fetch parent dashboard:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+ 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+ 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
+ 
+  const children        = dashboardData?.children          ?? [];
+  const upcomingEvents  = dashboardData?.upcomingEvents    ?? [];
+  const recentActivities = dashboardData?.recentActivities ?? [];
+  const subjectPerf     = dashboardData?.subjectPerformance?.subjects ?? [];
+  const parentName      = dashboardData?.parentName        ?? '';
+ 
+  const selectedChild   = children[selectedChildIdx] ?? null;
+ 
+  const getGpaColor = (gpa) => {
+    if (gpa >= 3.7) return 'text-green-600 dark:text-green-400';
+    if (gpa >= 3.0) return 'text-blue-600 dark:text-blue-400';
+    if (gpa >= 2.0) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+ 
+  const getAttendanceColor = (pct) => {
+    if (pct >= 90) return 'text-green-600 dark:text-green-400';
+    if (pct >= 70) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+ 
+  const getEventIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'exams':   return <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
+      case 'homework': return <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
+      case 'meeting': return <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
+      default:        return <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
+    }
+  };
+ 
+  const getEventTypeBadge = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'exams':    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'homework': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'meeting':  return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      default:         return 'bg-muted text-muted-foreground';
+    }
+  };
+ 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{t('parentDashboard')}</h1>
-          <p className="text-muted-foreground mt-1">{t('parentDashboardDesc')}</p>
+          <p className="text-muted-foreground mt-1">
+            {parentName ? `${t('welcome')}, ${parentName}` : t('parentDashboardDesc')}
+          </p>
         </div>
-        <Link to="/parent/messages" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+        <Link
+          to="/parent/messages"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+        >
           <Bell className="h-4 w-4" />
           {t('contactTeachers')}
         </Link>
       </div>
-
+ 
       {/* Child Selector */}
-      <Card>
-        <CardHeader><CardTitle>{t('selectChild')}</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex gap-4 flex-wrap">
-            {children.map((child) => (
-              <div
-                key={child.id}
-                onClick={() => setSelectedChild(child.id)}
-                className={`flex-1 min-w-[140px] p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  selectedChild === child.id ? 'border-primary bg-primary/10' : 'border-transparent bg-muted/50 hover:bg-muted'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center text-xl font-bold shrink-0 ${
-                    selectedChild === child.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {child.avatar}
+      {children.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>{t('selectChild')}</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {children.map((child, index) => (
+                <div
+                  key={`${child.studentOid ?? child.name}-${index}`}
+                  onClick={() => setSelectedChildIdx(index)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedChildIdx === index
+                      ? 'border-primary bg-primary/10'
+                      : 'border-transparent bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className={`h-11 w-11 rounded-full flex items-center justify-center text-lg font-bold shrink-0 relative ${
+                      selectedChildIdx === index
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {child.name?.[0]?.toUpperCase() ?? '?'}
+                      {selectedChildIdx === index && (
+                        <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background flex items-center justify-center">
+                          <CheckCircle className="h-3.5 w-3.5 text-primary" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 w-full">
+                      <div className="font-medium text-foreground text-sm truncate">{child.name}</div>
+                      <div className="text-xs text-muted-foreground">{child.gradeLevel}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <div className="font-semibold text-foreground truncate">{child.name}</div>
-                    <div className="text-sm text-muted-foreground">{child.grade} • {child.class}</div>
-                  </div>
-                  {selectedChild === child.id && (
-                    <CheckCircle className={`h-5 w-5 text-primary shrink-0 ${isRTL ? 'mr-auto' : 'ms-auto'}`} />
-                  )}
                 </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+ 
+      {/* Selected Child Stats */}
+      {selectedChild && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('attendance')}</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getAttendanceColor(selectedChild.attendance)}`}>
+                {selectedChild.attendance}%
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Child Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('attendance')}</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">98%</div>
-            <p className="text-xs text-muted-foreground mt-1">{t('presentThisMonth')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('assignmentsLabel')}</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">12/14</div>
-            <p className="text-xs text-muted-foreground mt-1">{t('completedTasksLabel')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('averageGrade')}</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">A-</div>
-            <p className="text-xs text-muted-foreground mt-1">{t('excellentProgress')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('behaviorLabel')}</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">{t('goodBehavior')}</div>
-            <p className="text-xs text-muted-foreground mt-1">{t('noIncidentsReported')}</p>
-          </CardContent>
-        </Card>
-      </div>
-
+              <p className="text-xs text-muted-foreground mt-1">{t('presentThisMonth')}</p>
+            </CardContent>
+          </Card>
+ 
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('subjects')}</CardTitle>
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{selectedChild.subjectsCount}</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('enrolledSubjects', 'Enrolled subjects')}</p>
+            </CardContent>
+          </Card>
+ 
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('gpa')}</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getGpaColor(selectedChild.gpa)}`}>
+                {selectedChild.gpa?.toFixed(1)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{t('outOf', 'out of')} 4.0</p>
+            </CardContent>
+          </Card>
+ 
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{t('gradeLevelLabel')}</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{selectedChild.gradeLevel}</div>
+              <p className="text-xs text-muted-foreground mt-1">{t('currentGrade', 'Current grade level')}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+ 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ 
         {/* Recent Activity */}
         <Card>
           <CardHeader><CardTitle>{t('recentActivity')}</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-medium text-foreground">{t('homeworkSubmittedLabel')}</p>
-                  <p className="text-sm text-muted-foreground">Math - Algebra Set 3</p>
-                  <p className="text-xs text-muted-foreground">Today at 2:30 PM</p>
-                </div>
+            {recentActivities.length === 0 || recentActivities[0]?.status === 'N/A' ? (
+              <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
+                {t('noRecentActivity', 'No recent activity.')}
               </div>
-              <div className="flex gap-4">
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                  <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-medium text-foreground">{t('newGradePostedLabel')}</p>
-                  <p className="text-sm text-muted-foreground">Science - Lab Report</p>
-                  <p className="text-xs text-muted-foreground">Yesterday</p>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {recentActivities.map((item, idx) => (
+                  <div key={idx} className="flex gap-4">
+                    <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="font-medium text-foreground">{item.activity}</p>
+                      {item.timeAgo && (
+                        <p className="text-xs text-muted-foreground">{item.timeAgo}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
-
+ 
         {/* Upcoming Events */}
         <Card>
           <CardHeader><CardTitle>{t('upcomingEventsLabel')}</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors">
-                <div className="flex gap-3 items-center">
-                  <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                  <div className="space-y-0.5">
-                    <p className="font-medium text-foreground">Math Final Exam</p>
-                    <p className="text-sm text-muted-foreground">Friday, March 3</p>
-                  </div>
-                </div>
+            {upcomingEvents.length === 0 ? (
+              <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
+                {t('noUpcomingEvents', 'No upcoming events.')}
               </div>
-              <div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors">
-                <div className="flex gap-3 items-center">
-                  <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                  <div className="space-y-0.5">
-                    <p className="font-medium text-foreground">Parent Teacher Meeting</p>
-                    <p className="text-sm text-muted-foreground">Thursday, March 9</p>
+            ) : (
+              <div className="space-y-3">
+                {upcomingEvents.map((event, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex gap-3 items-center">
+                      {getEventIcon(event.type)}
+                      <div className="space-y-0.5">
+                        <p className="font-medium text-foreground">{event.title}</p>
+                        <p className="text-sm text-muted-foreground">{event.date}</p>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeBadge(event.type)}`}>
+                      {event.type}
+                    </span>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
+ 
+      {/* Subject Performance */}
+      {subjectPerf.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>{t('subjectPerformanceTitle')}</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {subjectPerf.map((subj, idx) => (
+                <div key={idx} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground capitalize">{subj.name}</span>
+                    <span className="text-muted-foreground">{subj.percentage}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        subj.percentage >= 90 ? 'bg-green-500' :
+                        subj.percentage >= 70 ? 'bg-blue-500' :
+                        subj.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${subj.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
 // ─── AttendanceButton ─────────────────────────────────────────────────────────
 function AttendanceButton({ attendanceEnabled, attendanceStatus, onJoin }) {
   if (attendanceStatus === 'completed') {

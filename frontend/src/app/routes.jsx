@@ -80,6 +80,7 @@ import { StudentHomework } from "./pages/student/Homework.jsx";
 import { StudentHomeworkDetails } from "./pages/student/HomeworkDetails.jsx";
 import { StudentGrades } from "./pages/student/Grades.jsx";
 import { StudentMessages } from "./pages/student/Messages.jsx";
+
 import { StudentSupport } from "./pages/student/Support.jsx";
 import { StudentProfile } from "./pages/student/Profile.jsx";
 import { StudentSettings } from "./pages/student/Settings.jsx";
@@ -115,6 +116,7 @@ import EditLesson from "./pages/teacher/EditLesson.jsx";
 //import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 import { SendMessage } from "./pages/teacher/Sendmessage.jsx";
 import {StudentSendMessage} from "./pages/student/StudentSendMessage.jsx";
+import {ParentSendMessage} from "./pages/parent/Parentsendmessage.jsx";
 
 import {StudentExams} from "./pages/student/Exam.jsx"
 import {StudentExamDetails} from "./pages/student/StudentExamsDetails.jsx"
@@ -322,6 +324,7 @@ export const router = createBrowserRouter([
       { path: "parent/calendar", Component: ParentCalendar },
       { path: "parent/schedule", Component: ParentSchedule },
       { path: "parent/receipts", Component: ParentReceipts },
+      { path: "parent/messages/new", Component: ParentSendMessage },
     ],
   },
   {

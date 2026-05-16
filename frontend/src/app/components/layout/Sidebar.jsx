@@ -22,6 +22,8 @@ import {
   Clock,
   ClipboardList,
   ChevronDown,
+  CalendarDays,
+  
   UserCircle,
   X
 } from 'lucide-react';
@@ -231,11 +233,13 @@ export function Sidebar() {
   const parentLinks = [
     { icon: LayoutDashboard, label: t('dashboard'), path: '/parent/dashboard' },
     { icon: Users, label: t('children'), path: '/parent/children' },
+    { icon: CalendarDays, label: t('schedule'), path: '/parent/schedule' },
     { icon: Clock, label: t('attendance'), path: '/parent/attendance' },
     { icon: GraduationCap, label: t('grades'), path: '/parent/grades' },
     { icon: ClipboardList, label: t('homework'), path: '/parent/homework' },
     { icon: MessageSquare, label: t('messages'), path: '/parent/messages' },
     { icon: CreditCard, label: t('payments'), path: '/parent/payments' },
+   
     { icon: Bell, label: t('notifications'), path: '/parent/notifications' },
     { icon: HelpCircle, label: t('support'), path: '/parent/support' },
     { icon: UserCircle, label: t('profile'), path: '/parent/profile' },
