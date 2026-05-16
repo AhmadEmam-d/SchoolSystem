@@ -15,8 +15,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<Class> _classRepo;
         private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
-        private readonly IGenericRepository<ExamResult> _examResultRepo;
-        private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
+        private readonly IGenericRepository<Lesson> _lessonRepo;   // ← replaced
         private readonly IMediator _mediator;
 
         public GetMyChildrenQueryHandler(
@@ -24,28 +23,28 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
             IGenericRepository<Student> studentRepo,
             IGenericRepository<Class> classRepo,
             IGenericRepository<Domain.Entities.Attendance> attendanceRepo,
-            IGenericRepository<ExamResult> examResultRepo,
-            IGenericRepository<HomeworkSubmission> submissionRepo,
+            IGenericRepository<Lesson> lessonRepo,                 // ← replaced
             IMediator mediator)
         {
             _parentRepo = parentRepo;
             _studentRepo = studentRepo;
             _classRepo = classRepo;
             _attendanceRepo = attendanceRepo;
-            _examResultRepo = examResultRepo;
-            _submissionRepo = submissionRepo;
+            _lessonRepo = lessonRepo;
             _mediator = mediator;
         }
 
         public async Task<MyChildrenDto> Handle(GetMyChildrenQuery request, CancellationToken cancellationToken)
         {
             var parent = await _parentRepo.GetAllQueryable()
+                .Cast<Parent>()
                 .FirstOrDefaultAsync(p => p.UserId == request.ParentUserId, cancellationToken);
 
             if (parent == null)
                 throw new Exception("Parent not found");
 
             var students = await _studentRepo.GetAllQueryable()
+                .Cast<Student>()
                 .Include(s => s.Class)
                 .Where(s => s.ParentOid == parent.Oid)
                 .ToListAsync(cancellationToken);
@@ -54,12 +53,13 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
 
             foreach (var student in students)
             {
-                var gradesQuery = new GetStudentGradesQuery(student.Oid);
-                var gradesData = await _mediator.Send(gradesQuery, cancellationToken);
+                var gradesData = await _mediator.Send(
+                    new GetStudentGradesQuery(student.Oid), cancellationToken);
 
                 double gpa = gradesData?.OverallGPA?.GPA ?? 0;
 
-                var subjectsCount = await GetSubjectsCount(student.Oid, cancellationToken);
+                // ← Fix: pass ClassOid
+                var subjectsCount = await GetSubjectsCount(student.ClassOid, cancellationToken);
 
                 var attendancePercentage = await CalculateAttendancePercentage(student.Oid, cancellationToken);
 
@@ -76,41 +76,30 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
                 });
             }
 
-            return new MyChildrenDto
-            {
-                Children = childrenList
-            };
+            return new MyChildrenDto { Children = childrenList };
         }
 
+        // ← Fix: count by ClassOid from Lesson table
         private async Task<int> GetSubjectsCount(
-            Guid studentOid,
-            CancellationToken cancellationToken)
+            Guid classOid, CancellationToken cancellationToken)
         {
-            var examSubjects = await _examResultRepo.GetAllQueryable()
-                .Include(er => er.Exam)
-                .Where(er => er.StudentOid == studentOid)
-                .Select(er => er.Exam.SubjectOid)
+            return await _lessonRepo.GetAllQueryable()
+                .Cast<Lesson>()
+                .Where(l => !l.IsDeleted && l.ClassOid == classOid)
+                .Select(l => l.SubjectOid)
                 .Distinct()
-                .ToListAsync(cancellationToken);
-
-            var homeworkSubjects = await _submissionRepo.GetAllQueryable()
-                .Include(s => s.Homework)
-                .Where(s => s.StudentOid == studentOid && !s.IsDeleted)
-                .Select(s => s.Homework.SubjectOid)
-                .Distinct()
-                .ToListAsync(cancellationToken);
-
-            return examSubjects.Union(homeworkSubjects).Distinct().Count();
+                .CountAsync(cancellationToken);
         }
 
-        private async Task<double> CalculateAttendancePercentage(Guid studentOid, CancellationToken cancellationToken)
+        private async Task<double> CalculateAttendancePercentage(
+            Guid studentOid, CancellationToken cancellationToken)
         {
             var attendances = await _attendanceRepo.GetAllQueryable()
+                .Cast<Domain.Entities.Attendance>()
                 .Where(a => a.StudentOid == studentOid)
                 .ToListAsync(cancellationToken);
 
-            if (!attendances.Any())
-                return 0;
+            if (!attendances.Any()) return 0;
 
             var dailyAttendance = attendances
                 .GroupBy(a => a.Date.Date)
@@ -132,32 +121,18 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
         private string FormatGradeLevel(string className)
         {
             if (string.IsNullOrEmpty(className)) return "N/A";
-
             if (System.Text.RegularExpressions.Regex.IsMatch(className, @"^\d+(st|nd|rd|th)$"))
                 return className;
-
             var match = System.Text.RegularExpressions.Regex.Match(className, @"(\d+)");
             if (match.Success && int.TryParse(match.Groups[1].Value, out int grade))
-            {
                 return $"{grade}{GetOrdinal(grade)}";
-            }
-
             return className;
         }
 
-        private string GetOrdinal(int number)
+        private string GetOrdinal(int number) => (number % 100) switch
         {
-            return (number % 100) switch
-            {
-                11 or 12 or 13 => "th",
-                _ => (number % 10) switch
-                {
-                    1 => "st",
-                    2 => "nd",
-                    3 => "rd",
-                    _ => "th"
-                }
-            };
-        }
+            11 or 12 or 13 => "th",
+            _ => (number % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" }
+        };
     }
 }

@@ -9,7 +9,6 @@ using SchoolSystem.Application.Features.Students.DTOs.Create;
 using SchoolSystem.Application.Features.Students.DTOs.Update;
 using SchoolSystem.Application.Features.Students.Queries.Get;
 using SchoolSystem.Application.Features.Students.Queries.GetAllStudentsWithSubjectsCount;
-using SchoolSystem.Application.Features.Students.Queries.GetMySubjects;
 using SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsCount;
 using SchoolSystem.Application.Interfaces.Services;
 using System;
