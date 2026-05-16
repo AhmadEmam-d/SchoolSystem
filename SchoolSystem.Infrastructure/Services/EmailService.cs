@@ -24,8 +24,7 @@ namespace SchoolSystem.Infrastructure.Services
                 var port = int.Parse(_configuration["EmailSettings:Port"] ?? "587");
                 var senderEmail = _configuration["EmailSettings:SenderEmail"];
                 var password = _configuration["EmailSettings:Password"];
-                var senderName = _configuration["EmailSettings:SenderName"] ?? "SchoolSystem";
-
+                var senderName = _configuration["EmailSettings:SenderName"] ?? "EduSmart";
                 using var client = new SmtpClient(host, port)
                 {
                     Credentials = new NetworkCredential(senderEmail, password),
@@ -65,7 +64,7 @@ namespace SchoolSystem.Infrastructure.Services
                 var message = new MailMessage
                 {
                     From = new MailAddress(config.SenderEmail, config.SenderName),
-                    Subject = "Test Email Configuration",
+                    Subject = "Test Email Configuration - EduSmart",
                     Body = "<h2>Email configuration is working correctly!</h2>",
                     IsBodyHtml = true
                 };

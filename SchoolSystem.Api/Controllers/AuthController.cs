@@ -105,33 +105,21 @@ namespace SchoolSystem.Api.Controllers
         // 🔐 Forgot Password & Reset Password
         // ============================================
 
-        // POST: api/Auth/forgot-password
         [HttpPost("forgot-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
         {
-            try
-            {
-                var command = new ForgotPasswordCommand { Email = dto.Email };
-                var result = await _mediator.Send(command);
+            // ← Remove try/catch temporarily to see the real error
+            var command = new ForgotPasswordCommand { Email = dto.Email };
+            var result = await _mediator.Send(command);
 
-                if (result.Success)
-                {
-                    return Ok(ApiResponseFactory.Success(true, result.Message ?? "Reset code sent successfully", _messageService));
-                }
+            if (result.Success)
+                return Ok(ApiResponseFactory.Success(true, result.Message ?? "Reset code sent successfully", _messageService));
 
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ResetCodeFailed", _messageService,
-                    new List<string> { result.Message ?? "Failed to send reset code" }
-                ));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ApiResponseFactory.Failure<object>(
-                    "ResetCodeFailed", _messageService,
-                    new List<string> { ex.Message }
-                ));
-            }
+            return BadRequest(ApiResponseFactory.Failure<object>(
+                "ResetCodeFailed", _messageService,
+                new List<string> { result.Message ?? "Failed to send reset code" }
+            ));
         }
 
         // POST: api/Auth/verify-otp-reset
