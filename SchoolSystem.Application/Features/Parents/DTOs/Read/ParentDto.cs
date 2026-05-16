@@ -23,4 +23,5 @@ namespace SchoolSystem.Application.Features.Parents.DTOs.Read
         public string FullName { get; set; }
     }
 
+
 }

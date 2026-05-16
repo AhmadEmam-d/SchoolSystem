@@ -12,6 +12,7 @@ using SchoolSystem.Application.Features.Parents.DTOs.Update;
 using SchoolSystem.Application.Features.Parents.Queries.Get;
 using SchoolSystem.Application.Features.Parents.Queries.GetAll;
 using SchoolSystem.Application.Features.Parents.Queries.GetById;
+using SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard;
 using SchoolSystem.Application.Features.Parents.Queries.GetChildSchedule;
 using SchoolSystem.Application.Features.Parents.Queries.GetMyChildren;
 using SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance;
@@ -326,6 +327,20 @@ namespace SchoolSystem.Api.Controllers
                     "ScheduleFetchFailed", _messageService,
                     new List<string> { ex.Message }));
             }
+        }
+        [HttpGet("Children-Dashboard")]
+        [Authorize(Roles = "Parent")]
+        public async Task<IActionResult> GetChildrenDashboard()
+        {
+            var userIdClaim = User.FindFirst("UserId")?.Value
+                           ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!Guid.TryParse(userIdClaim, out var parentUserId))
+                return Unauthorized();
+
+            var result = await _mediator.Send(new GetChildrenDashboardQuery(parentUserId));
+            return Ok(ApiResponseFactory.Success(result, "Children dashboard fetched successfully", _messageService));
+
         }
     }
 }
