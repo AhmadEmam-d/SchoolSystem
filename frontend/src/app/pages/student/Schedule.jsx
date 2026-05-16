@@ -15,44 +15,42 @@ function AttendanceModal({ session, onClose, onSuccess }) {
   const isQR = session?.method === 2;
   const isNumber = session?.method === 3;
 
-const handleSubmit = async () => {
-  setSubmitting(true);
-  try {
-    const payload = {
-      sessionId: session.sessionId,
-      selectedNumber: isNumber ? selectedNumber : null,
-      attendances: [],
-    };
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const payload = {
+        sessionId: session.sessionId,
+        selectedNumber: isNumber ? selectedNumber : null,
+        attendances: [],
+      };
 
-    console.log("📤 submit payload:", payload);
+      console.log("📤 submit payload:", payload);
 
-    //const res = await api.attendance.submitSession(payload);
-    const res = await api.attendance.studentSubmit(payload);
-    console.log("❌ error:", JSON.stringify(res.data, null, 2));
+      const res = await api.attendance.studentSubmit(payload);
 
-    console.log("📥 submit response:", res);
+      console.log("📥 submit response:", res);
 
-    if (res.data?.success) {
-      setResult({ 
-        success: true, 
-        message: res.data.messages?.EN || 'Attendance recorded!' 
-      });
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1800);
-    } else {
-      setResult({
-        success: false,
-        message: res.data?.errors?.[0] || res.data?.messages?.EN || 'Failed.',
-      });
+      if (res.data?.success) {
+        setResult({
+          success: true,
+          message: res.data.messages?.EN || 'Attendance recorded!',
+        });
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1800);
+      } else {
+        setResult({
+          success: false,
+          message: res.data?.errors?.[0] || res.data?.messages?.EN || 'Failed.',
+        });
+      }
+    } catch (e) {
+      setResult({ success: false, message: e.message });
+    } finally {
+      setSubmitting(false);
     }
-  } catch (e) {
-    setResult({ success: false, message: e.message });
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   return (
     <div
@@ -169,47 +167,57 @@ function AttendanceButton({ lesson, isToday }) {
   const [attended, setAttended] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
-  // ✅ يظهر بس لو اليوم ده هو اليوم الحالي
   if (!isToday) return null;
 
- const handleClick = async () => {
-  setChecking(true);
-  try {
-    const response = await api.attendance.getStudentActiveSession();
+  const handleClick = async () => {
+    setChecking(true);
+    try {
+      const response = await api.attendance.getStudentActiveSession();
+      console.log("🎯 activeSession:", JSON.stringify(response.data, null, 2));
 
-    console.log("🎯 activeSession:", JSON.stringify(response.data, null, 2));
-
-    if (response.ok && response.data) {
-      setActiveSession(response.data);
-      setShowModal(true);
-    } else {
-      if (lesson.sessionId) {
-        setActiveSession({
-          sessionId: lesson.sessionId,
-          className: lesson.subjectName,
-          method: lesson.attendanceMethod || 1,
-          expiresAt: lesson.expiresAt,
-          qrCodeBase64: lesson.qrCodeBase64,
-          randomNumbers: lesson.randomNumbers,
-        });
+      if (response.ok && response.data) {
+        setActiveSession(response.data);
         setShowModal(true);
       } else {
-        alert('لا توجد جلسة حضور نشطة لهذه الحصة');
+        if (lesson.sessionId) {
+          setActiveSession({
+            sessionId: lesson.sessionId,
+            className: lesson.subjectName,
+            method: lesson.attendanceMethod || 1,
+            expiresAt: lesson.expiresAt,
+            qrCodeBase64: lesson.qrCodeBase64,
+            randomNumbers: lesson.randomNumbers,
+          });
+          setShowModal(true);
+        } else {
+          alert('لا توجد جلسة حضور نشطة لهذه الحصة');
+        }
       }
+    } catch (error) {
+      console.error('Error fetching active session:', error);
+      alert('حدث خطأ في الاتصال بالخادم');
+    } finally {
+      setChecking(false);
     }
-  } catch (error) {
-    console.error('Error fetching active session:', error);
-    alert('حدث خطأ في الاتصال بالخادم');
-  } finally {
-    setChecking(false);
-  }
-};
+  };
 
+  // ✅ لو سجل حضوره → علامة صح والزرار disabled
   if (attended) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'green', marginTop: 8, fontWeight: 500 }}>
-        <CheckCircle size={13} />
-        Attendance recorded
+      <div style={{
+        marginTop: 8,
+        display: 'flex', alignItems: 'center', gap: 5,
+        padding: '5px 10px',
+        borderRadius: 6,
+        border: '1px solid #16a34a',
+        background: '#f0fdf4',
+        color: '#16a34a',
+        fontSize: 11, fontWeight: 500,
+        cursor: 'not-allowed',
+        opacity: 0.8,
+      }}>
+        <CheckCircle size={12} />
+        Attendance Recorded ✓
       </div>
     );
   }
@@ -277,14 +285,9 @@ export function StudentSchedule() {
       setError(null);
       try {
         const localDate = weekStart.toLocaleDateString('en-CA');
-        console.log('Fetching week starting:', localDate);
-
         const result = await api.timetable.getStudentWeeklySchedule(localDate);
-        console.log('API result:', result);
 
         if (result.ok && result.data) {
-          console.log('weeklyTimetable from API:', result.data.weeklyTimetable);
-
           const allDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
           const timetable = result.data.weeklyTimetable || [];
           const completeTimetable = allDays.map(dayName => {
@@ -296,21 +299,18 @@ export function StudentSchedule() {
               lessons: [],
             };
           });
-
           setWeeklyTimetable(completeTimetable);
         } else {
           setError('Failed to load schedule');
           setWeeklyTimetable([]);
         }
       } catch (err) {
-        console.error('Fetch error:', err);
         setError(err.message);
         setWeeklyTimetable([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchSchedule();
   }, [currentWeek]);
 
@@ -331,14 +331,10 @@ export function StudentSchedule() {
   };
 
   const getLessonsForDay = (dayName) =>
-    weeklyTimetable.find(
-      (d) => d.dayName?.toLowerCase() === dayName.toLowerCase()
-    )?.lessons || [];
+    weeklyTimetable.find(d => d.dayName?.toLowerCase() === dayName.toLowerCase())?.lessons || [];
 
   const getDayData = (dayName) =>
-    weeklyTimetable.find(
-      (d) => d.dayName?.toLowerCase() === dayName.toLowerCase()
-    );
+    weeklyTimetable.find(d => d.dayName?.toLowerCase() === dayName.toLowerCase());
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
@@ -347,7 +343,6 @@ export function StudentSchedule() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('myScheduleTitle')}</h1>
@@ -372,7 +367,6 @@ export function StudentSchedule() {
           </div>
         )}
 
-        {/* Weekly Summary */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {weekDays.map((date, index) => {
             const dayName = format(date, 'EEEE');
@@ -396,7 +390,6 @@ export function StudentSchedule() {
           })}
         </div>
 
-        {/* Detailed Schedule */}
         <Card className="border-none shadow-md">
           <CardHeader className="border-b bg-gray-50">
             <CardTitle>{t('weeklyTimetable')}</CardTitle>
@@ -447,7 +440,6 @@ export function StudentSchedule() {
                                 <span>{lesson.room}</span>
                               </div>
                             </div>
-                            {/* ✅ isToday بيتمرر هنا */}
                             <AttendanceButton lesson={lesson} isToday={isToday} />
                           </div>
                         ))}

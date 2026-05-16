@@ -20,11 +20,11 @@ export function AttendanceMethodSelection() {
   const className = searchParams.get('className') || 'Class';
   const date      = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd');
 
-  const [selectedMethod,    setSelectedMethod]    = useState(null);
-  const [generatedNumbers,  setGeneratedNumbers]  = useState([]);
-  const [correctNumber,     setCorrectNumber]     = useState(null);
-  const [loading,           setLoading]           = useState(false);
-  const [pendingSessionData, setPendingSessionData] = useState(null); // ← جديد
+  const [selectedMethod,     setSelectedMethod]     = useState(null);
+  const [generatedNumbers,   setGeneratedNumbers]   = useState([]);
+  const [correctNumber,      setCorrectNumber]      = useState(null);
+  const [loading,            setLoading]            = useState(false);
+  const [pendingSessionData, setPendingSessionData] = useState(null);
 
   const [lessonOid,     setLessonOid]     = useState(null);
   const [lessonTitle,   setLessonTitle]   = useState('');
@@ -68,9 +68,6 @@ export function AttendanceMethodSelection() {
     fetchLesson();
   }, [classOid]);
 
-  // ← شيلنا الـ useEffect اللي كان بيولد أرقام frontend
-
-  // لما المعلم يغير الـ method نمسح الـ pendingSessionData
   const handleMethodSelect = (methodId) => {
     setSelectedMethod(methodId);
     setPendingSessionData(null);
@@ -79,26 +76,27 @@ export function AttendanceMethodSelection() {
   };
 
   const attendanceMethods = [
-    { id: 'manual', title: 'Take Attendance Manually', description: 'Mark each student manually', icon: ClipboardCheck, color: 'bg-blue-500' },
-    { id: 'qr',     title: 'Generate QR Code',         description: 'Students scan QR code',      icon: QrCode,         color: 'bg-green-500' },
-    { id: 'number', title: 'Number Selection',          description: 'Choose one number for attendance', icon: ListOrdered, color: 'bg-amber-500' },
+    { id: 'manual', title: 'Take Attendance Manually', description: 'Mark each student manually',       icon: ClipboardCheck, color: 'bg-blue-500' },
+    { id: 'qr',     title: 'Generate QR Code',         description: 'Students scan QR code',           icon: QrCode,         color: 'bg-green-500' },
+    { id: 'number', title: 'Number Selection',          description: 'Choose one number for attendance', icon: ListOrdered,    color: 'bg-amber-500' },
   ];
 
   const handleStartSession = async () => {
-    if (!classOid)      { toast.error('Invalid class selected');    return; }
-    if (!lessonOid)     { toast.error('No lesson found for today'); return; }
-    if (!selectedMethod){ toast.error('Please select a method');    return; }
+    if (!classOid)       { toast.error('Invalid class selected');    return; }
+    if (!lessonOid)      { toast.error('No lesson found for today'); return; }
+    if (!selectedMethod) { toast.error('Please select a method');    return; }
 
-    // لو number وعندنا أرقام من الـ backend → المعلم لازم يختار الرقم الصح
+    // لو number وعندنا أرقام من الـ backend → روح لصفحة الكود مباشرة
     if (selectedMethod === 'number' && pendingSessionData) {
-      if (correctNumber === null) {
-        toast.error('Please select the correct number');
-        return;
-      }
-      // روح لصفحة الكود
       navigate(
         `/teacher/attendance/code?classOid=${classOid}&className=${encodeURIComponent(className)}&date=${date}`,
-        { state: { sessionData: pendingSessionData, correctNumber, numberOptions: pendingSessionData.randomNumbers } }
+        {
+          state: {
+            sessionData: pendingSessionData,
+            correctNumber: pendingSessionData.randomNumbers?.[0],
+            numberOptions: pendingSessionData.randomNumbers,
+          },
+        }
       );
       return;
     }
@@ -131,9 +129,10 @@ export function AttendanceMethodSelection() {
         );
       } else if (selectedMethod === 'number') {
         // ← حفظ الـ sessionData وعرض أرقام الـ backend
+        // أول رقم هو الصح دايماً حسب الـ backend
         setPendingSessionData(sessionData);
         setGeneratedNumbers(sessionData.randomNumbers || []);
-        setCorrectNumber(null);
+        setCorrectNumber(sessionData.randomNumbers?.[0] ?? null);
       }
 
     } catch (err) {
@@ -203,27 +202,26 @@ export function AttendanceMethodSelection() {
         {/* NUMBER METHOD - أرقام الـ backend */}
         {selectedMethod === 'number' && generatedNumbers.length > 0 && (
           <div className="mb-8 p-4 rounded-xl border bg-amber-50">
-            <h3 className="font-semibold mb-4">Select the correct number to show students:</h3>
+            <h3 className="font-semibold mb-4">
+              ✓ Session started — correct number is highlighted:
+            </h3>
             <div className="grid grid-cols-3 gap-4">
               {generatedNumbers.map((num, idx) => (
-                <button
+                <div
                   key={idx}
-                  onClick={() => setCorrectNumber(num)}
-                  className={`py-4 rounded-lg border-2 text-xl font-bold transition-all ${
-                    correctNumber === num
+                  className={`py-4 rounded-lg border-2 text-xl font-bold text-center ${
+                    idx === 0
                       ? 'bg-amber-500 text-white border-amber-600'
-                      : 'bg-white border-gray-200 hover:border-amber-300'
+                      : 'bg-white border-gray-200 text-gray-700'
                   }`}
                 >
                   {num}
-                </button>
+                </div>
               ))}
             </div>
-            {correctNumber !== null && (
-              <p className="mt-3 text-sm text-amber-700 font-medium">
-                ✓ Students must select: <strong>{correctNumber}</strong>
-              </p>
-            )}
+            <p className="mt-3 text-sm text-amber-700 font-medium">
+              ✓ Students must select: <strong>{generatedNumbers[0]}</strong>
+            </p>
           </div>
         )}
 

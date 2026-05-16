@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { ArrowLeft, Clock, Users } from 'lucide-react';
+import { api } from '../../lib/api';
+import { toast } from 'sonner';
 
 export function CodeAttendance() {
   const navigate   = useNavigate();
@@ -19,6 +21,7 @@ export function CodeAttendance() {
 
   const [timeLeft, setTimeLeft] = useState(null);
   const [revealed, setRevealed] = useState(false);
+ // console.log("🔢 correctNumber:", correctNumber);
 
   // حساب الوقت المتبقي
   useEffect(() => {
@@ -34,7 +37,7 @@ export function CodeAttendance() {
   }, [sessionData]);
 
   // لو جه للصفحة من غير state → redirect
-  if (!sessionData || correctNumber === null) {
+  if (!sessionData || correctNumber == null) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <p className="text-muted-foreground">No active session found.</p>
@@ -158,16 +161,48 @@ export function CodeAttendance() {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-3 w-full pt-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => navigate('/teacher/dashboard')}
-          >
-            Back to Dashboard
-          </Button>
-        </div>
+       {/* Actions */}
+<div className="flex gap-3 w-full pt-2">
+  <Button
+    variant="outline"
+    className="flex-1"
+    onClick={() => navigate('/teacher/dashboard')}
+  >
+    Back to Dashboard
+  </Button>
+  <Button
+    className="flex-1"
+    variant="destructive"
+    disabled={isExpired}
+    onClick={async () => {
+  try {
+  const res = await api.attendance.submitSession({
+  sessionId: sessionData.sessionId,
+  selectedNumber: null,
+  attendances: sessionData.students?.map(s => ({
+    studentOid: s.studentOid,
+    status: 'Absent',
+    remarks: '',
+    checkInTime: new Date().toISOString().split('T')[1].split('.')[0],
+  })) || [],
+});
+    console.log("❌ error:", JSON.stringify(res.data, null, 2));
+    console.log("📥 submit session:", res);
+    if (res.ok) {
+      toast.success('Session submitted!');
+      navigate('/teacher/dashboard');
+    } else {
+      toast.error(res.data?.errors?.[0] || 'Failed to submit');
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error('Connection error');
+  }
+}}
+  >
+    Submit Session
+  </Button>
+</div>
       </div>
     </div>
   );

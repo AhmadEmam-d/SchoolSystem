@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router';
 import { Button } from '../../components/ui/button';
 import { ArrowLeft, Clock, Users, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { api } from '../../lib/api';
+import { toast } from 'sonner';
+
 
 export function QRAttendance() {
   const navigate   = useNavigate();
@@ -132,26 +135,57 @@ export function QRAttendance() {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-3 w-full pt-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => navigate('/teacher/dashboard')}
-          >
-            Back to Dashboard
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => navigate(
-             `/teacher/attendance/manual?classOid=${sessionData.classOid}&className=${encodeURIComponent(sessionData.className)}&lessonOid=${sessionData.lessonOid}&date=${format(new Date(), 'yyyy-MM-dd')}`,
-              { state: { sessionData } }
-            )}
-          >
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            View Manual List
-          </Button>
-        </div>
+       {/* Actions */}
+<div className="flex gap-3 w-full pt-2">
+  <Button
+    variant="outline"
+    className="flex-1"
+    onClick={() => navigate('/teacher/dashboard')}
+  >
+    Back to Dashboard
+  </Button>
+  <Button
+    className="flex-1"
+    variant="destructive"
+    disabled={isExpired}
+   onClick={async () => {
+  try {
+    const res = await api.attendance.submitSession({
+      sessionId: sessionData.sessionId,
+      selectedNumber:  null,
+      attendances: sessionData.students?.map(s => ({
+        studentOid: s.studentOid,
+        status: 'Absent',
+        remarks: '',
+        checkInTime: new Date().toISOString().split('T')[1].split('.')[0],
+      })) || [],
+    });
+    console.log("📥 submit session:", res);
+    if (res.ok) {
+      toast.success('Session submitted!');
+      navigate('/teacher/dashboard');
+    } else {
+      toast.error(res.data?.errors?.[0] || 'Failed to submit');
+    }
+  } catch (e) {
+    console.error(e);
+    toast.error('Connection error');
+  }
+}}
+  >
+    Submit Session
+  </Button>
+  <Button
+    className="flex-1"
+    onClick={() => navigate(
+      `/teacher/attendance/manual?classOid=${sessionData.classOid}&className=${encodeURIComponent(sessionData.className)}&lessonOid=${sessionData.lessonOid}&date=${format(new Date(), 'yyyy-MM-dd')}`,
+      { state: { sessionData } }
+    )}
+  >
+    <CheckCircle2 className="h-4 w-4 mr-2" />
+    View Manual List
+  </Button>
+</div>
       </div>
     </div>
   );

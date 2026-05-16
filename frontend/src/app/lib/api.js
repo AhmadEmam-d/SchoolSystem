@@ -264,6 +264,64 @@ console.log(token,'token');
     const text = await res.text();
     return text ? JSON.parse(text) : {};
   })
+  ,
+  getDashboard: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/dashboard`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return null;
+},
+
+getMyChildren: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/my-children`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return [];
+},
+
+getChildrenAttendance: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/Children-Attendance`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return null;
+},
+
+getChildrenHomework: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/children-homework`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return [];
+},
+
+getGrades: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/grades`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return [];
+},
+
+getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
+  const res = await fetch(`${API_BASE_URL}/Parents/Get`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({
+      request: { filters, sort, pagination, columns: [] }
+    })
+  });
+  const data = await res.json();
+  return data.success ? data.data : { items: [], totalCount: 0 };
+},
+  
   },
   
   // Classes endpoints
@@ -2802,6 +2860,79 @@ studentExams: {
     }
   }
 },
-
+ parentPayments: {
+ 
+    // GET /api/parent/payments/summary
+    getSummary: () =>
+      fetch(`${API_BASE_URL}/parent/payments/summary`, {
+        headers: getHeaders(),
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch payment summary');
+        return res.json();
+      }),
+    // Returns: { totalPaid, pending, overdue, totalDue, overdueCount, overdueAmount,
+    //            totalChildren, totalInvoices, hasOverduePayments, minimumPaymentDue }
+ 
+    // GET /api/parent/payments/history?studentId=&category=&status=&page=1&pageSize=20
+    getHistory: ({ studentId, category, status, page = 1, pageSize = 20 } = {}) => {
+      const params = new URLSearchParams();
+      if (studentId) params.append('studentId', studentId);
+      if (category)  params.append('category',  category);
+      if (status)    params.append('status',    status);
+      params.append('page',     page);
+      params.append('pageSize', pageSize);
+ 
+      return fetch(`${API_BASE_URL}/parent/payments/history?${params}`, {
+        headers: getHeaders(),
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch payment history');
+        return res.json();
+      });
+      // Returns: { items, totalCount, page, pageSize }
+    },
+ 
+    // GET /api/parent/payments/receipts?studentId=&category=&page=1&pageSize=20
+    getReceipts: ({ studentId, category, page = 1, pageSize = 20 } = {}) => {
+      const params = new URLSearchParams();
+      if (studentId) params.append('studentId', studentId);
+      if (category)  params.append('category',  category);
+      params.append('page',     page);
+      params.append('pageSize', pageSize);
+ 
+      return fetch(`${API_BASE_URL}/parent/payments/receipts?${params}`, {
+        headers: getHeaders(),
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch receipts');
+        return res.json();
+      });
+      // Returns: { totalReceipts, totalAmount, latestPaymentDate, page, pageSize, items }
+    },
+ 
+    // POST /api/parent/payments/pay
+    makePayment: ({ invoiceId, amount, paymentMethod, cardDetails } = {}) =>
+      fetch(`${API_BASE_URL}/parent/payments/pay`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ invoiceId, amount, paymentMethod, cardDetails }),
+      }).then(async res => {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || 'Payment failed');
+        }
+        return res.json();
+      }),
+    // Returns: { success, message, receiptNumber, transactionId, paymentDate,
+    //            amountPaid, remainingAmount, isFullyPaid, invoiceNumber, studentName }
+ 
+    // GET /api/parent/payments/overdue/summary
+    getOverdueSummary: () =>
+      fetch(`${API_BASE_URL}/parent/payments/overdue/summary`, {
+        headers: getHeaders(),
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch overdue summary');
+        return res.json();
+      }),
+    // Returns: { count, totalAmount, hasOverdue, items }
+  },
 
 };
