@@ -15,17 +15,20 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
         private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<User> _userRepo;
+        private readonly IGenericRepository<Parent> _parentRepo;
         private readonly IMediator _mediator;
 
         public GetParentAttendanceQueryHandler(
             IGenericRepository<Domain.Entities.Attendance> attendanceRepo,
             IGenericRepository<Student> studentRepo,
             IGenericRepository<User> userRepo,
+                IGenericRepository<Parent> parentRepo,
             IMediator mediator)
         {
             _attendanceRepo = attendanceRepo;
             _studentRepo = studentRepo;
             _userRepo = userRepo;
+            _parentRepo = parentRepo;
             _mediator = mediator;
         }
 
@@ -34,11 +37,17 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
             CancellationToken cancellationToken)
         {
             var parentUser = await _userRepo.GetByOidAsync(request.ParentOid);
+            var parentEntity = await _parentRepo.GetAllQueryable()
+                    .Cast<Parent>()
+                    .FirstOrDefaultAsync(p => p.UserId == request.ParentOid, cancellationToken);
 
+            if (parentEntity == null)
+                return new ParentFullDashboardDto { ParentName = parentUser?.FullName ?? "N/A", Children = new List<StudentDashboardDetailDto>() };
             var students = await _studentRepo.GetAllQueryable()
+                .Cast<Student>()
                 .Include(s => s.Class)
                 .Include(s => s.Parent)
-                .Where(s => s.ParentOid == request.ParentOid)
+                .Where(s => s.ParentOid == parentEntity.Oid)
                 .ToListAsync(cancellationToken);
 
             var studentIds = students.Select(s => s.Oid).ToList();
