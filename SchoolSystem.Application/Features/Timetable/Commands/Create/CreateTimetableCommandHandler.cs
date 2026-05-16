@@ -46,24 +46,29 @@ namespace SchoolSystem.Application.Features.Timetable.Commands.Create
             if (teacher == null)
                 throw new Exception($"Teacher with ID {request.Dto.TeacherOid} not found");
 
+            // Parse once, reuse everywhere
+            var day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), request.Dto.Day);
+            var startTime = TimeSpan.Parse(request.Dto.StartTime);
+            var endTime = TimeSpan.Parse(request.Dto.EndTime);
+
+            if (day == DayOfWeek.Friday || day == DayOfWeek.Saturday)
+                throw new Exception("Lessons cannot be scheduled on Friday or Saturday.");
+
             var existing = await _timetableRepo.GetAllQueryable()
                 .AnyAsync(t => t.TeacherOid == request.Dto.TeacherOid
-                    && t.Day.ToString() == request.Dto.Day
-                    && ((t.StartTime <= TimeSpan.Parse(request.Dto.StartTime) && t.EndTime > TimeSpan.Parse(request.Dto.StartTime))
-                        || (t.StartTime < TimeSpan.Parse(request.Dto.EndTime) && t.EndTime >= TimeSpan.Parse(request.Dto.EndTime))
-                        || (t.StartTime >= TimeSpan.Parse(request.Dto.StartTime) && t.EndTime <= TimeSpan.Parse(request.Dto.EndTime))),
+                    && t.Day == day
+                    && ((t.StartTime <= startTime && t.EndTime > startTime)
+                        || (t.StartTime < endTime && t.EndTime >= endTime)
+                        || (t.StartTime >= startTime && t.EndTime <= endTime)),
                     cancellationToken);
 
             if (existing)
                 throw new Exception("Teacher has a scheduling conflict at this time");
 
-         
             var timetable = _mapper.Map<SchoolSystem.Domain.Entities.Timetable>(request.Dto);
-
-          
-            timetable.Day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), request.Dto.Day);
-            timetable.StartTime = TimeSpan.Parse(request.Dto.StartTime);
-            timetable.EndTime = TimeSpan.Parse(request.Dto.EndTime);
+            timetable.Day = day;
+            timetable.StartTime = startTime;
+            timetable.EndTime = endTime;
 
             await _timetableRepo.AddAsync(timetable);
             return timetable.Oid;

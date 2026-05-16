@@ -30,12 +30,10 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
 
         public async Task<StudentWeeklyScheduleDto> Handle(GetStudentWeeklyScheduleQuery request, CancellationToken cancellationToken)
         {
-            // Get student - try by Oid first, then by UserId
             var student = await _studentRepo.GetByOidAsync(request.StudentId);
 
             if (student == null)
             {
-                // If not found by Oid, try to find by UserId
                 student = await _studentRepo.GetAllQueryable()
                     .FirstOrDefaultAsync(s => s.UserId == request.StudentId, cancellationToken);
             }
@@ -43,38 +41,35 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
             if (student == null)
                 throw new Exception("Student not found");
 
-            // Get week start date (Monday)
             var weekStart = request.WeekStartDate ?? GetStartOfWeek(DateTime.UtcNow);
 
-            // Get timetables for student's class
             var timetables = await _timetableRepo
                 .GetAllQueryable()
-                .Include(t => t.Subject)   // أضف هذا
+                .Include(t => t.Subject)  
                 .Include(t => t.Teacher)
                 .Where(t => t.ClassOid == student.ClassOid && !t.IsDeleted)
                 .ToListAsync(cancellationToken);
 
-            // Days mapping from DayOfWeek to display names
             var dayNames = new Dictionary<DayOfWeek, string>
             {
-                { DayOfWeek.Monday, "Monday" }, { DayOfWeek.Tuesday, "Tuesday" },
-                { DayOfWeek.Wednesday, "Wednesday" }, { DayOfWeek.Thursday, "Thursday" },
-                { DayOfWeek.Friday, "Friday" }, { DayOfWeek.Saturday, "Saturday" },
-                { DayOfWeek.Sunday, "Sunday" }
+                { DayOfWeek.Sunday,    "Sunday"    },
+                { DayOfWeek.Monday,    "Monday"    },
+                { DayOfWeek.Tuesday,   "Tuesday"   },
+                { DayOfWeek.Wednesday, "Wednesday" },
+                { DayOfWeek.Thursday,  "Thursday"  }
             };
 
             var shortDayNames = new Dictionary<DayOfWeek, string>
             {
-                { DayOfWeek.Monday, "Mon" }, { DayOfWeek.Tuesday, "Tue" },
-                { DayOfWeek.Wednesday, "Wed" }, { DayOfWeek.Thursday, "Thu" },
-                { DayOfWeek.Friday, "Fri" }, { DayOfWeek.Saturday, "Sat" },
-                { DayOfWeek.Sunday, "Sun" }
+                { DayOfWeek.Sunday,    "Sun" },
+                { DayOfWeek.Monday,    "Mon" },
+                { DayOfWeek.Tuesday,   "Tue" },
+                { DayOfWeek.Wednesday, "Wed" },
+                { DayOfWeek.Thursday,  "Thu" }
             };
 
-            // Define week days (Monday to Friday)
-            var weekDays = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+            var weekDays = new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday };
 
-            // Create calendar and weekly schedule
             var calendar = new List<CalendarDayDto>();
             var weeklyTimetable = new List<WeeklyDayScheduleDto>();
 
@@ -90,7 +85,6 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
                 var dayNumber = currentDate.Day;
                 var monthName = currentDate.ToString("MMM");
 
-                // Add to calendar
                 calendar.Add(new CalendarDayDto
                 {
                     DayName = shortDayNames[dayOfWeek],
@@ -98,7 +92,6 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
                     ClassesCount = dayTimetables.Count
                 });
 
-                // Create lessons for this day
                 var lessons = new List<StudentLessonDto>();
                 foreach (var timetable in dayTimetables)
                 {
@@ -111,7 +104,6 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
                     });
                 }
 
-                // Add to weekly timetable
                 weeklyTimetable.Add(new WeeklyDayScheduleDto
                 {
                     DayName = dayNames[dayOfWeek],
@@ -134,7 +126,7 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
 
         private DateTime GetStartOfWeek(DateTime date)
         {
-            int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+            int diff = (7 + (date.DayOfWeek - DayOfWeek.Sunday)) % 7;
             return date.AddDays(-diff).Date;
         }
 
