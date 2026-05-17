@@ -21,7 +21,7 @@ namespace SchoolSystem.Application.Mappings
                     opt => opt.MapFrom(src => src.TeacherSubjects != null ?
                         src.TeacherSubjects.Count(ts => !ts.IsDeleted) : 0))
                 .ForMember(dest => dest.ActiveClassesCount,
-                    opt => opt.MapFrom(src => 0)) // يمكن تعديلها حسب الحاجة
+                    opt => opt.MapFrom(src => 0)) 
                 .ForMember(dest => dest.Teachers,
                     opt => opt.MapFrom(src => src.TeacherSubjects != null ?
                         src.TeacherSubjects.Where(ts => !ts.IsDeleted).Select(ts => ts.Teacher) : new List<Teacher>()));

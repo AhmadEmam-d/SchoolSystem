@@ -35,8 +35,8 @@
     }
     public class UploadAvatarDto
     {
-        public string Base64Image { get; set; }
-        public string FileName { get; set; }
-        public string FileType { get; set; }
+        public string Base64Image { get; set; } = string.Empty;
+        public string FileName { get; set; }= string.Empty;
+        public string FileType { get; set; } = string.Empty;
     }
 }

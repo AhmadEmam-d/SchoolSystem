@@ -1,5 +1,5 @@
 ﻿// Application/Interfaces/Services/IFileStorageService.cs
-using System.IO;  // add this
+using System.IO;  
 
 namespace SchoolSystem.Application.Interfaces.Services
 {
@@ -11,9 +11,9 @@ namespace SchoolSystem.Application.Interfaces.Services
 
     public class FileUploadResult
     {
-        public string FileUrl { get; set; }
-        public string FileType { get; set; }
+        public string FileUrl { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty;
         public long FileSize { get; set; }
-        public string OriginalName { get; set; }
+        public string OriginalName { get; set; } = string.Empty;
     }
 }

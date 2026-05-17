@@ -26,17 +26,14 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Commands.SubmitHome
 
         public async Task<bool> Handle(SubmitHomeworkCommand request, CancellationToken cancellationToken)
         {
-            // Check if homework exists
             var homework = await _homeworkRepo.GetByOidAsync(request.HomeworkId);
             if (homework == null)
                 throw new Exception("Homework not found");
 
-            // Check if student exists
             var student = await _studentRepo.GetByOidAsync(request.StudentId);
             if (student == null)
                 throw new Exception("Student not found");
 
-            // Check if already submitted
             var existingSubmission = await _submissionRepo.GetAllQueryable()
                 .FirstOrDefaultAsync(s => s.HomeworkOid == request.HomeworkId && s.StudentOid == request.StudentId, cancellationToken);
 
@@ -45,7 +42,6 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Commands.SubmitHome
 
             if (existingSubmission != null)
             {
-                // Update existing submission
                 existingSubmission.Content = request.SubmissionText;
                 existingSubmission.AttachmentUrl = request.AttachmentUrl;
                 existingSubmission.SubmittedAt = now;
@@ -54,7 +50,6 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Commands.SubmitHome
             }
             else
             {
-                // Create new submission
                 var submission = new HomeworkSubmission
                 {
                     Oid = Guid.NewGuid(),

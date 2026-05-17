@@ -12,7 +12,6 @@ namespace SchoolSystem.Application.Mappings
             CreateMap<Message, MessageDto>()
                 .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => GetTimeAgo(src.SentAt)))
                 .ForMember(dest => dest.Replies, opt => opt.Ignore())
-                // ✅ Add these missing mappings
                 .ForMember(dest => dest.ReceiverName, opt => opt.MapFrom(src => src.ReceiverName ?? "Unknown"))
                 .ForMember(dest => dest.ReceiverRole, opt => opt.MapFrom(src => src.ReceiverRole ?? "N/A"))
                 .ForMember(dest => dest.ReceiverOid, opt => opt.MapFrom(src => src.ReceiverOid))

@@ -9,7 +9,6 @@ namespace SchoolSystem.Application.Mappings
     {
         public ExamsProfile()
         {
-            // Create mapping
             CreateMap<CreateExamDto, Exam>()
                .ForMember(dest => dest.Oid, opt => opt.Ignore())
                .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
@@ -22,7 +21,6 @@ namespace SchoolSystem.Application.Mappings
                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => TimeSpan.Parse(src.StartTime)))
                .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => TimeSpan.Parse(src.Duration)));
 
-            // Update mapping
             CreateMap<UpdateExamDto, Exam>()
                .ForMember(dest => dest.Type, opt => opt.Ignore())
                .ForMember(dest => dest.StartTime, opt => opt.Ignore())
@@ -32,7 +30,6 @@ namespace SchoolSystem.Application.Mappings
                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
 
-            // Response mapping
             CreateMap<Exam, ExamDto>()
                  .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : string.Empty))
                  .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class != null ? src.Class.Name : string.Empty))
@@ -41,7 +38,6 @@ namespace SchoolSystem.Application.Mappings
                  .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString(@"hh\:mm")))
                  .ForMember(dest => dest.Duration, opt => opt.MapFrom(src => src.Duration.ToString(@"hh\:mm")));
 
-            // Result mapping
             CreateMap<ExamResult, ExamResultDto>()
                 .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName : string.Empty))
                 .ForMember(dest => dest.ExamName, opt => opt.MapFrom(src => src.Exam != null ? src.Exam.Name : string.Empty));

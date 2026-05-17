@@ -22,7 +22,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.ClassOid, opt => opt.MapFrom(src => src.ClassId))
                 .ForMember(dest => dest.SubjectOid, opt => opt.MapFrom(src => src.SubjectId));
 
-            // Mapping for HomeworkAttachment
             CreateMap<HomeworkAttachmentDto, HomeworkAttachment>()
                 .ForMember(dest => dest.Oid, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
@@ -31,7 +30,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.HomeworkOid, opt => opt.Ignore())
                 .ForMember(dest => dest.Homework, opt => opt.Ignore());
 
-            // Response mappings
             CreateMap<Homework, HomeworkListResponseDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Oid))
                 .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class != null ? src.Class.Name : string.Empty))
@@ -48,7 +46,6 @@ namespace SchoolSystem.Application.Mappings
             CreateMap<HomeworkAttachment, HomeworkAttachmentDto>();
 
 
-            // Student Homework Dashboard Mapping
             CreateMap<Homework, HomeworkSummaryDto>()
                 .ForMember(dest => dest.HomeworkId, opt => opt.MapFrom(src => src.Oid))
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : "N/A"))
@@ -60,7 +57,6 @@ namespace SchoolSystem.Application.Mappings
                .ForMember(dest => dest.Materials, opt => opt.MapFrom(src =>
                     src.Materials.Where(a => !a.IsDeleted).ToList()));
 
-            // Homework Details Mapping
             CreateMap<Homework, HomeworkDetailsDto>()
                 .ForMember(dest => dest.HomeworkId, opt => opt.MapFrom(src => src.Oid))
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : "N/A"))
@@ -69,14 +65,11 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.OverdueText, opt => opt.MapFrom(src => GetOverdueText(src.DueDate)))
                 .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => GetPriority(src.DueDate)))
                 .ForMember(dest => dest.Materials, opt => opt.MapFrom(src => src.Materials.Where(m => !m.IsDeleted)))
-                //.ForMember(dest => dest.Attachments, opt => opt.MapFrom(src => src.Attachments.Where(a => !a.IsDeleted)))
                 .ForMember(dest => dest.MySubmission, opt => opt.Ignore());
 
-            // HomeworkAttachment to AttachmentDto
             CreateMap<HomeworkAttachment, AttachmentDto>()
                 .ForMember(dest => dest.SizeText, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)));
 
-            // HomeworkSubmission to StudentSubmissionDto
             CreateMap<HomeworkSubmission, StudentSubmissionDto>()
                 .ForMember(dest => dest.SubmissionId, opt => opt.MapFrom(src => src.Oid))
                 .ForMember(dest => dest.SubmissionText, opt => opt.MapFrom(src => src.Content))
@@ -98,7 +91,6 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.SizeText, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)));
         }
 
-        // Helper methods
         private string GetPriority(DateTime dueDate)
         {
             var daysLeft = (dueDate - DateTime.UtcNow).Days;

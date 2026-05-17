@@ -6,98 +6,98 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
 {
     public class StudentDto
     {
-        public Guid Oid { get; set; }
-        public string FullName { get; set; }
-        public string Gender { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string Address { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public Guid ClassOid { get; set; }
+        public Guid Oid { get; set; } = new Guid();
+        public string FullName { get; set; } = string.Empty;
+        public string Gender { get; set; } = string.Empty;
+        public DateTime DateOfBirth { get; set; } = new DateTime();
+        public string Address { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public Guid ClassOid { get; set; } = new Guid();
 
-        public Guid SectionOid { get; set; }
-        public Guid ParentOid { get; set; }
-        public Guid UserId { get; set; }
-        public string UserName { get; set; }
-        public ClassBasicInfoDto Class { get; set; }
-        public SectionBasicInfoDto Section { get; set; }
-        public ParentBasicInfoDto Parent { get; set; }
+        public Guid SectionOid { get; set; } = new Guid();
+        public Guid ParentOid { get; set; } = new Guid();
+        public Guid UserId { get; set; } = new Guid();
+        public string UserName { get; set; } = string.Empty;
+        public ClassBasicInfoDto Class { get; set; } = new ClassBasicInfoDto();
+        public SectionBasicInfoDto Section { get; set; }= new SectionBasicInfoDto();
+        public ParentBasicInfoDto Parent { get; set; } = new ParentBasicInfoDto();
     }
 
     public class ClassBasicInfoDto
     {
-        public Guid Oid { get; set; }
-        public string Name { get; set; }
-        public string Level { get; set; }
+        public Guid Oid { get; set; } = new Guid();
+        public string Name { get; set; } = string.Empty;
+        public string Level { get; set; } = string.Empty;
     }
 
     public class SectionBasicInfoDto
     {
-        public Guid Oid { get; set; }
-        public string Name { get; set; }
+        public Guid Oid { get; set; } = new Guid();
+        public string Name { get; set; } = string.Empty;
     }
 
     public class ParentBasicInfoDto
     {
-        public Guid Oid { get; set; }
-        public string FatherName { get; set; }
-        public string MotherName { get; set; }
-        public string Phone { get; set; }
+        public Guid Oid { get; set; } = new Guid();
+        public string FatherName { get; set; } = string.Empty;
+        public string MotherName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
     }
     public class StudentSubjectsCountDto
     {
-        public Guid StudentId { get; set; }
-        public string StudentName { get; set; }
-        public string ClassName { get; set; }
-        public int SubjectsCount { get; set; }
-        public List<string> SubjectsNames { get; set; }
+        public Guid StudentId { get; set; } = new Guid();
+        public string StudentName { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public int SubjectsCount { get; set; } = new int();
+        public List<string> SubjectsNames { get; set; } = new List<string>();
     }
     public class MySubjectsDto
     {
         public string Title { get; set; } = "My Subjects";
         public string Subtitle { get; set; } = "trackPerformanceSubjects";
-        public TotalSubjectsCardDto TotalSubjectsCard { get; set; }
-        public List<SubjectDetailsDto> Subjects { get; set; }
+        public TotalSubjectsCardDto TotalSubjectsCard { get; set; } = new TotalSubjectsCardDto();
+        public List<SubjectDetailsDto> Subjects { get; set; }= new List<SubjectDetailsDto>();
     }
 
     public class TotalSubjectsCardDto
     {
-        public int TotalSubjects { get; set; }
-        public double OverallGrade { get; set; }
+        public int TotalSubjects { get; set; } = new int();
+        public double OverallGrade { get; set; } = new double();
     }
 
     public class SubjectDetailsDto
     {
-        public string SubjectName { get; set; }
-        public string TeacherName { get; set; }
-        public CourseProgressDto CourseProgress { get; set; }
-        public NextClassDto NextClass { get; set; }
-        public PendingAssignmentsDto PendingAssignments { get; set; }
-        public double? Grade { get; set; }
+        public string SubjectName { get; set; } = string.Empty;
+        public string TeacherName { get; set; } = string.Empty;
+        public CourseProgressDto CourseProgress { get; set; } = new CourseProgressDto();
+        public NextClassDto NextClass { get; set; } = new NextClassDto();
+        public PendingAssignmentsDto PendingAssignments { get; set; } = new PendingAssignmentsDto();
+        public double? Grade { get; set; } = new double?();
     }
 
     public class CourseProgressDto
     {
-        public int CompletedClasses { get; set; }
-        public int TotalClasses { get; set; }
-        public double Attendance { get; set; }
-        public int CompletedAssignments { get; set; }
-        public int TotalAssignments { get; set; }
+        public int CompletedClasses { get; set; } = new int();
+        public int TotalClasses { get; set; } = new int();
+        public double Attendance { get; set; } = new double();
+        public int CompletedAssignments { get; set; } = new int();
+        public int TotalAssignments { get; set; } = new int();
         public string ProgressText => $"{CompletedClasses}/{TotalClasses} classes";
         public string AssignmentsText => $"{CompletedAssignments}/{TotalAssignments}";
     }
 
     public class NextClassDto
     {
-        public string Day { get; set; }
-        public string Time { get; set; }
-        public string Room { get; set; }
+        public string Day { get; set; } = string.Empty;
+        public string Time { get; set; } = string.Empty;
+        public string Room { get; set; } = string.Empty;
         public string ViewText => "viewMaterials";
     }
 
     public class PendingAssignmentsDto
     {
-        public int Count { get; set; }
+        public int Count { get; set; } = new int();
         public string Text => Count == 1 ? "pendingAssignmentSingular" : "pendingAssignmentPlural";
         public string ViewText => "viewMaterials";
     }

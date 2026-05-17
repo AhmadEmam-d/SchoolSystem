@@ -24,12 +24,10 @@ namespace SchoolSystem.Application.Students.Commands
             var student = await _repository.GetByOidAsync(request.Id);
             if (student == null) throw new KeyNotFoundException("Student not found");
 
-            // Soft delete student
             student.IsDeleted = true;
             student.UpdatedAt = DateTime.UtcNow;
             await _repository.UpdateAsync(student);
 
-            // Soft delete linked user
             var user = await _userRepo.GetByOidAsync(student.UserId);
             if (user != null)
             {

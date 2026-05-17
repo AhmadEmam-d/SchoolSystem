@@ -46,7 +46,6 @@ namespace SchoolSystem.Application.Features.Timetable.Commands.Create
             if (teacher == null)
                 throw new Exception($"Teacher with ID {request.Dto.TeacherOid} not found");
 
-            // Parse once, reuse everywhere
             var day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), request.Dto.Day);
             var startTime = TimeSpan.Parse(request.Dto.StartTime);
             var endTime = TimeSpan.Parse(request.Dto.EndTime);
