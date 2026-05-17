@@ -176,12 +176,14 @@ namespace SchoolSystem.Api.Controllers
                 .Select(s => new ExamSubmissionViewDto
                 {
                     SubmissionId = s.Oid,
-                    StudentId = s.StudentOid,
-                    StudentName = s.Student.User.FullName,
+                    StudentId = s.StudentOid??Guid.Empty,
+                    StudentName = s.Student != null && s.Student.User != null
+                        ? s.Student.User.FullName
+                        : "Unknown Student",
                     AnswerText = s.AnswerText,
                     AttachmentUrl = s.AttachmentUrl,
                     FileName = s.FileName,
-                    SubmittedAt = s.SubmittedAt,
+                    SubmittedAt = s.SubmittedAt??DateTime.UtcNow,
                     Score = s.Score,
                     Feedback = s.Feedback,
                     Status = s.Status.ToString(),
@@ -210,9 +212,14 @@ namespace SchoolSystem.Api.Controllers
             if (submission == null)
                 return NotFound(ApiResponseFactory.Failure<object>("SubmissionNotFound", _messageService, null));
 
+            if (submission.Exam == null)
+                return BadRequest(ApiResponseFactory.Failure<object>("ExamNotFound", _messageService,
+                    new List<string> { "The exam associated with this submission could not be found." }));
+
             if (dto.Score < 0 || dto.Score > submission.Exam.MaxScore)
                 return BadRequest(ApiResponseFactory.Failure<object>("InvalidScore", _messageService,
                     new List<string> { $"Score must be between 0 and {submission.Exam.MaxScore}." }));
+
 
             submission.Score = dto.Score;
             submission.Feedback = dto.Feedback;

@@ -31,8 +31,10 @@ namespace SchoolSystem.Application.Features.Exams.Commands.UpdateResult
             if (result == null)
                 throw new Exception("Exam result not found");
 
-            var exam = await _examRepo.GetByOidAsync(result.ExamOid);
-            if (exam == null)
+            if (result.ExamOid == null)
+                throw new Exception("Exam result has no associated exam");
+
+            var exam = await _examRepo.GetByOidAsync(result.ExamOid.Value); if (exam == null)
                 throw new Exception("Exam not found");
 
             result.Score = request.Dto.Score;

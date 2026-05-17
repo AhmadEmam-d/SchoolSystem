@@ -90,7 +90,7 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
                 var teacherSubject = await _teacherSubjectRepo.GetAllQueryable()
                     .Where(ts => ts.SubjectOid == subject.Oid)
                     .Include(ts => ts.Teacher)
-                        .ThenInclude(t => t.User)
+                        .ThenInclude(t => t!.User)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 var teacherName = teacherSubject?.Teacher?.User?.FullName;
@@ -118,9 +118,9 @@ namespace SchoolSystem.Application.Features.Subjects.Queries.GetMySubjects
 
                 // Get exam results
                 var examResults = await _examResultRepo.GetAllQueryable()
-                    .Where(r => r.StudentOid == studentId && exams.Select(e => e.Oid).Contains(r.ExamOid))
-                    .ToDictionaryAsync(r => r.ExamOid, cancellationToken);
-
+                    .Where(r => r.StudentOid == studentId && r.ExamOid.HasValue && exams.Select(e => e.Oid).Contains(r.ExamOid.Value))
+                    .Where(r => r.ExamOid.HasValue)
+                    .ToDictionaryAsync(r => r.ExamOid!.Value, cancellationToken);
                 result.Add(new MySubjectDto
                 {
                     SubjectId = subject.Oid,

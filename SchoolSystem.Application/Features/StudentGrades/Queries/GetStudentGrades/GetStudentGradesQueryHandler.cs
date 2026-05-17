@@ -95,7 +95,6 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
 
         private GradeTrendDto GetGradeTrend(List<ExamResult> examResults)
         {
-            // ✅ Use actual exam months from data, not hardcoded Sep-Feb
             var grouped = examResults
                 .Where(er => er.Percentage.HasValue)
                 .GroupBy(er => new { er.Exam.Date.Year, er.Exam.Date.Month })
@@ -178,7 +177,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
                 var examsList = subjectExams.Select(er => new ExamGradeDto
                 {
                     Title = er.Exam.Name,
-                    Date = er.SubmittedAt,
+                    Date = er.SubmittedAt ?? DateTime.UtcNow,
                     Score = er.Score,
                     TotalMarks = er.Exam.MaxScore,
                     Percentage = er.Percentage.HasValue ? (double)er.Percentage.Value : 0
@@ -227,8 +226,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
 
             var allClassAverages = await _examResultRepo
                 .GetAllQueryable()
-                .Where(er => classStudentIds.Contains(er.StudentOid) && er.Percentage.HasValue)
-                .GroupBy(er => er.StudentOid)
+                .Where(er => er.StudentOid.HasValue && classStudentIds.Contains(er.StudentOid.Value) && er.Percentage.HasValue).GroupBy(er => er.StudentOid)
                 .Select(g => new
                 {
                     StudentOid = g.Key,

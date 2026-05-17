@@ -34,7 +34,6 @@ namespace SchoolSystem.Application.Features.Reports.Queries.GetStudentsSummary
 
         public async Task<StudentsSummaryReportDto> Handle(GetStudentsSummaryReportQuery request, CancellationToken cancellationToken)
         {
-            // ✅ الطريقة الأولى: جلب البيانات أولاً ثم المعالجة
             var allStudents = await _studentRepo.GetAllQueryable().ToListAsync(cancellationToken);
             var students = allStudents.ToList();
 
@@ -55,8 +54,9 @@ namespace SchoolSystem.Application.Features.Reports.Queries.GetStudentsSummary
                 : 0;
 
             var allExamResults = await _examResultRepo.GetAllQueryable().ToListAsync(cancellationToken);
-            var examResults = allExamResults.Where(r => studentOids.Contains(r.StudentOid)).ToList();
-
+            var examResults = allExamResults
+                .Where(r => r.StudentOid.HasValue && studentOids.Contains(r.StudentOid.Value))
+                .ToList();
             var avgPerformance = examResults.Any() ? examResults.Average(r => r.Percentage ?? 0) : 0;
 
             var genderDistribution = new GenderDistributionDto

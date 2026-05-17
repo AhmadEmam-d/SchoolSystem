@@ -52,16 +52,15 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimeTableByTeac
                     .Select(t => new TimetableSlotDto
                     {
                         Time = $"{t.StartTime:hh\\:mm}-{t.EndTime:hh\\:mm}",
-                        SubjectName = t.Subject.Name,
+                        SubjectName = t.Subject?.Name ?? "Unknown Subject",
                         TeacherName = teacher.FullName,
                         Room = t.Room,
                         ClassName = t.Class?.Name ?? "N/A",
-                        // أضف هذه الخصائص
-                        ClassOid = t.ClassOid,
-                        SubjectOid = t.SubjectOid,
+                        ClassOid = t.ClassOid??Guid.Empty,
+                        SubjectOid = t.SubjectOid??Guid.Empty,
                         Day = t.Day.ToString(),
-                        StartTime = t.StartTime.ToString(@"hh\:mm"),
-                        EndTime = t.EndTime.ToString(@"hh\:mm"),
+                        StartTime = FormatTimeSpan(t.StartTime),
+                        EndTime = FormatTimeSpan(t.EndTime),
                         Period = t.Period
                     }).ToList();
 
@@ -74,6 +73,13 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimeTableByTeac
                 TeacherName = teacher.FullName,
                 WeeklySchedule = weeklySchedule,
             };
+        }
+        private string FormatTimeSpan(TimeSpan? time)
+        {
+            if (!time.HasValue)
+                return string.Empty;
+
+            return time.Value.ToString(@"hh\:mm");
         }
     }
 }

@@ -52,7 +52,7 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetSummary
             // Calculate overall average from completed exams
             var completedExamIds = exams.Where(e => e.Status == ExamStatus.Completed).Select(e => e.Oid).ToList();
             var allResults = await _examResultRepo.GetAllQueryable()
-                .Where(r => completedExamIds.Contains(r.ExamOid))
+                .Where(r => r.ExamOid.HasValue && completedExamIds.Contains(r.ExamOid.Value))
                 .ToListAsync(cancellationToken);
 
             var overallAverage = allResults.Any() ? allResults.Average(r => r.Percentage ?? 0) : 0;

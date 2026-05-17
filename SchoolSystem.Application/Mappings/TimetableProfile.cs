@@ -13,8 +13,8 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.SubjectName, opt => opt.MapFrom(src => src.Subject != null ? src.Subject.Name : null))
                 .ForMember(dest => dest.TeacherName, opt => opt.MapFrom(src => src.Teacher != null ? src.Teacher.FullName : null))
                 .ForMember(dest => dest.Day, opt => opt.MapFrom(src => src.Day.ToString()))
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.ToString(@"hh\:mm")))
-                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime.ToString(@"hh\:mm")));
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime.HasValue ? src.StartTime.Value.ToString(@"hh\:mm") : null))
+                .ForMember(dest => dest.EndTime, opt => opt.MapFrom(src => src.EndTime.HasValue ? src.EndTime.Value.ToString(@"hh\:mm") : null));
 
             CreateMap<CreateTimetableDto, SchoolSystem.Domain.Entities.Timetable>()
                 .ForMember(dest => dest.Day, opt => opt.Ignore())
