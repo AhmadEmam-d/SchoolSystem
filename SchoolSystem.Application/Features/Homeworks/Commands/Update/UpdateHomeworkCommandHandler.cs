@@ -33,16 +33,7 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
             if (homework == null)
                 throw new Exception("Homework not found");
 
-            homework.Title = request.Dto.Title;
-            homework.Description = request.Dto.Description;
-            homework.Instructions = request.Dto.Instructions;
-            homework.DueDate = request.Dto.DueDate;
-            homework.TotalMarks = request.Dto.TotalMarks;
-            homework.SubmissionType = request.Dto.SubmissionType;
-            homework.AllowLateSubmissions = request.Dto.AllowLateSubmissions;
-            homework.NotifyParents = request.Dto.NotifyParents;
-            homework.ClassOid = request.Dto.ClassId;
-            homework.SubjectOid = request.Dto.SubjectId;
+            _mapper.Map(request.Dto, homework);
             homework.UpdatedAt = DateTime.UtcNow;
 
             await _homeworkRepo.UpdateAsync(homework);
@@ -52,34 +43,31 @@ namespace SchoolSystem.Application.Features.Homeworks.Commands.Update
                 if (attachmentDto.IsDeleted && attachmentDto.Oid.HasValue)
                 {
                     var attachment = await _attachmentRepo.GetByOidAsync(attachmentDto.Oid.Value);
+
                     if (attachment != null)
                         await _attachmentRepo.DeleteAsync(attachment.Oid);
                 }
                 else if (attachmentDto.Oid.HasValue)
                 {
                     var attachment = await _attachmentRepo.GetByOidAsync(attachmentDto.Oid.Value);
+
                     if (attachment != null)
                     {
-                        attachment.FileName = attachmentDto.FileName;
-                        attachment.FileUrl = attachmentDto.FileUrl;
-                        attachment.FileType = attachmentDto.FileType;
-                        attachment.FileSize = attachmentDto.FileSize;
+                        _mapper.Map(attachmentDto, attachment);
+
                         attachment.UpdatedAt = DateTime.UtcNow;
+
                         await _attachmentRepo.UpdateAsync(attachment);
                     }
                 }
                 else if (!string.IsNullOrEmpty(attachmentDto.FileName))
                 {
-                    var newAttachment = new HomeworkAttachment
-                    {
-                        Oid = Guid.NewGuid(),
-                        FileName = attachmentDto.FileName,
-                        FileUrl = attachmentDto.FileUrl,
-                        FileType = attachmentDto.FileType,
-                        FileSize = attachmentDto.FileSize,
-                        HomeworkOid = homework.Oid,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                    var newAttachment = _mapper.Map<HomeworkAttachment>(attachmentDto);
+
+                    newAttachment.Oid = Guid.NewGuid();
+                    newAttachment.HomeworkOid = homework.Oid;
+                    newAttachment.CreatedAt = DateTime.UtcNow;
+
                     await _attachmentRepo.AddAsync(newAttachment);
                 }
             }

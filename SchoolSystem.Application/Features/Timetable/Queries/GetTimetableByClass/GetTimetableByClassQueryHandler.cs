@@ -6,7 +6,9 @@ using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimetableByClass
 {
@@ -45,18 +47,19 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimetableByClas
 
             foreach (var day in days)
             {
-                var dayTimetables = timetables
+                var filtered = timetables
                     .Where(t => t.Day.ToString() == day)
-                    .Select(t => new TimetableSlotDto
-                    {
-                        Time = $"{t.StartTime:hh\\:mm}-{t.EndTime:hh\\:mm}",
-                        SubjectName = t.Subject.Name,
-                        TeacherName = t.Teacher.FullName,
-                        Room = t.Room,
-                        ClassName = classEntity.Name
-                    }).ToList();
+                    .ToList();
 
-                weeklySchedule[day] = dayTimetables;
+                var mapped = _mapper.Map<List<TimetableSlotDto>>(filtered);
+
+                // set ClassName (not from entity directly in mapping)
+                foreach (var item in mapped)
+                {
+                    item.ClassName = classEntity.Name;
+                }
+
+                weeklySchedule[day] = mapped;
             }
 
             return new TimetableByClassDto
@@ -67,5 +70,4 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetTimetableByClas
             };
         }
     }
-
 }

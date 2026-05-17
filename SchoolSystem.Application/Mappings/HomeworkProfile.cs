@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using SchoolSystem.Application.Features.Homeworks.DTOs;
+using SchoolSystem.Application.Features.Homeworks.DTOs.Update;
 using SchoolSystem.Application.Features.StudentHomeworks.DTOs;
 using SchoolSystem.Domain.Entities;
 
@@ -89,6 +90,20 @@ namespace SchoolSystem.Application.Mappings
             CreateMap<Material, AttachmentDto>()
                 .ForMember(dest => dest.FileName, opt => opt.MapFrom(src => src.Name)) 
                 .ForMember(dest => dest.SizeText, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)));
+
+
+            CreateMap<UpdateHomeworkDto, Homework>()
+                .ForMember(dest => dest.Oid, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.AssignedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.TeacherOid, opt => opt.Ignore())
+                .ForMember(dest => dest.Attachments, opt => opt.Ignore())
+                .ForMember(dest => dest.Submissions, opt => opt.Ignore())
+                .ForMember(dest => dest.ClassOid, opt => opt.MapFrom(src => src.ClassId))
+                .ForMember(dest => dest.SubjectOid, opt => opt.MapFrom(src => src.SubjectId));
         }
 
         private string GetPriority(DateTime dueDate)
