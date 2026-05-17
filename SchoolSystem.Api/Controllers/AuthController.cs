@@ -114,7 +114,7 @@ namespace SchoolSystem.Api.Controllers
             var result = await _mediator.Send(command);
 
             if (result.Success)
-                return Ok(ApiResponseFactory.Success(true, result.Message ?? "Reset code sent successfully", _messageService));
+                return Ok(ApiResponseFactory.Success(true, result.Message ?? "ResetCodeSentSuccessfully", _messageService));
 
             return BadRequest(ApiResponseFactory.Failure<object>(
                 "ResetCodeFailed", _messageService,
@@ -147,7 +147,7 @@ namespace SchoolSystem.Api.Controllers
 
                 if (result.Success)
                 {
-                    return Ok(ApiResponseFactory.Success(true, result.Message ?? "Password reset successfully", _messageService));
+                    return Ok(ApiResponseFactory.Success(true, "PasswordResetSuccessfully", _messageService));
                 }
 
                 return BadRequest(ApiResponseFactory.Failure<object>(

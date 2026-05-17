@@ -1417,5 +1417,41 @@
   "ActiveSessionFetchFailed": {
     "EN": "An error occurred while fetching the active session",
     "AR": "حدث خطأ أثناء جلب الجلسة النشطة"
+  },
+  "AlreadySubmitted": {
+    "EN": "You have already submitted this exam",
+    "AR": "لقد قمت بالفعل بتسليم هذا الامتحان"
+  },
+  "ExamSubmittedSuccessfully": {
+    "EN": "Exam submitted successfully",
+    "AR": "تم تسليم الامتحان بنجاح"
+  },
+  "SubmitFailed": {
+    "EN": "An error occurred while submitting the exam",
+    "AR": "حدث خطأ أثناء تسليم الامتحان"
+  },
+  "ResetCodeFailed": {
+    "EN": "Failed to send password reset code",
+    "AR": "فشل إرسال رمز إعادة تعيين كلمة المرور"
+  },
+  "PasswordMismatch": {
+    "EN": "New password and confirmation do not match",
+    "AR": "كلمة المرور الجديدة وتأكيدها غير متطابقين"
+  },
+  "ResetFailed": {
+    "EN": "Failed to reset password",
+    "AR": "فشل إعادة تعيين كلمة المرور"
+  },
+  "AdminResetFailed": {
+    "EN": "Failed to reset user password",
+    "AR": "فشل إعادة تعيين كلمة مرور المستخدم"
+  },
+  "PasswordResetSuccessfully": {
+    "EN": "Password reset successfully",
+    "AR": "تم إعادة تعيين كلمة المرور بنجاح"
+  },
+  "ResetCodeSentSuccessfully": {
+    "EN": "Password reset code sent successfully",
+    "AR": "تم إرسال رمز إعادة تعيين كلمة المرور بنجاح"
   }
 }
