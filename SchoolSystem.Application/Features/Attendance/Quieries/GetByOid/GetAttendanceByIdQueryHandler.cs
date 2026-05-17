@@ -26,12 +26,17 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetById
 
         public async Task<AttendanceDto> Handle(GetAttendanceByIdQuery request, CancellationToken cancellationToken)
         {
-            return await _attendanceRepo.GetAllQueryable()
+            var attendance = await _attendanceRepo.GetAllQueryable()
                 .Include(a => a.Student)
                 .Include(a => a.Class)
                 .Where(a => a.Oid == request.Oid)
                 .ProjectTo<AttendanceDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
+
+            if (attendance == null)
+                throw new Exception("Attendance record not found");
+
+            return attendance;
         }
     }
 }

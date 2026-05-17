@@ -7,11 +7,11 @@ namespace SchoolSystem.Domain.Entities
     public class Attendance : BaseEntity
     {
         public Guid StudentOid { get; set; }
-        public Student Student { get; set; }
+        public Student? Student { get; set; }
 
         public Guid ClassOid { get; set; }
-        public Class Class { get; set; }
-        public Guid? SessionOid { get; set; }  // Track which session this attendance belongs to
+        public Class? Class { get; set; }
+        public Guid? SessionOid { get; set; } 
         public virtual AttendanceSession? Session { get; set; }
         public DateTime Date { get; set; }
         public AttendanceStatus Status { get; set; }

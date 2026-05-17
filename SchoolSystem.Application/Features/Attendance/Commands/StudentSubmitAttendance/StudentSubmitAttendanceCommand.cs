@@ -5,7 +5,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
 {
     public class StudentSubmitAttendanceCommand : IRequest<StudentSubmitAttendanceResponseDto>
     {
-        public StudentSubmitAttendanceDto Dto { get; set; }
+        public StudentSubmitAttendanceDto Dto { get; set; }= new();
         public Guid StudentId { get; set; }   
     }
 }

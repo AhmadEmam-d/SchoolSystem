@@ -48,7 +48,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
                     Oid = Guid.NewGuid(),
                     StudentOid = attendance.StudentOid,
                     ClassOid = session.ClassOid,
-                    SessionOid = session.Oid,  // Add this line
+                    SessionOid = session.Oid, 
                     Date = DateTime.UtcNow.Date,
                     Status = (AttendanceStatus)Enum.Parse(typeof(AttendanceStatus), attendance.Status),
                     Remarks = attendance.Remarks,

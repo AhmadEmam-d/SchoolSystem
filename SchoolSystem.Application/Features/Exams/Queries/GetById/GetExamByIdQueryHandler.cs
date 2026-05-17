@@ -32,28 +32,26 @@ namespace SchoolSystem.Application.Features.Exams.Queries.GetById
                 .ProjectTo<ExamDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (exam != null)
-            {
-                // Calculate statistics
-                var results = await _examRepo.GetAllQueryable()
-                    .Where(e => e.Oid == request.Oid)
-                    .SelectMany(e => e.Results)
-                    .ToListAsync(cancellationToken);
+            if (exam == null)
+                throw new Exception("Exam not found");
 
-                if (results.Any())
+            var results = await _examRepo.GetAllQueryable()
+                   .Where(e => e.Oid == request.Oid)
+                   .SelectMany(e => e.Results)
+                   .ToListAsync(cancellationToken);
+            if (results.Any())
+            {
+                exam.Statistics = new ExamStatisticsDto
                 {
-                    exam.Statistics = new ExamStatisticsDto
-                    {
-                        AverageScore = results.Average(r => r.Score),
-                        HighestScore = results.Max(r => r.Score),
-                        LowestScore = results.Min(r => r.Score),
-                        PassRate = results.Count(r => r.IsPassed) * 100.0 / results.Count,
-                        TotalStudents = results.Count,
-                        GradedCount = results.Count(r => r.GradedAt.HasValue)
-                    };
-                }
-                exam.StudentsCount = results?.Count ?? 0;
+                    AverageScore = results.Average(r => r.Score),
+                    HighestScore = results.Max(r => r.Score),
+                    LowestScore = results.Min(r => r.Score),
+                    PassRate = results.Count(r => r.IsPassed) * 100.0 / results.Count,
+                    TotalStudents = results.Count,
+                    GradedCount = results.Count(r => r.GradedAt.HasValue)
+                };
             }
+            exam.StudentsCount = results.Count;
 
             return exam;
         }

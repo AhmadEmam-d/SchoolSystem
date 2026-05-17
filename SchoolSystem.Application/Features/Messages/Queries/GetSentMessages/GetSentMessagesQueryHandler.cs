@@ -31,6 +31,9 @@ namespace SchoolSystem.Application.Features.Messages.Queries.GetSentMessages
 
         public async Task<List<MessageDto>> Handle(GetSentMessagesQuery request, CancellationToken cancellationToken)
         {
+            if (!_currentUser.UserId.HasValue)
+                throw new Exception("User not authenticated");
+
             var userId = _currentUser.UserId.Value;
 
             var query = _messageRepo.GetAllQueryable()

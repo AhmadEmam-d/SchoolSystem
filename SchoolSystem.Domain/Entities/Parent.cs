@@ -9,12 +9,12 @@ namespace SchoolSystem.Domain.Entities
 {
     public class Parent : BaseEntity
     {
-        public string FatherName { get; set; }
-        public string MotherName { get; set; }
-        public string Phone { get; set; }
-        public string Email { get; set; }
+        public string FatherName { get; set; } = string.Empty;
+        public string MotherName { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public Guid UserId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         public ICollection<Student> Students { get; set; } = new List<Student>();
     }
 

@@ -87,7 +87,7 @@ namespace SchoolSystem.Application.Features.Invoices.Commands.BulkCreateInvoices
 
     public class BulkCreateInvoicesCommand : IRequest<BulkCreateInvoicesResponse>
     {
-        public BulkCreateInvoicesDto Dto { get; set; }
+        public BulkCreateInvoicesDto Dto { get; set; } = new();
     }
 
     public class BulkCreateInvoicesResponse

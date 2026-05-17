@@ -82,7 +82,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAtt
                 Oid = Guid.NewGuid(),
                 StudentOid = student.Oid,
                 ClassOid = session.ClassOid,
-                SessionOid = session.Oid,  // Add this line
+                SessionOid = session.Oid,  
                 Date = DateTime.UtcNow.Date,
                 Status = attendanceStatus,
                 Remarks = request.Dto.Remarks ?? $"Self-submitted via {method}",

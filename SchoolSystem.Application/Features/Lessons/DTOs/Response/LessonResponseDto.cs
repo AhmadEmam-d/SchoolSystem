@@ -4,25 +4,25 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
     public class LessonResponseDto
     {
         public Guid Oid { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int Duration { get; set; }
-        public string Status { get; set; }
-        public string Type { get; set; }
-        public string ClassName { get; set; }
-        public string SubjectName { get; set; }
-        public string TeacherName { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string ClassName { get; set; } = string.Empty;
+        public string SubjectName { get; set; } = string.Empty;
+        public string TeacherName { get; set; } = string.Empty;
         public int MaterialsCount { get; set; }
         public int ObjectivesCount { get; set; }
         public bool HasHomework { get; set; }
         public HomeworkResponseDto? Homework { get; set; }
-        public List<ObjectiveResponseDto> Objectives { get; set; }
-        public List<MaterialResponseDto> Materials { get; set; }
-        public List<string> ResourceLinks { get; set; }
-        public string TeacherNotes { get; set; }
+        public List<ObjectiveResponseDto> Objectives { get; set; }= new List<ObjectiveResponseDto>();
+        public List<MaterialResponseDto> Materials { get; set; }=new List<MaterialResponseDto>();
+        public List<string> ResourceLinks { get; set; } = new List<string>();
+        public string TeacherNotes { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
@@ -30,22 +30,22 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs
     public class ObjectiveResponseDto
     {
         public Guid Oid { get; set; }
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         public int Order { get; set; }
     }
     public class HomeworkResponseDto
     {
         public Guid Oid { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
     }
     public class MaterialResponseDto
     {
         public Guid Oid { get; set; }
-        public string Name { get; set; }
-        public string FileUrl { get; set; }
-        public string FileType { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty;
         public long FileSize { get; set; }
     }
 

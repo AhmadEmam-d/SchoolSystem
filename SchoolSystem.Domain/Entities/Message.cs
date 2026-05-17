@@ -2,11 +2,11 @@
 
 public class Message : BaseEntity
 {
-    public string Subject { get; set; }
-    public string Content { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
     public Guid SenderOid { get; set; }
-    public string SenderName { get; set; }
-    public string SenderRole { get; set; }
+    public string SenderName { get; set; } = string.Empty;
+    public string SenderRole { get; set; } = string.Empty;
     public Guid? ReceiverOid { get; set; }
     public string? ReceiverName { get; set; }
     public string? ReceiverRole { get; set; }

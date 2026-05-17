@@ -29,14 +29,14 @@ namespace SchoolSystem.Application.Features.Announcements.Queries.GetById
                 .ProjectTo<AnnouncementDto>(_mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (announcement != null)
+            if (announcement == null)
+                throw new Exception("Announcement not found");
+
+            var entity = await _announcementRepo.GetByOidAsync(request.Oid);
+            if (entity != null)
             {
-                var entity = await _announcementRepo.GetByOidAsync(request.Oid);
-                if (entity != null)
-                {
-                    entity.ViewCount++;
-                    await _announcementRepo.UpdateAsync(entity);
-                }
+                entity.ViewCount++;
+                await _announcementRepo.UpdateAsync(entity);
             }
 
             return announcement;

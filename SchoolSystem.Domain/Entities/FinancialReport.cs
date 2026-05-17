@@ -7,13 +7,13 @@ namespace SchoolSystem.Domain.Entities
 {
     public class FinancialReport : BaseEntity
     {
-        public string Period { get; set; }
+        public string Period { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public decimal TotalIncome { get; set; }
         public decimal TotalExpenses { get; set; }
         public decimal NetProfit { get; set; }
-        public string Details { get; set; } 
+        public string Details { get; set; } = string.Empty;
         public DateTime GeneratedAt { get; set; }
         public Guid? GeneratedBy { get; set; }
     }

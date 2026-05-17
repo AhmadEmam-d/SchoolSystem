@@ -13,17 +13,17 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetClassStats
         public double AverageAttendance { get; set; }
         public int TotalLessons { get; set; }
         public int CompletedLessons { get; set; }
-        public List<StudentAttendanceSummaryDto> StudentSummaries { get; set; }
+        public List<StudentAttendanceSummaryDto> StudentSummaries { get; set; }=new List<StudentAttendanceSummaryDto>();
     }
 
     public class StudentAttendanceSummaryDto
     {
         public Guid StudentOid { get; set; }
-        public string StudentName { get; set; }
+        public string StudentName { get; set; } = string.Empty;
         public double AttendancePercentage { get; set; }
         public int PresentCount { get; set; }
         public int AbsentCount { get; set; }
         public int LateCount { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
 }

@@ -5,8 +5,8 @@ namespace SchoolSystem.Application.Features.Auth.Commands.VerifyOtpAndReset
 {
     public class VerifyOtpAndResetCommand : IRequest<QueryResponse<bool>>
     {
-        public string Email { get; set; }
-        public string OtpCode { get; set; }
-        public string NewPassword { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string OtpCode { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

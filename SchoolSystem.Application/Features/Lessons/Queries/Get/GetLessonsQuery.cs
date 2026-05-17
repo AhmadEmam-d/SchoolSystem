@@ -7,6 +7,6 @@ namespace SchoolSystem.Application.Features.Lessons.Queries.Get
 {
     public class GetLessonsQuery : IRequest<QueryResponse<object>>
     {
-        public RequestModel Request { get; set; }
+        public RequestModel Request { get; set; }=new RequestModel();
     }
 }

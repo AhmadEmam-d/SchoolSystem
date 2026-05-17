@@ -97,7 +97,7 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetStudentWeeklySc
                 {
                     lessons.Add(new StudentLessonDto
                     {
-                        Time = FormatTime(timetable.StartTime),
+                        Time = timetable.StartTime.HasValue ? FormatTime(timetable.StartTime.Value) : "N/A",
                         SubjectName = timetable.Subject?.Name ?? "N/A",
                         TeacherName = timetable.Teacher?.FullName ?? "N/A",
                         Room = timetable.Room ?? "N/A"

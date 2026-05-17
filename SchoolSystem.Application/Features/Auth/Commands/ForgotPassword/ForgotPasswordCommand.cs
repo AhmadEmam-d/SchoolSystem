@@ -5,6 +5,6 @@ namespace SchoolSystem.Application.Features.Auth.Commands.ForgotPassword
 {
     public class ForgotPasswordCommand : IRequest<QueryResponse<bool>>
     {
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
     }
 }

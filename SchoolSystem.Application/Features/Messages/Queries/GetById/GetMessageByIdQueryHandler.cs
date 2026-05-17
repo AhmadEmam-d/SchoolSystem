@@ -30,8 +30,10 @@ namespace SchoolSystem.Application.Features.Messages.Queries.GetById
 
         public async Task<MessageDto> Handle(GetMessageByIdQuery request, CancellationToken cancellationToken)
         {
-            var userId = _currentUser.UserId.Value;
+            if (!_currentUser.UserId.HasValue)
+                throw new Exception("User not authenticated");
 
+            var userId = _currentUser.UserId.Value;
             var query = _messageRepo.GetAllQueryable()
                 .Where(m => m.Oid == request.Oid &&
                             (m.SenderOid == userId || m.ReceiverOid == userId));

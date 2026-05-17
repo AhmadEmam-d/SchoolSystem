@@ -8,8 +8,8 @@ namespace SchoolSystem.Domain.Entities
     public class StudentReport : BaseEntity
     {
         public Guid StudentOid { get; set; }
-        public Student Student { get; set; }
-        public string ReportType { get; set; }
+        public Student? Student { get; set; }
+        public string ReportType { get; set; } = string.Empty;
         public double AttendanceRate { get; set; }
         public double AverageGrade { get; set; }
         public int TotalExams { get; set; }

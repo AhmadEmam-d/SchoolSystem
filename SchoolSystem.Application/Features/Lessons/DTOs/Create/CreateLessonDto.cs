@@ -5,8 +5,8 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs.Create
 {
     public class CreateLessonDto
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
@@ -17,21 +17,21 @@ namespace SchoolSystem.Application.Features.Lessons.DTOs.Create
         public List<CreateMaterialDto> Materials { get; set; } = new List<CreateMaterialDto>();
         public List<string> ResourceLinks { get; set; } = new List<string>();
         public LessonHomeworkDto? Homework { get; set; }
-        public string TeacherNotes { get; set; }
+        public string TeacherNotes { get; set; } = string.Empty;
     }
 
     public class CreateMaterialDto
     {
-        public string Name { get; set; }
-        public string FileUrl { get; set; }
-        public string FileType { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string FileUrl { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty;
         public long FileSize { get; set; }
     }
 
     public class LessonHomeworkDto
     {
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
     }
 }

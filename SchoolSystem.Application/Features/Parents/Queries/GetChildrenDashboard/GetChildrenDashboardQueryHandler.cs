@@ -16,8 +16,8 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
         private readonly IGenericRepository<Domain.Entities.Attendance> _attendanceRepo;
         private readonly IGenericRepository<HomeworkSubmission> _submissionRepo;
         private readonly IGenericRepository<ExamResult> _examResultRepo;
-        private readonly IGenericRepository<Exam> _examRepo;        // ← Fix 3
-        private readonly IGenericRepository<Lesson> _lessonRepo;    // ← Fix 2
+        private readonly IGenericRepository<Exam> _examRepo;      
+        private readonly IGenericRepository<Lesson> _lessonRepo;   
         private readonly IMediator _mediator;
 
         public GetChildrenDashboardQueryHandler(
@@ -26,8 +26,8 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
             IGenericRepository<Domain.Entities.Attendance> attendanceRepo,
             IGenericRepository<HomeworkSubmission> submissionRepo,
             IGenericRepository<ExamResult> examResultRepo,
-            IGenericRepository<Exam> examRepo,                      // ← Fix 3
-            IGenericRepository<Lesson> lessonRepo,                  // ← Fix 2
+            IGenericRepository<Exam> examRepo,                      
+            IGenericRepository<Lesson> lessonRepo,                
             IMediator mediator)
         {
             _parentRepo = parentRepo;
@@ -71,14 +71,12 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
 
                 double attendance = await CalculateAttendancePercentage(student.Oid, cancellationToken);
 
-                // ← Fix 2: pass ClassOid
                 int subjectsCount = await GetSubjectsCount(student.ClassOid, cancellationToken);
 
                 var subjectScores = await GetStudentSubjectScores(student.Oid, cancellationToken);
                 if (!subjectScores.Any())
                     subjectScores.Add(new SubjectGradeDto { Name = "No subjects available", Percentage = 0 });
 
-                // ← Fix 3: pass ClassOid
                 var upcomingEvents = await GetUpcomingEvents(student.Oid, student.ClassOid, cancellationToken);
 
                 var recentActivities = await GetRecentActivities(student, cancellationToken);
@@ -94,7 +92,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
                 {
                     StudentOid = student.Oid,
                     StudentName = student.FullName ?? "Unknown",
-                    GradeLevel = FormatGradeLevel(student.Class?.Name),
+                    GradeLevel = FormatGradeLevel(student.Class?.Name ?? string.Empty),
                     GPA = Math.Round(gpa, 1),
                     Attendance = Math.Round(attendance, 0),
                     SubjectsCount = subjectsCount,
@@ -118,7 +116,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
 
             var examResults = await _examResultRepo.GetAllQueryable()
                 .Cast<ExamResult>()
-                .Include(er => er.Exam).ThenInclude(e => e.Subject)
+                .Include(er => er.Exam).ThenInclude(e => e!.Subject)
                 .Where(er => er.StudentOid == studentOid && er.Percentage.HasValue)
                 .ToListAsync(cancellationToken);
 
@@ -139,8 +137,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
             foreach (var sub in submissions)
             {
                 var name = sub.Homework?.Subject?.Name ?? "Unknown";
-                // ← Fix 1: cap at 100
-                var pct = Math.Min((double)(sub.Grade!.Value / sub.Homework.TotalMarks * 100), 100);
+                var pct = Math.Min((double)(sub.Grade!.Value / (sub.Homework?.TotalMarks ?? 1) * 100), 100);
                 if (!subjectPercentages.ContainsKey(name))
                     subjectPercentages[name] = new();
                 subjectPercentages[name].Add(pct);
@@ -178,7 +175,6 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
                    / daily.Count * 100;
         }
 
-        // ← Fix 2: count subjects from Lesson by ClassOid
         private async Task<int> GetSubjectsCount(
             Guid classOid, CancellationToken cancellationToken)
         {
@@ -190,7 +186,6 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
                 .CountAsync(cancellationToken);
         }
 
-        // ← Fix 3: query Exam by ClassOid directly
         private async Task<List<UpcomingEventDto>> GetUpcomingEvents(
             Guid studentOid, Guid classOid, CancellationToken cancellationToken)
         {
@@ -230,7 +225,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
                 events.Add(new UpcomingEventDto
                 {
                     Title = $"{hw.Homework?.Subject?.Name} - {hw.Homework?.Title}",
-                    Date = hw.Homework.DueDate.ToString("MMMM dd"),
+                    Date = hw.Homework?.DueDate.ToString("MMMM dd") ?? string.Empty,
                     Type = "Homework",
                     Link = "/homework"
                 });
@@ -295,7 +290,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetChildrenDashboard
                 activities.Add(new RecentActivityDto
                 {
                     Activity = $"{dl.Homework?.Title} due for {student.FullName}",
-                    TimeAgo = $"Due {dl.Homework.DueDate:MMM dd}",
+                    TimeAgo = $"Due {dl.Homework?.DueDate:MMM dd}",
                     Status = "Upcoming"
                 });
 

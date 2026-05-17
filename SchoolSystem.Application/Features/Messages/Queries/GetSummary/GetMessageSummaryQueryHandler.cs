@@ -31,6 +31,9 @@ namespace SchoolSystem.Application.Features.Messages.Queries.GetSummary
 
         public async Task<MessageSummaryDto> Handle(GetMessageSummaryQuery request, CancellationToken cancellationToken)
         {
+            if (!_currentUser.UserId.HasValue)
+                throw new Exception("User not authenticated");
+
             var userId = _currentUser.UserId.Value;
 
             var allMessages = await _messageRepo.GetAllQueryable()

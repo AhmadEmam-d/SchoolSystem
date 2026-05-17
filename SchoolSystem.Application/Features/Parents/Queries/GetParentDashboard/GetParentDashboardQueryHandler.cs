@@ -66,7 +66,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                 var gradesQuery = new GetStudentGradesQuery(student.Oid);
                 var gradesData = await _mediator.Send(gradesQuery, cancellationToken);
 
-                var gradeLevel = FormatGradeLevel(student.Class?.Name);
+                var gradeLevel = FormatGradeLevel(student.Class?.Name ?? string.Empty);
 
                 double gpa = gradesData?.OverallGPA?.GPA ?? 0.0;
 
@@ -139,7 +139,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
 
             var examResults = await _examResultRepo.GetAllQueryable()
                 .Cast<ExamResult>()
-                .Include(er => er.Exam).ThenInclude(e => e.Subject)
+                .Include(er => er.Exam).ThenInclude(e => e!.Subject)
                 .Where(er => er.StudentOid == studentOid && er.Percentage.HasValue)
                 .ToListAsync(cancellationToken);
 
@@ -160,8 +160,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
             foreach (var submission in submissions)
             {
                 var subjectName = submission.Homework?.Subject?.Name ?? "Unknown";
-                // ← Fix 1: cap at 100
-                var percentage = Math.Min((double)(submission.Grade!.Value / submission.Homework.TotalMarks * 100), 100);
+                var percentage = Math.Min((double)(submission.Grade!.Value / (submission.Homework?.TotalMarks ?? 1) * 100), 100);
                 if (!subjectPercentages.ContainsKey(subjectName))
                     subjectPercentages[subjectName] = new List<double>();
                 subjectPercentages[subjectName].Add(percentage);
@@ -253,7 +252,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentDashboard
                 activities.Add(new RecentActivityDto
                 {
                     Activity = $"{deadline.Homework?.Title} due for {student.FullName}",
-                    TimeAgo = $"Due {deadline.Homework.DueDate:MMM dd}",
+                    TimeAgo = $"Due {deadline.Homework?.DueDate:MMM dd}",
                     Status = "Upcoming"
                 });
 

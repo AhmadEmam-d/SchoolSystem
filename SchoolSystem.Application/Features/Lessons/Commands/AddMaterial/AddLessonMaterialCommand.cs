@@ -6,9 +6,9 @@ using SchoolSystem.Domain.Interfaces.Common;
 public class AddLessonMaterialCommand : IRequest<Guid>
 {
     public Guid LessonOid { get; set; }
-    public string Name { get; set; }
-    public string FileUrl { get; set; }
-    public string FileType { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string FileUrl { get; set; } = string.Empty;
+    public string FileType { get; set; } = string.Empty;
     public long FileSize { get; set; }
 }
 

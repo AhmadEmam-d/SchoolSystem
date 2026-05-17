@@ -14,10 +14,10 @@ namespace SchoolSystem.Application.Features.Attendance.Quieries.GetActiveSession
     public class ActiveSessionDto
     {
         public Guid SessionId { get; set; }
-        public string ClassName { get; set; }
+        public string ClassName { get; set; } = string.Empty;
         public AttendanceMethod Method { get; set; }
-        public string? QrCodeBase64 { get; set; }      // shown to student if QRCode method
-        public List<int>? RandomNumbers { get; set; }   // shown to student if NumberSelection
+        public string? QrCodeBase64 { get; set; }      
+        public List<int>? RandomNumbers { get; set; } 
         public DateTime ExpiresAt { get; set; }
     }
 }

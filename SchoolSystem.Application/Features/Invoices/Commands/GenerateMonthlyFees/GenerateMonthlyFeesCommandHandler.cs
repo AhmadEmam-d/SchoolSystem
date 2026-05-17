@@ -51,7 +51,6 @@ namespace SchoolSystem.Application.Features.Invoices.Commands.GenerateMonthlyFee
             {
                 try
                 {
-                    // Check if invoice already exists for this month
                     var existingInvoice = _invoiceRepo.GetAllQueryable()
                         .Any(i => i.StudentId == student.Oid &&
                                  i.Title == title &&
@@ -104,7 +103,7 @@ namespace SchoolSystem.Application.Features.Invoices.Commands.GenerateMonthlyFee
 
     public class GenerateMonthlyFeesCommand : IRequest<MonthlyFeesGenerationResponse>
     {
-        public GenerateMonthlyFeesDto Dto { get; set; }
+        public GenerateMonthlyFeesDto Dto { get; set; } = new GenerateMonthlyFeesDto();
     }
 
     public class MonthlyFeesGenerationResponse

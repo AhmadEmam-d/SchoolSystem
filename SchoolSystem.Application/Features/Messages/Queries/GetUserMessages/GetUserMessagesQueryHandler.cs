@@ -32,16 +32,17 @@ namespace SchoolSystem.Application.Features.Messages.Queries.GetUserMessages
 
         public async Task<List<MessageDto>> Handle(GetUserMessagesQuery request, CancellationToken cancellationToken)
         {
+            if (!_currentUser.UserId.HasValue)
+                throw new Exception("User not authenticated");
+
             var userId = _currentUser.UserId.Value;
 
-            // ✅ استخدم var وتطبيق الفلاتر بالتسلسل
             var query = _messageRepo.GetAllQueryable()
                 .Where(m => m.ReceiverOid == userId && !m.IsDeletedByReceiver);
 
             if (request.IsRead.HasValue)
                 query = query.Where(m => m.IsRead == request.IsRead.Value);
 
-            // ✅ تطبيق الترتيب
             var orderedQuery = query.OrderByDescending(m => m.SentAt);
 
             return await orderedQuery

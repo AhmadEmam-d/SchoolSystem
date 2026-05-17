@@ -5,7 +5,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
 {
     public class SubmitAttendanceSessionCommand : IRequest<bool>
     {
-        public SubmitAttendanceSessionDto Dto { get; set; }
+        public SubmitAttendanceSessionDto Dto { get; set; } = new();
         public Guid TeacherId { get; set; }
     }
 }

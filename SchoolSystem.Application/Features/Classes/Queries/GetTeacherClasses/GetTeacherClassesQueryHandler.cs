@@ -69,7 +69,7 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                     Students = new List<StudentBasicInfoDto>()
                 };
 
-                foreach (var student in classEntity.Students.Where(s => !s.IsDeleted))
+                foreach (var student in (classEntity.Students ?? new List<Student>()).Where(s => !s.IsDeleted))
                 {
                     var studentDto = new StudentBasicInfoDto
                     {
@@ -80,7 +80,6 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                         Details = new StudentDetailsDto()
                     };
 
-                    // جلب الدروس
                     var lessons = await _lessonRepo
                         .GetAllQueryable()
                         .Where(l => l.ClassOid == classEntity.Oid && !l.IsDeleted)
@@ -94,7 +93,6 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                         .ToListAsync(cancellationToken);
                     studentDto.Details.Lessons = lessons;
 
-                    // جلب الواجبات
                     var homeworks = await _homeworkRepo
                         .GetAllQueryable()
                         .Where(h => h.ClassOid == classEntity.Oid && !h.IsDeleted)
@@ -112,28 +110,29 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                         .ToListAsync(cancellationToken);
                     studentDto.Details.Homeworks = homeworks;
 
-                    // جلب الامتحانات
                     var exams = await _examRepo
                         .GetAllQueryable()
                         .Where(e => e.ClassOid == classEntity.Oid && !e.IsDeleted)
-                        .Select(e => new ExamInfoDto
-                        {
-                            Oid = e.Oid,
-                            Name = e.Name,
-                            Date = e.Date,
-                            Score = _examResultRepo.GetAllQueryable()
-                                .FirstOrDefault(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid) != null ?
-                                _examResultRepo.GetAllQueryable()
-                                    .First(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid).Score : (int?)null,
-                            Grade = _examResultRepo.GetAllQueryable()
-                                .FirstOrDefault(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid) != null ?
-                                _examResultRepo.GetAllQueryable()
-                                    .First(r => r.ExamOid == e.Oid && r.StudentOid == student.Oid).Grade : null
-                        })
                         .ToListAsync(cancellationToken);
-                    studentDto.Details.Exams = exams;
 
-                    // جلب الحضور
+                    var examIds = exams.Select(e => e.Oid).ToList();
+
+                    var examResults = await _examResultRepo
+                         .GetAllQueryable()
+                         .Cast<ExamResult>()
+                         .Where(r => r.ExamOid.HasValue && examIds.Contains(r.ExamOid.Value) && r.StudentOid == student.Oid)
+                         .ToListAsync(cancellationToken);
+
+                    var examDtos = exams.Select(e => new ExamInfoDto
+                    {
+                        Oid = e.Oid,
+                        Name = e.Name,
+                        Date = e.Date,
+                        Score = examResults.FirstOrDefault(r => r.ExamOid == (Guid?)e.Oid)?.Score,
+                        Grade = examResults.FirstOrDefault(r => r.ExamOid == (Guid?)e.Oid)?.Grade ?? string.Empty
+                    }).ToList();
+                    studentDto.Details.Exams = examDtos;
+
                     var attendances = await _attendanceRepo
                         .GetAllQueryable()
                         .Where(a => a.StudentOid == student.Oid && a.ClassOid == classEntity.Oid && !a.IsDeleted)

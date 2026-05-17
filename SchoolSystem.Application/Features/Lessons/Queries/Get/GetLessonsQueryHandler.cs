@@ -35,15 +35,15 @@ namespace SchoolSystem.Application.Features.Lessons.Queries.Get
             {
                 // Base query with includes
                 var baseQuery = _lessonRepo.GetAllQueryable()
-                                            .Include(l => l.Class)
-                                            .Include(l => l.Subject)
-                                            .Include(l => l.Teacher)
-                                            .Include(l => l.Teacher.User)
-                                            .Include(l => l.Objectives)
-                                            .Include(l => l.Materials)
-                                            .Include(l => l.Homeworks)
-                                            .Where(l => !l.IsDeleted)
-                                            .AsNoTracking();
+                                    .Include(l => l.Class)
+                                    .Include(l => l.Subject)
+                                    .Include(l => l.Teacher)
+                                        .ThenInclude(t => t!.User)
+                                    .Include(l => l.Objectives)
+                                    .Include(l => l.Materials)
+                                    .Include(l => l.Homeworks)
+                                    .Where(l => !l.IsDeleted)
+                                    .AsNoTracking();
 
                 // Apply filters (using FilterCondition list)
                 if (m.Filters != null && m.Filters.Any())

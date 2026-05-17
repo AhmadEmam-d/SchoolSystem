@@ -122,7 +122,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentAttendance
                 {
                     StudentOid = student.Oid,
                     StudentName = student.FullName,
-                    GradeLevel = FormatGradeLevel(student.Class?.Name),
+                    GradeLevel = FormatGradeLevel(student.Class?.Name ?? string.Empty),
                     GPA = Math.Round(gpaValue, 1),
                     Attendance = Math.Round(attendancePerc, 0),
                     SubjectsCount = subjectsCount,

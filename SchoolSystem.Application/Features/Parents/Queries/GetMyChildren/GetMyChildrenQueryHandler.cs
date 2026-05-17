@@ -63,7 +63,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetMyChildren
 
                 var attendancePercentage = await CalculateAttendancePercentage(student.Oid, cancellationToken);
 
-                var gradeLevel = FormatGradeLevel(student.Class?.Name);
+                var gradeLevel = FormatGradeLevel(student.Class?.Name ?? string.Empty);
 
                 childrenList.Add(new ChildDetailsDto
                 {

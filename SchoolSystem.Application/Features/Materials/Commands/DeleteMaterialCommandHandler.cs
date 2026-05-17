@@ -17,7 +17,6 @@ namespace SchoolSystem.Application.Features.Materials.Commands
 
         public async Task<bool> Handle(DeleteMaterialCommand request, CancellationToken cancellationToken)
         {
-            // Case 1: Delete by specific material OID
             if (request.MaterialOid.HasValue)
             {
                 var material = await _materialRepo.GetByOidAsync(request.MaterialOid.Value);
@@ -29,10 +28,9 @@ namespace SchoolSystem.Application.Features.Materials.Commands
                 return false;
             }
 
-            // Case 2: Delete all materials for an entity
             if (request.DeleteAllForEntity)
             {
-                IQueryable<Material> query = null;
+                IQueryable<Material>? query = null;
 
                 if (request.ExamOid.HasValue)
                 {
@@ -59,10 +57,9 @@ namespace SchoolSystem.Application.Features.Materials.Commands
                 return false;
             }
 
-            // Case 3: Delete by entity OID + file URL (for single file deletion)
             if (!string.IsNullOrEmpty(request.FileUrl))
             {
-                IQueryable<Material> query = null;
+                IQueryable<Material>? query = null;
 
                 if (request.ExamOid.HasValue)
                 {

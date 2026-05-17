@@ -2,18 +2,17 @@
 
 public class Notification : BaseEntity
 {
-    public string Title { get; set; }
-    public string Message { get; set; }
-    public string Type { get; set; }
-    public string Priority { get; set; } 
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Priority { get; set; } = string.Empty;
     public Guid? UserOid { get; set; }
-    public string TargetRole { get; set; } 
+    public string TargetRole { get; set; } = string.Empty;
     public bool IsRead { get; set; }
     public DateTime? ReadAt { get; set; }
     public DateTime SentAt { get; set; }
-    public string ActionUrl { get; set; }
-    public string Icon { get; set; }
-    public string Color { get; set; }
-    public bool IsDeleted { get; set; }
+    public string ActionUrl { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
     public DateTime? ExpiryDate { get; set; }
 }

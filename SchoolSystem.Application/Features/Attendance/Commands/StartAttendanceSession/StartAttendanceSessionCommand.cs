@@ -5,7 +5,7 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.StartAttendanceS
 {
     public class StartAttendanceSessionCommand : IRequest<AttendanceSessionResponseDto>
     {
-        public StartAttendanceSessionDto Dto { get; set; }
+        public StartAttendanceSessionDto Dto { get; set; }=new();
         public Guid TeacherId { get; set; }
     }
 }

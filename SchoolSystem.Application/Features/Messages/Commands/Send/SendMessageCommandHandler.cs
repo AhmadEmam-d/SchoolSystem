@@ -31,12 +31,14 @@ namespace SchoolSystem.Application.Features.Messages.Commands.Send
 
         public async Task<Guid> Handle(SendMessageCommand request, CancellationToken cancellationToken)
         {
-            var sender = await _userRepo.GetByOidAsync(_currentUser.UserId.Value);
-            if (sender == null)
+            if (!_currentUser.UserId.HasValue)
+                throw new Exception("User not authenticated");
+
+            var sender = await _userRepo.GetByOidAsync(_currentUser.UserId.Value); if (sender == null)
                 throw new Exception("Sender not found");
 
-            string receiverName = null;
-            string receiverRole = null;
+            string? receiverName = null;
+            string? receiverRole = null;
             Guid? receiverOid = null;
 
             if (!request.Dto.IsGroupMessage && request.Dto.ReceiverOid.HasValue)
@@ -55,7 +57,6 @@ namespace SchoolSystem.Application.Features.Messages.Commands.Send
             message.SenderName = sender.FullName;
             message.SenderRole = sender.Role.ToString();
 
-            // ✅ للرسائل الجماعية، اترك ReceiverName و ReceiverRole فارغين
             if (!request.Dto.IsGroupMessage)
             {
                 message.ReceiverOid = receiverOid;

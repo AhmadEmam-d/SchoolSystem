@@ -13,7 +13,7 @@ namespace SchoolSystem.Application.Features.Homeworks.DTOs
         public int TotalStudents { get; set; }
         public string Status { get; set; } = string.Empty;
         public decimal TotalMarks { get; set; }
-        public List<MaterialResponseDto> Materials { get; set; }
+        public List<MaterialResponseDto> Materials { get; set; }=new List<MaterialResponseDto>();
 
     }
 
@@ -39,7 +39,7 @@ namespace SchoolSystem.Application.Features.Homeworks.DTOs
         public int GradedCount { get; set; }
         public int LateCount { get; set; }
         public List<HomeworkAttachmentDto> Attachments { get; set; } = new();
-        public List<MaterialResponseDto> Materials { get; set; }
+        public List<MaterialResponseDto> Materials { get; set; }= new();
 
 
     }

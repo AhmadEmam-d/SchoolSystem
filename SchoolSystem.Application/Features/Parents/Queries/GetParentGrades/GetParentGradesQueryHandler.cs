@@ -49,9 +49,9 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
 
             var allExamResults = await _examResultRepo.GetAllQueryable()
                 .Include(er => er.Exam)
-                    .ThenInclude(e => e.Subject)
-                .Where(er => studentIds.Contains(er.StudentOid))
-                .OrderByDescending(er => er.Exam.Date)
+                .ThenInclude(e => e!.Subject)
+                .Where(er => er.StudentOid.HasValue && studentIds.Contains(er.StudentOid.Value))
+                .OrderByDescending(er => er.Exam!.Date)
                 .ToListAsync(cancellationToken);
 
             var allSubmissions = await _submissionRepo.GetAllQueryable()
@@ -70,8 +70,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
             var allClassmateStudentIds = allClassmateIds.Select(x => x.Oid).ToList();
 
             var allClassAverages = await _examResultRepo.GetAllQueryable()
-                .Where(er => allClassmateStudentIds.Contains(er.StudentOid) && er.Percentage.HasValue)
-                .GroupBy(er => er.StudentOid)
+                .Where(er => er.StudentOid.HasValue && allClassmateStudentIds.Contains(er.StudentOid.Value) && er.Percentage.HasValue).GroupBy(er => er.StudentOid)
                 .Select(g => new
                 {
                     StudentOid = g.Key,
@@ -117,7 +116,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
 
                 var homeworkPercentages = submissions
                     .Where(s => s.Grade.HasValue && s.Homework?.TotalMarks > 0)
-                    .Select(s => (double)(s.Grade.Value / s.Homework.TotalMarks) * 100) 
+                    .Select(s => (double)(s.Grade!.Value / s.Homework!.TotalMarks) * 100) 
                     .ToList();
 
                 var allPercentages = examPercentages.Concat(homeworkPercentages).ToList();
@@ -130,7 +129,7 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
 
                 var gradeTrend = examResults
                     .Where(er => er.Percentage.HasValue)
-                    .GroupBy(er => new { er.Exam.Date.Year, er.Exam.Date.Month })
+                    .GroupBy(er => new { er.Exam!.Date.Year, er.Exam!.Date.Month })
                     .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
                     .Select(g => new GradeTrendDto
                     {
@@ -141,24 +140,24 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
 
                 var allSubjectNames = examResults
                     .Where(er => er.Exam?.Subject != null)
-                    .Select(er => er.Exam.Subject.Name)
+                    .Select(er => er.Exam!.Subject!.Name)
                     .Union(submissions
                         .Where(s => s.Homework?.Subject != null)
-                        .Select(s => s.Homework.Subject.Name))
+                        .Select(s => s.Homework!.Subject!.Name))
                     .Distinct()
                     .ToList();
 
                 var subjectPerformance = allSubjectNames.Select(subjectName =>
                 {
                     var subjectExams = examResults
-                        .Where(er => er.Exam.Subject.Name == subjectName)
+                        .Where(er => er.Exam!.Subject!.Name == subjectName)
                         .ToList();
 
                     var examItems = subjectExams.Select(er => new ExamGradeItemDto
                     {
-                        ExamName = er.Exam.Name,
+                        ExamName = er.Exam!.Name,
                         Score = er.Score,
-                        MaxScore = er.Exam.MaxScore
+                        MaxScore = er.Exam!.MaxScore
                     }).ToList();
 
                     double subjectExamAvg = subjectExams.Any(er => er.Percentage.HasValue)
@@ -166,11 +165,11 @@ namespace SchoolSystem.Application.Features.Parents.Queries.GetParentGrades
                         : 0;
 
                     var subjectSubmissions = submissions
-                        .Where(s => s.Homework.Subject.Name == subjectName)
+                        .Where(s => s.Homework!.Subject!.Name == subjectName)
                         .ToList();
 
                     double subjectHomeworkAvg = subjectSubmissions.Any()
-                        ? subjectSubmissions.Average(s => (double)(s.Grade.Value / s.Homework.TotalMarks) * 100) 
+                        ? subjectSubmissions.Average(s => (double)(s.Grade!.Value / s.Homework!.TotalMarks) * 100) 
                         : 0;
 
                     double subjectAvg = 0;
