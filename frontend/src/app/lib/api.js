@@ -321,7 +321,22 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
   const data = await res.json();
   return data.success ? data.data : { items: [], totalCount: 0 };
 },
-  
+  getChildSchedule: async (childId) => {
+  const res = await fetch(`${API_BASE_URL}/Parents/${childId}/schedule`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return null;
+},
+getChildrenDashboard: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/Children-Dashboard`, {
+    headers: getHeaders()
+  });
+  const data = await res.json();
+  if (data.success && data.data) return data.data;
+  return null;
+},
   },
   
   // Classes endpoints
