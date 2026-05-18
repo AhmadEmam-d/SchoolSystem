@@ -8,7 +8,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Commands.SubmitHome
     {
         public Guid HomeworkId { get; set; }
         public Guid StudentId { get; set; }
-        public string SubmissionText { get; set; }
+        public string SubmissionText { get; set; } = string.Empty;
         public string? AttachmentUrl { get; set; }
     }
 }

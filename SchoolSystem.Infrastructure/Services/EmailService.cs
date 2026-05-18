@@ -31,9 +31,12 @@ namespace SchoolSystem.Infrastructure.Services
                     EnableSsl = true
                 };
 
+                if (string.IsNullOrWhiteSpace(senderEmail))
+                    throw new ArgumentException("Sender email cannot be null or empty", nameof(senderEmail));
+
                 var message = new MailMessage
                 {
-                    From = new MailAddress(senderEmail, senderName),
+                    From = new MailAddress(senderEmail, senderName ?? string.Empty),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true

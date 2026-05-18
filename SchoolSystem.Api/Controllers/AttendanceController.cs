@@ -11,7 +11,7 @@ using SchoolSystem.Application.Features.Attendance.Commands.StudentSubmitAttenda
 using SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendanceSession;
 using SchoolSystem.Application.Features.Attendance.Commands.Update;
 using SchoolSystem.Application.Features.Attendance.DTOs;
-using SchoolSystem.Application.Features.Attendance.Queries.GetAll;
+using SchoolSystem.Application.Features.Attendance.Quieries.GetAll;
 using SchoolSystem.Application.Features.Attendance.Queries.GetById;
 using SchoolSystem.Application.Features.Attendance.Queries.GetClassStats;
 using SchoolSystem.Application.Features.Attendance.Queries.GetMonthlyReport;
@@ -272,7 +272,7 @@ namespace SchoolSystem.Api.Controllers
                     .GetAllQueryable()
                     .Cast<Student>()
                     .Where(s => s.ClassOid == session.ClassOid && !s.IsDeleted)
-                    .Select(s => new { s.Oid, s.User.FullName })
+                    .Select(s => new { s.Oid, s.User!.FullName })
                     .ToListAsync();
 
                 // 3. Get attendance records for this session's date and class

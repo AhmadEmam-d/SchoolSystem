@@ -149,7 +149,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        private async Task<Student> GetCurrentStudent()
+        private async Task<Student?> GetCurrentStudent()
         {
             var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))

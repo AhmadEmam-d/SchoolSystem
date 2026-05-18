@@ -9,8 +9,8 @@ namespace SchoolSystem.Application.Mappings
         public AttendanceProfile()
         {
             CreateMap<SchoolSystem.Domain.Entities.Attendance, AttendanceDto>()
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName))
-                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class.Name))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName : string.Empty))
+                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Class != null ? src.Class.Name : string.Empty))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
                 .ForMember(dest => dest.CheckInTime, opt => opt.MapFrom(src => src.CheckInTime.HasValue ? src.CheckInTime.Value.ToString(@"hh\:mm") : null))
                 .ForMember(dest => dest.CheckOutTime, opt => opt.MapFrom(src => src.CheckOutTime.HasValue ? src.CheckOutTime.Value.ToString(@"hh\:mm") : null));
@@ -26,8 +26,8 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.CheckOutTime, opt => opt.Ignore());
 
             CreateMap<SchoolSystem.Domain.Entities.Attendance, StudentAttendanceDto>()
-                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student.FullName))
-                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Student.Class != null ? src.Student.Class.Name : "N/A"))
+                .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => src.Student != null ? src.Student.FullName : string.Empty))
+                .ForMember(dest => dest.ClassName, opt => opt.MapFrom(src => src.Student != null && src.Student.Class != null ? src.Student.Class.Name : "N/A"))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
         }
     }

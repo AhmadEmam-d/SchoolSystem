@@ -13,7 +13,9 @@ namespace SchoolSystem.Infrastructure.Services
 
         public OpenRouterAIService(IConfiguration configuration)
         {
-            _apiKey = configuration["OpenRouter:ApiKey"];
+            _apiKey = configuration["OpenRouter:ApiKey"]
+                ?? throw new ArgumentNullException(nameof(configuration), "OpenRouter:ApiKey is missing in configuration");
+
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
         }
@@ -46,17 +48,17 @@ namespace SchoolSystem.Infrastructure.Services
 
         private class OpenRouterResponse
         {
-            public Choice[] Choices { get; set; }
+            public Choice[]? Choices { get; set; }
         }
 
         private class Choice
         {
-            public Message Message { get; set; }
+            public Message? Message { get; set; }
         }
 
         private class Message
         {
-            public string Content { get; set; }
+            public string? Content { get; set; }
         }
     }
 }

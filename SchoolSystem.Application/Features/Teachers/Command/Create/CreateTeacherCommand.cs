@@ -5,6 +5,6 @@ namespace SchoolSystem.Application.Features.Teachers.Commands.Create
 {
     public class CreateTeacherCommand : IRequest<Guid>
     {
-        public CreateTeacherDto Teacher { get; set; }
+        public CreateTeacherDto Teacher { get; set; }=new CreateTeacherDto();
     }
 }

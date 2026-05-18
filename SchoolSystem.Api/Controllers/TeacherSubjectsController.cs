@@ -102,8 +102,8 @@ namespace SchoolSystem.Api.Controllers
                     .Select(ts => new
                     {
                         ts.Oid,
-                        TeacherName = ts.Teacher.FullName,
-                        SubjectName = ts.Subject.Name
+                        TeacherName = ts.Teacher != null ? ts.Teacher.FullName : "N/A",
+                        SubjectName = ts.Subject != null ? ts.Subject.Name : "N/A"
                     })
                     .ToListAsync();
 
@@ -129,8 +129,8 @@ namespace SchoolSystem.Api.Controllers
                     .Where(ts => ts.TeacherOid == teacherOid)
                     .Select(ts => new
                     {
-                        ts.Subject.Oid,
-                        ts.Subject.Name,
+                        Oid = ts.Subject != null ? ts.Subject.Oid : Guid.Empty,
+                        Name = ts.Subject != null ? ts.Subject.Name : string.Empty,
                     })
                     .ToListAsync();
 
@@ -157,9 +157,9 @@ namespace SchoolSystem.Api.Controllers
                     .Where(ts => ts.SubjectOid == subjectOid)
                     .Select(ts => new
                     {
-                        ts.Teacher.Oid,
-                        ts.Teacher.FullName,
-                        ts.Teacher.Email
+                        Oid = ts.Teacher != null ? ts.Teacher.Oid : Guid.Empty,
+                        FullName = ts.Teacher != null ? ts.Teacher.FullName : string.Empty,
+                        Email = ts.Teacher != null ? ts.Teacher.Email : string.Empty
                     })
                     .ToListAsync();
 

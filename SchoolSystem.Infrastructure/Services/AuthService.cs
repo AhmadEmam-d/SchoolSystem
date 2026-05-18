@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace SchoolSystem.Infrastructure.Services
 {
@@ -252,7 +253,7 @@ namespace SchoolSystem.Infrastructure.Services
                 .FirstOrDefaultAsync(u => u.Email == email);
 
             if (user == null)
-                return null;
+                throw new Exception("User not found");
 
             return new UserDto
             {

@@ -50,42 +50,39 @@ namespace SchoolSystem.Application.Features.Reports.Commands.GenerateTeacherRepo
             if (teacher == null)
                 throw new Exception("Teacher not found");
 
-            // Get classes taught by this teacher
             var classes = await _classRepo.GetAllQueryable()
                 .Where(c => c.TeacherOid == request.Dto.TeacherOid)
                 .ToListAsync(cancellationToken);
 
-            var totalClasses = classes.Count;
+            var classOids = classes.Select(c => c.Oid).ToList();
+
             var totalStudents = await _studentRepo.GetAllQueryable()
-                .Where(s => classes.Select(c => c.Oid).Contains(s.ClassOid))
+                .Where(s => classOids.Contains(s.ClassOid))
                 .CountAsync(cancellationToken);
 
-            // Calculate average attendance
             var attendances = await _attendanceRepo.GetAllQueryable()
-                .Where(a => classes.Select(c => c.Oid).Contains(a.ClassOid))
+                .Where(a => classOids.Contains(a.ClassOid))
                 .ToListAsync(cancellationToken);
 
             var avgAttendance = attendances.Any()
                 ? attendances.Average(a => a.Status == AttendanceStatus.Present ? 100 : 0)
                 : 0;
 
-            // Calculate average grade
             var examResults = await _examResultRepo.GetAllQueryable()
-                .Where(r => classes.Select(c => c.Oid).Contains(r.Exam.ClassOid))
+                .Include(r => r.Exam)
+                .Where(r => r.Exam != null && classOids.Contains(r.Exam.ClassOid))
                 .ToListAsync(cancellationToken);
 
-            var avgGrade = examResults.Any() ? examResults.Average(r => r.Percentage ?? 0) : 0;
+            var avgGrade = examResults.Any()
+                ? examResults.Average(r => r.Percentage ?? 0)
+                : 0;
 
-            var teacherReport = new TeacherReport
-            {
-                TeacherOid = request.Dto.TeacherOid,
-                ReportType = request.Dto.ReportType,
-                TotalClasses = totalClasses,
-                TotalStudents = totalStudents,
-                AverageClassAttendance = Math.Round(avgAttendance, 1),
-                AverageStudentGrade = Math.Round(avgGrade, 1),
-                GeneratedAt = DateTime.UtcNow
-            };
+            var teacherReport = _mapper.Map<TeacherReport>(request.Dto);
+            teacherReport.TotalClasses = classes.Count;
+            teacherReport.TotalStudents = totalStudents;
+            teacherReport.AverageClassAttendance = Math.Round(avgAttendance, 1);
+            teacherReport.AverageStudentGrade = Math.Round(avgGrade, 1);
+            teacherReport.GeneratedAt = DateTime.UtcNow;
 
             await _teacherReportRepo.AddAsync(teacherReport);
             return teacherReport.Oid;

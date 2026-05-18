@@ -47,7 +47,6 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 
         public async Task<List<TeacherResponseDto>> Handle(GetAllTeachersQuery request, CancellationToken cancellationToken)
         {
-            // جلب المعلمين
             var teachers = await _teacherRepo
                 .GetAllQueryable()
                 .Include(t => t.User)
@@ -61,31 +60,21 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
             {
                 var teacherDto = _mapper.Map<TeacherResponseDto>(teacher);
 
-                // جلب الفصول
                 var classes = await _classRepo
                     .GetAllQueryable()
                     .Where(c => c.TeacherOid == teacher.Oid && !c.IsDeleted)
-                    .Select(c => new TeacherClassBasicDto
-                    {
-                        Oid = c.Oid,
-                        Name = c.Name ?? string.Empty,
-                        Level = c.Level ?? string.Empty,
-                        StudentsCount = c.Students != null ? c.Students.Count(s => !s.IsDeleted) : 0
-                    })
+                    .ProjectTo<TeacherClassBasicDto>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
 
-                // ✅ جلب الطلاب
                 var classIds = classes.Select(c => c.Oid).ToList();
                 var students = await _studentRepo
                     .GetAllQueryable()
                     .Where(s => classIds.Contains(s.ClassOid) && !s.IsDeleted)
                     .ToListAsync(cancellationToken);
 
-                // حساب إحصائيات الطلاب
                 var studentDtos = new List<StudentBasicDto>();
                 foreach (var student in students)
                 {
-                    // ✅ إعادة تسمية المتغيرات (إضافة "Student" prefix)
                     var studentAttendances = await _attendanceRepo
                         .GetAllQueryable()
                         .Where(a => a.StudentOid == student.Oid && !a.IsDeleted)
@@ -102,73 +91,41 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 
                     var studentAverageGrade = studentExamResults.Any() ? studentExamResults.Average(r => r.Score) : 0;
 
-                    studentDtos.Add(new StudentBasicDto
-                    {
-                        Oid = student.Oid,
-                        FullName = student.FullName,
-                        Email = student.Email,
-                        Phone = student.Phone,
-                        ClassName = classes.FirstOrDefault(c => c.Oid == student.ClassOid)?.Name ?? string.Empty,
-                        AttendancePercentage = Math.Round(studentAttendancePercentage, 1),
-                        AverageGrade = Math.Round(studentAverageGrade, 1)
-                    });
+                    var studentDto = _mapper.Map<StudentBasicDto>(student);
+                    studentDto.ClassName = classes.FirstOrDefault(c => c.Oid == student.ClassOid)?.Name ?? string.Empty;
+                    studentDto.AttendancePercentage = Math.Round(studentAttendancePercentage, 1);
+                    studentDto.AverageGrade = Math.Round(studentAverageGrade, 1);
+
+                    studentDtos.Add(studentDto);
                 }
 
-                // جلب الدروس
                 var lessons = await _lessonRepo
                     .GetAllQueryable()
                     .Include(l => l.Class)
                     .Where(l => l.TeacherOid == teacher.Oid && !l.IsDeleted)
                     .OrderByDescending(l => l.CreatedAt)
                     .Take(5)
-                    .Select(l => new LessonBasicDto
-                    {
-                        Oid = l.Oid,
-                        Title = l.Title ?? string.Empty,
-                        ClassName = l.Class != null ? (l.Class.Name ?? string.Empty) : string.Empty,
-                        Date = l.Date,
-                        Status = l.Status.ToString()
-                    })
+                    .ProjectTo<LessonBasicDto>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
 
-                // جلب الواجبات
                 var homeworks = await _homeworkRepo
                     .GetAllQueryable()
                     .Include(h => h.Class)
                     .Where(h => h.TeacherOid == teacher.Oid && !h.IsDeleted)
                     .OrderByDescending(h => h.CreatedAt)
                     .Take(5)
-                    .Select(h => new HomeworkBasicDto
-                    {
-                        Oid = h.Oid,
-                        Title = h.Title ?? string.Empty,
-                        ClassName = h.Class != null ? (h.Class.Name ?? string.Empty) : string.Empty,
-                        DueDate = h.DueDate,
-                        SubmissionsCount = h.Submissions != null ? h.Submissions.Count : 0,
-                        Status = h.Status.ToString()
-                    })
+                    .ProjectTo<HomeworkBasicDto>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
 
-                // جلب الامتحانات
                 var exams = await _examRepo
                     .GetAllQueryable()
                     .Include(e => e.Class)
                     .Where(e => e.TeacherOid == teacher.Oid && !e.IsDeleted)
                     .OrderByDescending(e => e.CreatedAt)
                     .Take(5)
-                    .Select(e => new ExamBasicDto
-                    {
-                        Oid = e.Oid,
-                        Name = e.Name ?? string.Empty,
-                        ClassName = e.Class != null ? (e.Class.Name ?? string.Empty) : string.Empty,
-                        Date = e.Date,
-                        AverageGrade = e.Results != null && e.Results.Any(r => r.Score > 0)
-                            ? e.Results.Where(r => r.Score > 0).Average(r => (double)r.Score) : 0,
-                        Status = e.Status.ToString()
-                    })
+                    .ProjectTo<ExamBasicDto>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
 
-                // ✅ حساب حضور المعلم (إعادة تسمية المتغيرات)
                 var teacherAttendances = await _attendanceRepo
                     .GetAllQueryable()
                     .Include(a => a.Class)

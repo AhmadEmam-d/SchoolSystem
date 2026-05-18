@@ -67,7 +67,7 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentH
 
                 if (hasSubmission)
                 {
-                    if (submission.Grade.HasValue)
+                    if (submission!.Grade.HasValue)
                     {
                         status = "Graded";
                         graded++;
@@ -90,12 +90,11 @@ namespace SchoolSystem.Application.Features.StudentHomeworks.Queries.GetStudentH
                     pending++;
                 }
 
-                // Map using AutoMapper
                 var summary = _mapper.Map<HomeworkSummaryDto>(homework);
                 summary.Status = status;
                 summary.Grade = grade;
                 summary.IsOverdue = isOverdue && !hasSubmission;
-                summary.AttachmentUrl = hasSubmission ? submission.AttachmentUrl : null; // ✅ Add this
+                summary.AttachmentUrl = hasSubmission ? submission!.AttachmentUrl : null; 
 
                 // Filter by status if specified
                 if (!string.IsNullOrEmpty(request.Status) && request.Status != "All" && status != request.Status)

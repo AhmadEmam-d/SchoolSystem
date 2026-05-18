@@ -30,7 +30,7 @@ namespace SchoolSystem.Application.Features.Lessons.Queries.GetStudentLessons
                 .GetAllQueryable()
                 .Include(l => l.Class)
                 .Include(l => l.Subject)
-                .Include(l => l.Teacher)
+                .Include(l => l.Teacher!)
                 .ThenInclude(t => t.User)
                 .Include(l => l.Objectives)
                 .Include(l => l.Materials)

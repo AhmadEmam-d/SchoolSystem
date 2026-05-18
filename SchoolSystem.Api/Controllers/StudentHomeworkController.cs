@@ -171,7 +171,10 @@ namespace SchoolSystem.API.Controllers
 
                 if (submission == null)
                 {
-                    Console.WriteLine("NoSubmissionFound");
+                    return NotFound(ApiResponseFactory.Failure<object>(
+                        "NoSubmissionFound", _messageService,
+                        new List<string> { "No submission found for this homework." }
+                    ));
                 }
 
                 // Prepare response
@@ -244,7 +247,7 @@ namespace SchoolSystem.API.Controllers
             }
         }
 
-        private async Task<Student> GetCurrentStudent()
+        private async Task<Student?> GetCurrentStudent()
         {
             var userIdClaim = User.FindFirst("UserId") ?? User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))

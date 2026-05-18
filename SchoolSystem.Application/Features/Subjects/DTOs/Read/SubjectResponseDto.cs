@@ -8,16 +8,16 @@ namespace SchoolSystem.Application.Features.Subjects.DTOs
     public class SubjectResponseDto
     {
         public Guid Oid { get; set; }
-        public string Name { get; set; }
-        public string Code { get; set; }           // ✅ كود المادة (اختياري)
-        public int TeachersCount { get; set; }     // ✅ عدد المعلمين
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public int TeachersCount { get; set; } 
         public int ActiveClassesCount { get; set; }
         public List<TeacherBasicDto> Teachers { get; set; } = new List<TeacherBasicDto>();
         public class TeacherBasicDto
         {
             public Guid Oid { get; set; }
-            public string FullName { get; set; }
-            public string Email { get; set; }
+            public string FullName { get; set; }= string.Empty;
+            public string Email { get; set; }=string.Empty;
         }
     }
     public class StudentSubjectDto

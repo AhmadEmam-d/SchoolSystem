@@ -31,7 +31,6 @@ namespace SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsC
 
         public async Task<List<StudentSubjectsCountDto>> Handle(GetStudentSubjectsCountQuery request, CancellationToken cancellationToken)
         {
-            // Get all students first (without Include to avoid casting issues)
             var students = await _studentRepo.GetAllQueryable().ToListAsync(cancellationToken);
 
             if (request.StudentId.HasValue)
@@ -44,10 +43,8 @@ namespace SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsC
 
             foreach (var student in students)
             {
-                // Get class name
                 var className = student.Class?.Name ?? "N/A";
 
-                // Get distinct subjects for this student's class from Timetable using ClassOid
                 var subjects = await _timetableRepo
                     .GetAllQueryable()
                     .Where(t => t.ClassOid == student.ClassOid)
@@ -62,7 +59,7 @@ namespace SchoolSystem.Application.Features.Students.Queries.GetStudentSubjectsC
                     StudentName = student.FullName,
                     ClassName = className,
                     SubjectsCount = subjects.Count,
-                    SubjectsNames = subjects.Select(s => s.Name).ToList()
+                    SubjectsNames = subjects.Select(s => s!.Name).ToList()
                 });
             }
 

@@ -31,7 +31,7 @@ namespace SchoolSystem.Application.Features.Sections.Queries.GetById
                 .FirstOrDefaultAsync(s => s.Oid == request.Id, cancellationToken);
 
             if (section == null)
-                return null;
+                throw new Exception("Section not found");
 
             return _mapper.Map<SectionDto>(section);
         }

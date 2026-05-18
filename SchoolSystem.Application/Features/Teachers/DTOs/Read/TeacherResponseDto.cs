@@ -39,8 +39,8 @@ namespace SchoolSystem.Application.Features.Teachers.DTOs
     public class TeacherClassBasicDto
     {
         public Guid Oid { get; set; }
-        public string Name { get; set; }
-        public string Level { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Level { get; set; }= string.Empty;
         public int StudentsCount { get; set; }
     }
     public class LessonBasicDto

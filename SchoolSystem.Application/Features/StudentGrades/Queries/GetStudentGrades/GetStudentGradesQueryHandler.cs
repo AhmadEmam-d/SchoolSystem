@@ -42,19 +42,19 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             var examResults = await _examResultRepo
                 .GetAllQueryable()
                 .Include(er => er.Exam)
-                    .ThenInclude(e => e.Subject)
+                    .ThenInclude(e => e!.Subject)
                 .Where(er => er.StudentOid == student.Oid)
-                .OrderByDescending(er => er.Exam.Date)
+                .OrderByDescending(er => er.Exam!.Date)
                 .ToListAsync(cancellationToken);
 
             var subjectNamesFromExams = examResults
-                .Where(er => er.Exam?.Subject != null)
-                .Select(er => er.Exam.Subject.Name)
+                .Where(er => er.Exam?.Subject?.Name != null)
+                .Select(er => er.Exam!.Subject!.Name!)
                 .Distinct();
 
             var subjectNamesFromHomework = submissions
-                .Where(s => s.Homework?.Subject != null)
-                .Select(s => s.Homework.Subject.Name)
+                .Where(s => s.Homework?.Subject?.Name != null)
+                .Select(s => s.Homework!.Subject!.Name!)
                 .Distinct();
 
             var allSubjectNames = subjectNamesFromExams
@@ -97,7 +97,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
         {
             var grouped = examResults
                 .Where(er => er.Percentage.HasValue)
-                .GroupBy(er => new { er.Exam.Date.Year, er.Exam.Date.Month })
+                .GroupBy(er => new { er.Exam!.Date.Year, er.Exam.Date.Month })
                 .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
                 .ToList();
 
@@ -127,7 +127,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             foreach (var name in subjectNames)
             {
                 var examAvg = examResults
-                    .Where(er => er.Exam.Subject.Name == name && er.Percentage.HasValue)
+                    .Where(er => er.Exam?.Subject?.Name == name && er.Percentage.HasValue)
                     .Select(er => (double)er.Percentage!.Value)
                     .ToList();
 
@@ -155,11 +155,11 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
             foreach (var subjectName in subjectNames)
             {
                 var subjectExams = examResults
-                    .Where(er => er.Exam.Subject.Name == subjectName)
+                    .Where(er => er.Exam?.Subject?.Name == subjectName)
                     .ToList();
 
                 var subjectSubmissions = submissions
-                    .Where(s => s.Homework.Subject.Name == subjectName)
+                    .Where(s => s.Homework?.Subject?.Name == subjectName)
                     .ToList();
 
                 if (!subjectExams.Any() && !subjectSubmissions.Any())
@@ -176,21 +176,21 @@ namespace SchoolSystem.Application.Features.StudentGrades.Queries.GetStudentGrad
 
                 var examsList = subjectExams.Select(er => new ExamGradeDto
                 {
-                    Title = er.Exam.Name,
+                    Title = er.Exam?.Name ?? string.Empty,
                     Date = er.SubmittedAt ?? DateTime.UtcNow,
                     Score = er.Score,
-                    TotalMarks = er.Exam.MaxScore,
+                    TotalMarks = er.Exam?.MaxScore ?? 0,
                     Percentage = er.Percentage.HasValue ? (double)er.Percentage.Value : 0
                 }).ToList();
 
                 var assignmentsList = subjectSubmissions.Select(s => new AssignmentGradeDto
                 {
-                    Title = s.Homework.Title,
-                    DueDate = s.Homework.DueDate,
+                    Title = s.Homework?.Title ?? string.Empty,
+                    DueDate = s.Homework?.DueDate ?? DateTime.UtcNow,
                     Grade = s.Grade,
-                    TotalMarks = s.Homework.TotalMarks,
+                    TotalMarks = s.Homework?.TotalMarks ?? 0,
                     Percentage = s.Grade.HasValue
-                        ? (double)(s.Grade.Value / s.Homework.TotalMarks * 100)
+                        ? (double)(s.Grade.Value / s.Homework?.TotalMarks * 100 ?? 0)
                         : null
                 }).ToList();
 

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Teachers.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using static System.Collections.Specialized.BitVector32;
 
 namespace SchoolSystem.Application.Features.Teachers.Query.GetById
 {
@@ -30,7 +31,7 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetById
                 .FirstOrDefaultAsync(t => t.Oid == request.Oid, cancellationToken);
 
             if (teacher == null)
-                return null;
+                throw new Exception("Teacher not found");
 
             return _mapper.Map<TeacherResponseDto>(teacher);
         }

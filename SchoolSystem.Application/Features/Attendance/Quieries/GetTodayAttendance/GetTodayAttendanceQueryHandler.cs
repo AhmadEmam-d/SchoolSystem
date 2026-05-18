@@ -41,7 +41,7 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetToday
 
             var attendances = await _attendanceRepo.GetAllQueryable()
                 .Include(a => a.Student)
-                .ThenInclude(s => s.Class)
+                .ThenInclude(s => s!.Class)
                 .Where(a => a.Date.Date == today)
                 .ToListAsync(cancellationToken);
 

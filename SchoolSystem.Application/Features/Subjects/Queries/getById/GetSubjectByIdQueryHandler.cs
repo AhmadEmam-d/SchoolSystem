@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Application.Features.Subjects.DTOs;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
+using static System.Collections.Specialized.BitVector32;
 
 public class GetSubjectByIdQueryHandler : IRequestHandler<GetSubjectByIdQuery, SubjectResponseDto>
 {
@@ -24,7 +25,8 @@ public class GetSubjectByIdQueryHandler : IRequestHandler<GetSubjectByIdQuery, S
              .ThenInclude(ts => ts.Teacher)        
              .FirstOrDefaultAsync(s => s.Oid == request.Oid, cancellationToken);
 
-        if (subject == null) return null;
+        if (subject == null)
+            throw new Exception("Subject not found");
 
         return _mapper.Map<SubjectResponseDto>(subject);
     }

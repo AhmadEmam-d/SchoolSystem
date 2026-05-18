@@ -170,7 +170,7 @@ namespace SchoolSystem.Api.Controllers
         public async Task<IActionResult> GetSubmissions(Guid oid)
         {
             var submissions = await _submissionRepo.GetAllQueryable()
-                .Include(s => s.Student).ThenInclude(s => s.User)
+                .Include(s => s.Student).ThenInclude(s => s!.User)
                 .Where(s => s.ExamOid == oid && !s.IsDeleted)
                 .OrderByDescending(s => s.SubmittedAt)
                 .Select(s => new ExamSubmissionViewDto
@@ -186,7 +186,7 @@ namespace SchoolSystem.Api.Controllers
                     SubmittedAt = s.SubmittedAt??DateTime.UtcNow,
                     Score = s.Score,
                     Feedback = s.Feedback,
-                    Status = s.Status.ToString(),
+                    Status = s.Status.ToString()??string.Empty,
                     GradedAt = s.GradedAt
                 })
                 .ToListAsync();

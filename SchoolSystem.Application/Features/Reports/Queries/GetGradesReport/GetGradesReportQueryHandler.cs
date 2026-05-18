@@ -37,8 +37,8 @@ namespace SchoolSystem.Application.Features.Reports.Queries.GetGradesReport
                     r.Percentage,
                     r.IsPassed,
                     r.StudentOid,
-                    SubjectName = r.Exam.Subject.Name,
-                    StudentName = r.Student.FullName
+                    SubjectName = r.Exam!.Subject!.Name,
+                    StudentName = r.Student!.FullName
                 })
                 .ToListAsync(cancellationToken);
 

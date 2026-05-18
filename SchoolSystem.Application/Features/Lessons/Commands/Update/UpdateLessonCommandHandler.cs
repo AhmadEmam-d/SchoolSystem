@@ -38,8 +38,8 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Update
                 .Include(l => l.Class)
                 .Include(l => l.Subject)
                 .Include(l => l.Teacher)
-                .Include(l => l.Teacher.User)
-                .Include(l => l.Objectives)
+                .Include(l => l.Teacher!)
+                        .ThenInclude(t => t.User).Include(l => l.Objectives)
                 .Include(l => l.Materials)
                 .Include(l => l.Homeworks)
                 .FirstOrDefaultAsync(l => l.Oid == request.Oid && !l.IsDeleted, cancellationToken);
@@ -68,7 +68,7 @@ namespace SchoolSystem.Application.Features.Lessons.Commands.Update
                     var objective = await _objectiveRepo.GetByOidAsync(objectiveDto.Oid.Value);
                     if (objective != null)
                     {
-                        objective.Description = objectiveDto.Description;
+                        objective.Description = objectiveDto.Description ?? string.Empty;
                         objective.Order = objectiveDto.Order;
                         objective.UpdatedAt = DateTime.UtcNow;
                         await _objectiveRepo.UpdateAsync(objective);

@@ -7,6 +7,7 @@ using SchoolSystem.Domain.Interfaces.Common;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 public class GetStudentByIdQueryHandler : IRequestHandler<GetStudentByIdQuery, StudentDto>
 {
@@ -29,7 +30,7 @@ public class GetStudentByIdQueryHandler : IRequestHandler<GetStudentByIdQuery, S
                .FirstOrDefaultAsync(s => s.Oid == request.Id, cancellationToken);
 
         if (student == null)
-            return null;
+            throw new Exception("Student not found");
 
         return _mapper.Map<StudentDto>(student);
     }

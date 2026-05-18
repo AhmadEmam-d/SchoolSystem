@@ -6,7 +6,8 @@ namespace SchoolSystem.Application.Features.Subjects.DTOs.Create
 {
     public class CreateSubjectDto
     {
-        public string Name { get; set; }
+        public string Name { get; set; }=string.Empty;
+
     }
 }
 

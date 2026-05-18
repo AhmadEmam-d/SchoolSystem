@@ -47,7 +47,7 @@ namespace SchoolSystem.API.Controllers
 
                 var exams = await _examRepo.GetAllQueryable()
                     .Include(e => e.Subject)
-                    .Include(e => e.Teacher).ThenInclude(t => t.User)
+                    .Include(e => e.Teacher).ThenInclude(t => t!.User)
                     .Include(e => e.Materials)
                     .Include(e => e.Submissions.Where(s => s.StudentOid == student.Oid))
                     .Where(e => e.ClassOid == student.ClassOid && !e.IsDeleted)
@@ -89,7 +89,7 @@ namespace SchoolSystem.API.Controllers
                             SubmittedAt = submission.SubmittedAt??DateTime.UtcNow,
                             Score = submission.Score,
                             Feedback = submission.Feedback,
-                            Status = submission.Status.ToString(),
+                            Status = submission.Status.ToString()??string.Empty,
                             GradedAt = submission.GradedAt
                         }
                     };
@@ -114,7 +114,7 @@ namespace SchoolSystem.API.Controllers
 
                 var exam = await _examRepo.GetAllQueryable()
                     .Include(e => e.Subject)
-                    .Include(e => e.Teacher).ThenInclude(t => t.User)
+                    .Include(e => e.Teacher).ThenInclude(t => t!.User)
                     .Include(e => e.Materials)
                     .Include(e => e.Submissions.Where(s => s.StudentOid == student.Oid))
                     .FirstOrDefaultAsync(e => e.Oid == examId && e.ClassOid == student.ClassOid && !e.IsDeleted);
@@ -156,7 +156,7 @@ namespace SchoolSystem.API.Controllers
                         SubmittedAt = submission.SubmittedAt??DateTime.UtcNow,
                         Score = submission.Score,
                         Feedback = submission.Feedback,
-                        Status = submission.Status.ToString(),
+                        Status = submission.Status.ToString()??string.Empty,
                         GradedAt = submission.GradedAt
                     }
                 };

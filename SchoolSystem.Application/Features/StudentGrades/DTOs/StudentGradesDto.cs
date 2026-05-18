@@ -7,11 +7,11 @@ namespace SchoolSystem.Application.Features.StudentGrades.DTOs
     {
         public string Title { get; set; } = "myGradesTitle";
         public string Description { get; set; } = "myGradesDesc";
-        public OverallGpaDto OverallGPA { get; set; }
-        public GradeTrendDto GradeTrend { get; set; }
-        public SubjectPerformanceDto SubjectPerformance { get; set; }
-        public List<SubjectDetailedGradeDto> SubjectDetailedGrades { get; set; }
-        public ClassRankDto ClassRank { get; set; }
+        public OverallGpaDto OverallGPA { get; set; }= new OverallGpaDto();
+        public GradeTrendDto GradeTrend { get; set; }=new GradeTrendDto();
+        public SubjectPerformanceDto SubjectPerformance { get; set; } = new SubjectPerformanceDto();
+        public List<SubjectDetailedGradeDto> SubjectDetailedGrades { get; set; } = new List<SubjectDetailedGradeDto>();
+        public ClassRankDto ClassRank { get; set; } = new ClassRankDto();
     }
 
     public class OverallGpaDto
@@ -22,23 +22,23 @@ namespace SchoolSystem.Application.Features.StudentGrades.DTOs
 
     public class GradeTrendDto
     {
-        public List<string> Months { get; set; }
-        public List<int> Values { get; set; }
+        public List<string> Months { get; set; } = new List<string>();
+        public List<int> Values { get; set; } = new List<int>();
     }
 
     public class SubjectPerformanceDto
     {
-        public List<string> Subjects { get; set; }
-        public List<int> Grades { get; set; }
+        public List<string> Subjects { get; set; } = new List<string>();
+        public List<int> Grades { get; set; } = new List<int>();
     }
 
     public class SubjectDetailedGradeDto
     {
-        public string SubjectName { get; set; }
-        public string TeacherName { get; set; }
-        public SubjectGradeComponentsDto Components { get; set; }
-        public List<ExamGradeDto> Exams { get; set; }
-        public List<AssignmentGradeDto> Assignments { get; set; }
+        public string SubjectName { get; set; }= string.Empty;
+        public string TeacherName { get; set; }=string.Empty;
+        public SubjectGradeComponentsDto Components { get; set; } = new SubjectGradeComponentsDto();
+        public List<ExamGradeDto> Exams { get; set; } = new List<ExamGradeDto>();
+        public List<AssignmentGradeDto> Assignments { get; set; } = new List<AssignmentGradeDto>();
     }
 
     public class SubjectGradeComponentsDto
@@ -51,7 +51,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.DTOs
 
     public class ExamGradeDto
     {
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public decimal Score { get; set; }
         public decimal TotalMarks { get; set; }
@@ -60,7 +60,7 @@ namespace SchoolSystem.Application.Features.StudentGrades.DTOs
 
     public class AssignmentGradeDto
     {
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
         public decimal? Grade { get; set; }
         public decimal TotalMarks { get; set; }

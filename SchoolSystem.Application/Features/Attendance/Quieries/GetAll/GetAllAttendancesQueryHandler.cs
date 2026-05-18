@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SchoolSystem.Application.Features.Attendance.Queries.GetAll
+namespace SchoolSystem.Application.Features.Attendance.Quieries.GetAll
 {
     public class GetAllAttendancesQueryHandler : IRequestHandler<GetAllAttendancesQuery, List<AttendanceDto>>
     {
@@ -40,7 +40,7 @@ namespace SchoolSystem.Application.Features.Attendance.Queries.GetAll
 
             return await query
                 .OrderByDescending(a => a.Date)
-                .ThenBy(a => a.Student.FullName)
+                .ThenBy(a => a.Student != null ? a.Student.FullName : string.Empty)
                 .ProjectTo<AttendanceDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
         }

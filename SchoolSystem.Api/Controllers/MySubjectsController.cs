@@ -81,7 +81,7 @@ namespace SchoolSystem.API.Controllers
                         new List<string> { $"No {userRole} record found." }  // Fixed: List<string>
                     ));
 
-                var query = new GetMySubjectsQuery(entityId.Value, userRole);
+                var query = new GetMySubjectsQuery(entityId.Value, userRole!);
                 var result = await _mediator.Send(query);
 
                 return Ok(ApiResponseFactory.Success(result, "MySubjectsFetchedSuccessfully", _messageService));
@@ -135,7 +135,7 @@ namespace SchoolSystem.API.Controllers
                         new List<string> { $"No {userRole} record found." }  // Fixed: List<string>
                     ));
 
-                var query = new GetMySubjectsQuery(entityId.Value, userRole, subjectId);
+                var query = new GetMySubjectsQuery(entityId.Value, userRole!, subjectId);
                 var result = await _mediator.Send(query);
 
                 return Ok(ApiResponseFactory.Success(result, "SubjectDetailsFetchedSuccessfully", _messageService));

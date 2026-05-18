@@ -26,13 +26,15 @@ namespace SchoolSystem.Application.Features.Timetable.Queries.GetById
 
         public async Task<TimetableDto> Handle(GetTimetableByOidQuery request, CancellationToken cancellationToken)
         {
-            return await _timetableRepo.GetAllQueryable()
-                .Include(t => t.Class)
-                .Include(t => t.Subject)
-                .Include(t => t.Teacher)
-                .Where(t => t.Oid == request.Oid)
-                .ProjectTo<TimetableDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(cancellationToken);
+            var result = await _timetableRepo.GetAllQueryable()
+                 .Include(t => t.Class)
+                 .Include(t => t.Subject)
+                 .Include(t => t.Teacher)
+                 .Where(t => t.Oid == request.Oid)
+                 .ProjectTo<TimetableDto>(_mapper.ConfigurationProvider)
+                 .FirstOrDefaultAsync(cancellationToken);
+
+            return result ?? throw new KeyNotFoundException($"Timetable with Oid {request.Oid} not found");
         }
     }
 }

@@ -3,7 +3,7 @@ using SchoolSystem.Application.Features.Attendance.DTOs;
 using System;
 using System.Collections.Generic;
 
-namespace SchoolSystem.Application.Features.Attendance.Queries.GetAll
+namespace SchoolSystem.Application.Features.Attendance.Quieries.GetAll
 {
     public class GetAllAttendancesQuery : IRequest<List<AttendanceDto>>
     {

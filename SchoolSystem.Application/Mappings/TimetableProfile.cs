@@ -27,8 +27,8 @@ namespace SchoolSystem.Application.Mappings
                 .ForMember(dest => dest.EndTime, opt => opt.Ignore())
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             CreateMap<Timetable, TimetableSlotDto>()
-                .ForMember(d => d.SubjectName, o => o.MapFrom(s => s.Subject.Name))
-                .ForMember(d => d.TeacherName, o => o.MapFrom(s => s.Teacher.FullName))
+                .ForMember(d => d.SubjectName, o => o.MapFrom(s => s.Subject!.Name))
+                .ForMember(d => d.TeacherName, o => o.MapFrom(s => s.Teacher!.FullName))
                 .ForMember(d => d.Time, o => o.MapFrom(s => $"{s.StartTime:hh\\:mm}-{s.EndTime:hh\\:mm}"))
                 .ForMember(d => d.Room, o => o.MapFrom(s => s.Room))
                 .ForMember(d => d.SubjectOid, o => o.MapFrom(s => s.SubjectOid))

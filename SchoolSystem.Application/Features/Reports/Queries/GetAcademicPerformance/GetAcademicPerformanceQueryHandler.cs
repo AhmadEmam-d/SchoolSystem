@@ -26,20 +26,16 @@ namespace SchoolSystem.Application.Features.Reports.Queries.GetAcademicPerforman
         {
             var examResults = await _examResultRepo.GetAllQueryable()
                 .Include(r => r.Exam)
-                .ThenInclude(e => e.Subject)
+                    .ThenInclude(e => e!.Subject)
+                .Where(r => r.Exam != null && r.Exam.Subject != null)
                 .ToListAsync(cancellationToken);
 
             var subjects = examResults
-                .GroupBy(r => r.Exam.Subject.Name)
-                .Select(g => new SubjectPerformanceSummaryDto
-                {
-                    SubjectName = g.Key,
-                    AverageScore = Math.Round(g.Average(r => r.Percentage ?? 0), 1),
-                    PassRate = Math.Round((double)g.Count(r => r.IsPassed) / g.Count() * 100, 1)
-                })
+                .GroupBy(r => r.Exam!.Subject!.Name)
+                .Select(g => _mapper.Map<SubjectPerformanceSummaryDto>(g))
                 .ToList();
 
-            return new AcademicPerformanceDto { Subjects = subjects };
+            return _mapper.Map<AcademicPerformanceDto>(subjects);
         }
     }
 }
