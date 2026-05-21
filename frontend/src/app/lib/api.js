@@ -45,7 +45,34 @@ export const api = {
         },
         body: JSON.stringify({ email })
       }).then(res => res.json())
+      ,
+          forgotPassword: (email) =>
+      fetch(`${API_BASE_URL}/Auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      }).then(res => res.json()),
+
+    verifyOtpAndReset: (email, otpCode, newPassword, confirmPassword) =>
+      fetch(`${API_BASE_URL}/Auth/verify-otp-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otpCode, newPassword, confirmPassword })
+      }).then(res => res.json()),
+
+    adminResetPassword: (userId) =>
+      fetch(`${API_BASE_URL}/Auth/admin-reset-password`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ userId })
+      }).then(res => res.json()),
+
+
   },
+  
   
   // Teachers endpoints
   teachers: {
@@ -619,6 +646,7 @@ getChildrenDashboard: async () => {
   },
 
 //   // Attendance endpoints
+
 //  // Attendance endpoints
 //   // attendance: {
 //   //   getToday: (classOid) =>
@@ -745,142 +773,291 @@ getChildrenDashboard: async () => {
 // //       }).then(res => res.json()),
 // // }
 // // Attendance endpoints - بنفس ستايل باقي الـ APIs
-attendance: {
-  // ==================== Queries (GET) ====================
+// attendance: {
+//   // ==================== Queries (GET) ====================
   
+//   getToday: (classOid) =>
+//     fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   getWeekly: (classOid, startDate) =>
+//     fetch(`${API_BASE_URL}/Attendance/weekly${classOid ? `?classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   getMonthlyReport: (year, month, classOid) =>
+//     fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   getAll: (classOid, date) =>
+//     fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   getClassStats: (classOid) =>
+//     fetch(`${API_BASE_URL}/Attendance/class-stats/${classOid}`, {
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   // ==================== Commands (POST / PUT / DELETE) ====================
+
+//   create: (data) =>
+//     fetch(`${API_BASE_URL}/Attendance`, {
+//       method: 'POST',
+//       headers: { 
+//         'Content-Type': 'application/json',
+//         ...getHeaders()   // أفضل طريقة للتوكن
+//       },
+//       body: JSON.stringify(data)
+//     }).then(res => res.json()),
+
+//   update: (oid, data) =>
+//     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
+//       method: 'PUT',
+//       headers: { 
+//         'Content-Type': 'application/json',
+//         ...getHeaders()
+//       },
+//       body: JSON.stringify(data)
+//     }).then(res => res.json()),
+
+//   delete: (oid) =>
+//     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
+//       method: 'DELETE',
+//       headers: getHeaders()
+//     }).then(res => res.json()),
+
+//   // ==================== الـ Endpoints الجديدة (Session System) ====================
+
+//   /** بدء جلسة حضور جديدة */
+//    // ✅ start session
+//   startSession: async (dto) => {
+//     const res = await fetch(`${API_BASE_URL}/Attendance/start-session`, {
+//       method: 'POST',
+//       headers: { 
+//         'Content-Type': 'application/json',
+//         ...getHeaders()
+//       },
+//       body: JSON.stringify(dto)
+//     });
+
+//     const text = await res.text();
+//     const data = text ? JSON.parse(text) : null;
+
+//     return {
+//       ok: res.ok,
+//       data
+//     };
+//   },
+
+//   // ✅ end / submit session
+//   submitSession: async (dto) => {
+    
+//     const res = await fetch(`${API_BASE_URL}/Attendance/submit-session`, {
+//       method: 'POST',
+//       headers: { 
+//         'Content-Type': 'application/json',
+//         ...getHeaders()
+//       },
+//       body: JSON.stringify(dto)
+//     });
+
+//     const text = await res.text();
+//     const data = text ? JSON.parse(text) : null;
+
+//     return {
+//       ok: res.ok,
+//       data
+//     };
+//   },
+// // أضف هذا إلى attendance object في api.js
+// getStudentActiveSession: async () => {
+//   const token = localStorage.getItem('token');
+//   try {
+//    const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
+//       headers: getHeaders()
+//     });
+    
+//     if (!res.ok) {
+//       return { ok: false, data: null };
+//     }
+    
+//     const data = await res.json();
+//     return { ok: true, data: data?.data };
+//   } catch (error) {
+//     console.error('Error in getStudentActiveSession:', error);
+//     return { ok: false, data: null, error: error.message };
+//   }
+// },
+// studentSubmit: async (dto) => {
+//   const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//       ...getHeaders()
+//     },
+//     body: JSON.stringify(dto)
+//   });
+
+//   const text = await res.text();
+//   const data = text ? JSON.parse(text) : null;
+
+//   return { ok: res.ok, data };
+// },
+// }
+//   ,
+    
+attendance: {
+ 
+  // ==================== Queries (GET) ====================
+ 
   getToday: (classOid) =>
     fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
       headers: getHeaders()
     }).then(res => res.json()),
-
+ 
   getWeekly: (classOid, startDate) =>
     fetch(`${API_BASE_URL}/Attendance/weekly${classOid ? `?classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
       headers: getHeaders()
     }).then(res => res.json()),
-
+ 
   getMonthlyReport: (year, month, classOid) =>
     fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
       headers: getHeaders()
     }).then(res => res.json()),
-
+ 
   getAll: (classOid, date) =>
     fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
       headers: getHeaders()
     }).then(res => res.json()),
-
+ 
   getClassStats: (classOid) =>
     fetch(`${API_BASE_URL}/Attendance/class-stats/${classOid}`, {
       headers: getHeaders()
     }).then(res => res.json()),
-
+ 
+  // ✅ جيب الـ attendance records بتاعة session معينة (للمدرس)
+  getSessionAttendance: async (sessionId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/Attendance/session/${sessionId}`, {
+        headers: getHeaders()
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      return { ok: res.ok, data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+ 
+  // ✅ جيب كل الـ sessions (للمدرس يتحقق من session موجودة)
+  getSessions: async (classOid) => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/Attendance/sessions${classOid ? `?classOid=${classOid}` : ''}`,
+        { headers: getHeaders() }
+      );
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      return { ok: res.ok, data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+ 
   // ==================== Commands (POST / PUT / DELETE) ====================
-
+ 
   create: (data) =>
     fetch(`${API_BASE_URL}/Attendance`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...getHeaders()   // أفضل طريقة للتوكن
-      },
-      body: JSON.stringify(data)
-    }).then(res => res.json()),
-
-  update: (oid, data) =>
-    fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-      method: 'PUT',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
       body: JSON.stringify(data)
     }).then(res => res.json()),
-
+ 
+  update: (oid, data) =>
+    fetch(`${API_BASE_URL}/Attendance/${oid}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getHeaders()
+      },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+ 
   delete: (oid) =>
     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
       method: 'DELETE',
       headers: getHeaders()
     }).then(res => res.json()),
-
-  // ==================== الـ Endpoints الجديدة (Session System) ====================
-
-  /** بدء جلسة حضور جديدة */
-   // ✅ start session
+ 
+  // ==================== Session System ====================
+ 
+  // ✅ المدرس يبدأ session جديدة
   startSession: async (dto) => {
     const res = await fetch(`${API_BASE_URL}/Attendance/start-session`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
       body: JSON.stringify(dto)
     });
-
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-
-    return {
-      ok: res.ok,
-      data
-    };
+    return { ok: res.ok, data };
   },
-
-  // ✅ end / submit session
+ 
+  // ✅ المدرس ينهي الـ session ويسجل الحضور (manual أو end session)
   submitSession: async (dto) => {
-    
     const res = await fetch(`${API_BASE_URL}/Attendance/submit-session`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
       body: JSON.stringify(dto)
     });
-
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-
-    return {
-      ok: res.ok,
-      data
-    };
+    return { ok: res.ok, data };
   },
-// أضف هذا إلى attendance object في api.js
-getStudentActiveSession: async () => {
-  const token = localStorage.getItem('token');
-  try {
-   const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
-      headers: getHeaders()
-    });
-    
-    if (!res.ok) {
-      return { ok: false, data: null };
+ 
+  // ✅ الطالب يجيب الـ session النشطة بتاعته
+  getStudentActiveSession: async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
+        headers: getHeaders()
+      });
+      if (!res.ok) return { ok: false, data: null };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
     }
-    
-    const data = await res.json();
-    return { ok: true, data: data?.data };
-  } catch (error) {
-    console.error('Error in getStudentActiveSession:', error);
-    return { ok: false, data: null, error: error.message };
-  }
+  },
+ 
+  // ✅ الطالب يسجل حضوره
+  studentSubmit: async (dto) => {
+    const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getHeaders()
+      },
+      body: JSON.stringify(dto)
+    });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    return { ok: res.ok, data };
+  },
+ 
 },
-studentSubmit: async (dto) => {
-  const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders()
-    },
-    body: JSON.stringify(dto)
-  });
-
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  return { ok: res.ok, data };
-},
-}
-  ,
-  homeworks: {
+homeworks: {
   // ==================== Queries (GET) ====================
 
   /** جلب جميع الواجبات الخاصة بالمعلم المسجل دخوله */

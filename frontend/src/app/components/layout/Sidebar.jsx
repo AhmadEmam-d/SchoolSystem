@@ -123,6 +123,7 @@ export function Sidebar() {
       label: t('timetable'), 
       id: 'timetable',
       subItems: [
+        { label: t('AddTimetable'), path: '/admin/timetable/Addtimetable' },
         { label: t('byClass'), path: '/admin/timetable' },
         { label: t('byTeacher'), path: '/admin/timetable/by-teacher' },
       ]

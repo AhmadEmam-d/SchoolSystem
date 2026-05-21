@@ -23,6 +23,7 @@ import { AdminAnnouncements } from "./pages/admin/Announcements.jsx";
 import { AddAnnouncement } from "./pages/admin/AddAnnouncement.jsx";
 import { AdminNotifications } from "./pages/admin/Notifications.jsx";
 import { AdminMessages } from "./pages/admin/Messages.jsx";
+import {AddTimetable} from "./pages/admin/Addtimetable.jsx";
 import { NewMessage } from "./pages/admin/NewMessage.jsx";
 import { AdminReports } from "./pages/admin/Reports.jsx";
 import { StudentsSummaryReport } from "./pages/admin/StudentsSummaryReport.jsx";
@@ -217,6 +218,8 @@ export const router = createBrowserRouter([
       { path: "admin/subjects/edit/:id", Component: EditSubject },
       
       { path: "admin/timetable", Component: AdminTimetable },
+      { path: "admin/timetable/addTimetable", Component: AddTimetable },
+
       { path: "admin/timetable/edit", Component: EditTimetable },
       { path: "admin/timetable/by-teacher", Component: TimetableByTeacher },
       
