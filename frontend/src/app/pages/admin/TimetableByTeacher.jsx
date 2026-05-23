@@ -5,135 +5,83 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../../../app/lib/api';
 
-const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-const times = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
 
 export function TimetableByTeacher() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const [teachers, setTeachers] = useState([]);
+  const [teachers,        setTeachers]        = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [timetableData, setTimetableData] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [currentTeacher,  setCurrentTeacher]  = useState(null);
+  const [weeklySchedule,  setWeeklySchedule]  = useState({});
+  const [allTimes,        setAllTimes]        = useState([]);
+  const [loading,         setLoading]         = useState(false);
   const [loadingTeachers, setLoadingTeachers] = useState(true);
-  const [currentTeacher, setCurrentTeacher] = useState(null);
 
-  // ✅ Fetch Teachers
+  // ─── Load teachers ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        setLoadingTeachers(true);
-        const teachersList = await api.teachers.getAll();
-        
-       // console.log("📚 Teachers loaded:", teachersList);
-        
-        if (teachersList && teachersList.length > 0) {
-          setTeachers(teachersList);
-          setSelectedTeacher(teachersList[0].oid);
-          setCurrentTeacher(teachersList[0]);
+        const list = await api.teachers.getAll();
+        if (list?.length > 0) {
+          setTeachers(list);
+          setSelectedTeacher(list[0].oid);
+          setCurrentTeacher(list[0]);
         } else {
-          toast.error("No teachers found");
+          toast.error('No teachers found');
         }
-      } catch (error) {
-        console.error("Error loading teachers:", error);
-        toast.error("Error loading teachers");
+      } catch (err) {
+        console.error(err);
+        toast.error('Error loading teachers');
       } finally {
         setLoadingTeachers(false);
       }
     };
-
     fetchTeachers();
   }, []);
 
-  // ✅ Fetch Timetable when teacher changes
+  // ─── Load timetable when teacher changes ─────────────────────────────────
   useEffect(() => {
+    if (!selectedTeacher) return;
+
     const fetchTimetable = async () => {
-      if (!selectedTeacher) {
-        console.log("No teacher selected");
-        return;
-      }
-
-   //   console.log("🟢 Fetching timetable for teacher:", selectedTeacher);
       setLoading(true);
-
       try {
         const response = await api.timetable.getByTeacher(selectedTeacher);
-        
-      //  console.log("🟢 Full response:", response);
-        
         if (!response.ok) {
-          console.error("Response not OK:", response);
-          toast.error(response.data?.message || "Failed to load timetable");
-          setTimetableData({});
+          toast.error('Failed to load timetable');
+          setWeeklySchedule({});
+          setAllTimes([]);
           return;
         }
 
-        let timetableResponse = response.data;
-     //   console.log("🟢 Timetable data:", timetableResponse);
+        const raw = response.data;
+        // Support both: raw.data.weeklySchedule and raw.weeklySchedule
+        const sched = raw?.data?.weeklySchedule ?? raw?.weeklySchedule ?? {};
 
-        // Find teacher info
-        const teacher = teachers.find(t => t.oid === selectedTeacher);
-        setCurrentTeacher(teacher);
+        // Update teacher name from response if available
+        const teacher = teachers.find(tc => tc.oid === selectedTeacher);
+        setCurrentTeacher(prev => ({
+          ...teacher,
+          fullName: raw?.data?.teacherName ?? raw?.teacherName ?? teacher?.fullName,
+        }));
 
-        // Check different response structures
-        let weeklySchedule = null;
-        
-        if (timetableResponse && timetableResponse.weeklySchedule) {
-          weeklySchedule = timetableResponse.weeklySchedule;
-        } else if (timetableResponse && timetableResponse.data && timetableResponse.data.weeklySchedule) {
-          weeklySchedule = timetableResponse.data.weeklySchedule;
-        } else if (timetableResponse && Array.isArray(timetableResponse)) {
-          // Convert array format to organized structure
-          const organized = {};
-          days.forEach(day => { organized[day] = {}; });
-          
-          timetableResponse.forEach(slot => {
-            if (slot.day && slot.startTime) {
-              organized[slot.day][slot.startTime] = {
-                subjectName: slot.subjectName || slot.subject?.name || '-',
-                className: slot.className || slot.class?.name || '-',
-                room: slot.room || '-'
-              };
-            }
+        // Build a unique sorted times list from all slots
+        const timesSet = new Set();
+        Object.values(sched).forEach(slots => {
+          (slots ?? []).forEach(slot => {
+            if (slot.startTime) timesSet.add(slot.startTime);
           });
-          
-          setTimetableData(organized);
-          return;
-        }
-
-        if (weeklySchedule) {
-          const organized = {};
-          
-          days.forEach(day => {
-            organized[day] = {};
-          });
-
-          Object.entries(weeklySchedule).forEach(([day, slots]) => {
-            if (slots && Array.isArray(slots) && slots.length > 0) {
-              slots.forEach(slot => {
-                const startTime = slot.startTime;
-                
-                organized[day][startTime] = {
-                  subjectName: slot.subjectName || slot.subject?.name || '-',
-                  className: slot.className || slot.class?.name || '-',
-                  room: slot.room || '-'
-                };
-              });
-            }
-          });
-
-        //  console.log("✅ Organized timetable:", organized);
-          setTimetableData(organized);
-        } else {
-          console.log("⚠️ No weeklySchedule found in response");
-          setTimetableData({});
-        }
-
-      } catch (error) {
-        console.error("❌ Error fetching timetable:", error);
-        toast.error("Failed to load timetable");
-        setTimetableData({});
+        });
+        const sortedTimes = Array.from(timesSet).sort();
+        setAllTimes(sortedTimes);
+        setWeeklySchedule(sched);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to load timetable');
+        setWeeklySchedule({});
+        setAllTimes([]);
       } finally {
         setLoading(false);
       }
@@ -142,21 +90,18 @@ export function TimetableByTeacher() {
     fetchTimetable();
   }, [selectedTeacher, teachers]);
 
-  const getScheduleItem = (day, time) => {
-    return timetableData[day]?.[time] || null;
-  };
+  const getSlot = (day, startTime) =>
+    (weeklySchedule[day] ?? []).find(s => s.startTime === startTime) ?? null;
 
-  const totalHours = Object.values(timetableData)
-    .flatMap(day => Object.values(day)).length;
+  const totalClasses = Object.values(weeklySchedule)
+    .reduce((acc, slots) => acc + (slots?.length ?? 0), 0);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const hasAnyData = allTimes.length > 0;
 
   if (loadingTeachers) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading teachers...</div>
+        <div className="text-muted-foreground">Loading teachers...</div>
       </div>
     );
   }
@@ -166,117 +111,119 @@ export function TimetableByTeacher() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={() => navigate('/admin/timetable')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Teacher Timetable</h1>
-            <p className="text-gray-500 text-sm mt-1">View and manage teacher schedules</p>
+            <h1 className="text-2xl font-bold text-foreground">Teacher Timetable</h1>
+            <p className="text-muted-foreground text-sm mt-1">View and manage teacher schedules</p>
           </div>
         </div>
-
         <div className="flex gap-2">
-          <button 
-            onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-foreground"
           >
             <Printer className="w-4 h-4" />
             Print
           </button>
-
-          <button 
-            onClick={() => navigate('/admin/timetable/edit')}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <button
+            onClick={() => navigate('/admin/timetable/add')}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             <Edit className="w-4 h-4" />
-            Edit
+            Add Entry
           </button>
         </div>
       </div>
 
-      {/* Select Teacher */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Select Teacher
-        </label>
+      {/* Teacher Selector */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <label className="block text-sm font-medium text-foreground mb-2">Select Teacher</label>
         <select
           value={selectedTeacher}
-          onChange={(e) => setSelectedTeacher(e.target.value)}
-          className="w-full md:w-96 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          onChange={e => {
+            setSelectedTeacher(e.target.value);
+            setCurrentTeacher(teachers.find(tc => tc.oid === e.target.value));
+          }}
+          className="w-full md:w-96 border border-border rounded-lg p-2 bg-background text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
         >
-          {teachers.map(t => (
-            <option key={t.oid} value={t.oid}>
-              {t.fullName || t.name || t.email || 'Unnamed Teacher'}
+          {teachers.map(tc => (
+            <option key={tc.oid} value={tc.oid}>
+              {tc.fullName || tc.name || tc.email || 'Unnamed Teacher'}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Teacher Info */}
+      {/* Teacher Info Banner */}
       {currentTeacher && (
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg shadow-lg p-6">
           <div className="flex items-center gap-3">
             <User className="w-8 h-8" />
             <div>
               <h2 className="text-2xl font-bold">{currentTeacher.fullName || currentTeacher.name}</h2>
-              <p className="text-purple-100 mt-1">
-                <Clock className="w-4 h-4 inline mr-1" />
-                Total: {totalHours} classes per week
+              <p className="text-purple-100 mt-1 flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                Total: {totalClasses} classes per week
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && (
-        <div className="flex items-center justify-center h-64 bg-white rounded-lg">
-          <div className="text-gray-500">Loading timetable...</div>
+        <div className="flex items-center justify-center h-64 bg-card rounded-lg border border-border">
+          <div className="text-muted-foreground">Loading timetable...</div>
         </div>
       )}
 
       {/* Timetable Table */}
-      {!loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {!loading && hasAnyData && (
+        <div className="bg-card rounded-lg border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted/50">
                 <tr>
-                  <th className="border border-gray-200 p-3 text-left font-semibold text-gray-700">
+                  <th className="border border-border p-3 text-left font-semibold text-foreground text-sm">
                     Time
                   </th>
-                  {days.map(day => (
-                    <th key={day} className="border border-gray-200 p-3 text-left font-semibold text-gray-700">
+                  {DAYS.map(day => (
+                    <th key={day} className="border border-border p-3 text-left font-semibold text-foreground text-sm">
                       {day}
                     </th>
                   ))}
                 </tr>
               </thead>
-
               <tbody>
-                {times.map(time => (
-                  <tr key={time} className="hover:bg-gray-50 transition-colors">
-                    <td className="border border-gray-200 p-3 font-medium text-gray-700">
+                {allTimes.map(time => (
+                  <tr key={time} className="hover:bg-muted/30 transition-colors">
+                    <td className="border border-border p-3 font-medium text-foreground text-sm whitespace-nowrap">
                       {time}
                     </td>
-
-                    {days.map(day => {
-                      const item = getScheduleItem(day, time);
-
+                    {DAYS.map(day => {
+                      const slot = getSlot(day, time);
                       return (
-                        <td key={day} className="border border-gray-200 p-3">
-                          {item ? (
-                            <div className="space-y-1">
-                              <div className="font-semibold text-gray-800">{item.className}</div>
-                              <div className="text-sm text-gray-600">{item.subjectName}</div>
-                              <div className="text-xs text-gray-500">Room: {item.room}</div>
+                        <td key={day} className="border border-border p-3">
+                          {slot ? (
+                            <div className="space-y-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-2">
+                              <div className="font-semibold text-indigo-800 dark:text-indigo-300 text-sm">
+                                {slot.className}
+                              </div>
+                              <div className="text-sm text-foreground capitalize">{slot.subjectName}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {slot.startTime} – {slot.endTime}
+                              </div>
+                              {slot.room && (
+                                <div className="text-xs text-muted-foreground">Room: {slot.room}</div>
+                              )}
                             </div>
                           ) : (
-                            <div className="text-gray-400 text-center">-</div>
+                            <div className="text-muted-foreground text-center text-sm">—</div>
                           )}
                         </td>
                       );
@@ -290,15 +237,15 @@ export function TimetableByTeacher() {
       )}
 
       {/* Empty State */}
-      {!loading && !loadingTeachers && Object.keys(timetableData).length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900">No timetable found</h3>
-          <p className="text-gray-500 mt-1">No schedule available for this teacher</p>
+      {!loading && !hasAnyData && (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <h3 className="text-lg font-medium text-foreground">No timetable found</h3>
+          <p className="text-muted-foreground mt-1">No schedule available for this teacher</p>
           <button
-            onClick={() => navigate('/admin/timetable/edit')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => navigate('/admin/timetable/add')}
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
-            Create Timetable
+            Add Timetable Entry
           </button>
         </div>
       )}

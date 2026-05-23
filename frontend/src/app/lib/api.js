@@ -535,15 +535,22 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
       .then(res => res.json())
       .then(data => data.success ? data.data : null),
     
-    create: (data) =>
-      fetch(`${API_BASE_URL}/Timetable`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(data)
-      }).then(res => res.json()),
+    create: async (data) => {
+  const res = await fetch(`${API_BASE_URL}/Timetable`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(data)
+  });
+  const text = await res.text();
+  const json = text ? JSON.parse(text) : {};
+  console.log('Timetable create response:', json);
+console.log('❌ Messages:', json.messages);
+console.log('❌ Errors:', json.errors);// 🔍
+  return json;
+},
     
     update: (oid, data) =>
       fetch(`${API_BASE_URL}/Timetable/${oid}`, {
@@ -730,9 +737,14 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
 // //       }).then(res => res.json()),
 // // }
 // // Attendance endpoints - بنفس ستايل باقي الـ APIs
+// ============================================================
+// استبدل الـ attendance object الموجود في api.js بالكود ده
+// ============================================================
+
 attendance: {
+
   // ==================== Queries (GET) ====================
-  
+
   getToday: (classOid) =>
     fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
       headers: getHeaders()
@@ -758,14 +770,43 @@ attendance: {
       headers: getHeaders()
     }).then(res => res.json()),
 
+  // ✅ جيب الـ attendance records بتاعة session معينة (للمدرس)
+  getSessionAttendance: async (sessionId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/Attendance/session/${sessionId}`, {
+        headers: getHeaders()
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      return { ok: res.ok, data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
+  // ✅ جيب كل الـ sessions (للمدرس يتحقق من session موجودة)
+  getSessions: async (classOid) => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/Attendance/sessions${classOid ? `?classOid=${classOid}` : ''}`,
+        { headers: getHeaders() }
+      );
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : null;
+      return { ok: res.ok, data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
+    }
+  },
+
   // ==================== Commands (POST / PUT / DELETE) ====================
 
   create: (data) =>
     fetch(`${API_BASE_URL}/Attendance`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        ...getHeaders()   // أفضل طريقة للتوكن
+        ...getHeaders()
       },
       body: JSON.stringify(data)
     }).then(res => res.json()),
@@ -773,7 +814,7 @@ attendance: {
   update: (oid, data) =>
     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
       method: 'PUT',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
@@ -786,83 +827,67 @@ attendance: {
       headers: getHeaders()
     }).then(res => res.json()),
 
-  // ==================== الـ Endpoints الجديدة (Session System) ====================
+  // ==================== Session System ====================
 
-  /** بدء جلسة حضور جديدة */
-   // ✅ start session
+  // ✅ المدرس يبدأ session جديدة
   startSession: async (dto) => {
     const res = await fetch(`${API_BASE_URL}/Attendance/start-session`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
       body: JSON.stringify(dto)
     });
-
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-
-    return {
-      ok: res.ok,
-      data
-    };
+    return { ok: res.ok, data };
   },
 
-  // ✅ end / submit session
+  // ✅ المدرس ينهي الـ session ويسجل الحضور (manual أو end session)
   submitSession: async (dto) => {
-    
     const res = await fetch(`${API_BASE_URL}/Attendance/submit-session`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         ...getHeaders()
       },
       body: JSON.stringify(dto)
     });
-
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-
-    return {
-      ok: res.ok,
-      data
-    };
+    return { ok: res.ok, data };
   },
-// أضف هذا إلى attendance object في api.js
-getStudentActiveSession: async () => {
-  const token = localStorage.getItem('token');
-  try {
-   const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
-      headers: getHeaders()
-    });
-    
-    if (!res.ok) {
-      return { ok: false, data: null };
+
+  // ✅ الطالب يجيب الـ session النشطة بتاعته
+  getStudentActiveSession: async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/Attendance/active-session`, {
+        headers: getHeaders()
+      });
+      if (!res.ok) return { ok: false, data: null };
+      const data = await res.json();
+      return { ok: true, data: data?.data };
+    } catch (error) {
+      return { ok: false, data: null, error: error.message };
     }
-    
-    const data = await res.json();
-    return { ok: true, data: data?.data };
-  } catch (error) {
-    console.error('Error in getStudentActiveSession:', error);
-    return { ok: false, data: null, error: error.message };
-  }
-},
-studentSubmit: async (dto) => {
-  const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders()
-    },
-    body: JSON.stringify(dto)
-  });
+  },
 
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  // ✅ الطالب يسجل حضوره
+  studentSubmit: async (dto) => {
+    const res = await fetch(`${API_BASE_URL}/Attendance/student-submit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getHeaders()
+      },
+      body: JSON.stringify(dto)
+    });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    return { ok: res.ok, data };
+  },
 
-  return { ok: res.ok, data };
-},
 }
   ,
   homeworks: {
