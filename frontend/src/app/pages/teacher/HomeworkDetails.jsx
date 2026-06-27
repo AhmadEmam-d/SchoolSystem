@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { ArrowLeft, Calendar, Clock, FileText, Users, Download, Edit, Loader2, AlertCircle, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, FileText, Users, Edit, Loader2, AlertCircle, Eye } from 'lucide-react';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
@@ -15,41 +15,19 @@ export function HomeworkDetails() {
 
   const [loading, setLoading] = useState(true);
   const [homework, setHomework] = useState(null);
-  const [attachments, setAttachments] = useState([]);
   const [downloading, setDownloading] = useState(null);
 
-  // ================= جلب البيانات والملفات =================
+  // ================= جلب البيانات =================
   useEffect(() => {
     const fetchDetails = async () => {
       try {
         setLoading(true);
-
-        // 1. جلب بيانات الواجب الأساسية
         const res = await api.homeworks.getById(id);
         if (res.success) {
           setHomework(res.data);
         } else {
           toast.error(res.messages?.Error || "Failed to load details");
         }
-
-        // 2. جلب قائمة الملفات المرفقة
-        const fileRes = await fetch(`${API_BASE_URL}/api/Files/Homework/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        const fileData = await fileRes.json();
-        
-        // التعامل مع هيكل البيانات الفعلي
-        if (fileData.success && fileData.data) {
-          setAttachments(fileData.data);
-        } else if (Array.isArray(fileData)) {
-          setAttachments(fileData);
-        } else {
-          setAttachments([]);
-        }
-
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error("Connection error to server");
@@ -61,64 +39,46 @@ export function HomeworkDetails() {
     fetchDetails();
   }, [id]);
 
-  // ================= دالة فتح الملف في تاب جديد =================
-  const handleOpenAttachment = async (file) => {
-    // استخدام المفتاح المناسب للتحميل
-    const fileName = file.name;
-    const fileUrl = file.fileUrl;
-    
-    if (!fileName && !fileUrl) {
-      console.error("Missing file info:", file);
+  // ================= دالة فتح الملف =================
+  // API shape: { oid, name, fileUrl, fileType, fileSize }
+  const handleOpenAttachment = async (material) => {
+    const { name, fileUrl } = material;
+
+    if (!fileUrl) {
       toast.error("File information not found");
       return;
     }
 
-    setDownloading(fileName || fileUrl);
-    
+    setDownloading(material.oid);
+
     try {
-      // الطريقة 1: محاولة التحميل باستخدام الـ fileUrl الكامل
-      let url = null;
-      
-      if (fileUrl) {
-        // إذا كان fileUrl موجود، نستخدمه مباشرة
-        const fullUrl = `${API_BASE_URL}${fileUrl}`;
-        console.log("Attempting to open:", fullUrl);
-        
-        const response = await fetch(fullUrl, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          url = window.URL.createObjectURL(blob);
-        } else {
-          throw new Error(`Failed to fetch from URL: ${response.status}`);
-        }
-      }
-      
-      // إذا نجحنا في الحصول على URL، نفتح الملف
-      if (url) {
-        window.open(url, '_blank');
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      } else {
-        throw new Error("Could not generate file URL");
-      }
-      
+      const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL}${fileUrl}`;
+
+      const response = await fetch(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
-      console.error("Download error:", error);
+      console.error("Open file error:", error);
       toast.error("Could not open file. Please try again later.");
     } finally {
       setDownloading(null);
     }
   };
 
-  // ================= الحصول على أيقونة الملف المناسبة =================
+  // ================= أيقونة الملف =================
   const getFileIcon = (fileName) => {
-    const extension = fileName?.split('.').pop()?.toLowerCase();
-    switch(extension) {
-      case 'pdf': return '📄';
+    const ext = fileName?.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf':  return '📄';
       case 'doc':
       case 'docx': return '📝';
       case 'xls':
@@ -128,13 +88,21 @@ export function HomeworkDetails() {
       case 'jpg':
       case 'jpeg':
       case 'png':
-      case 'gif': return '🖼️';
+      case 'gif':  return '🖼️';
       case 'mp4':
-      case 'mov': return '🎥';
-      default: return '📎';
+      case 'mov':  return '🎥';
+      default:     return '📎';
     }
   };
 
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // ================= Loading / Error =================
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
@@ -149,6 +117,9 @@ export function HomeworkDetails() {
       <Button variant="link" onClick={() => navigate('/teacher/homework')}>Go back</Button>
     </div>
   );
+
+  // materials جاية مع homework مباشرة
+  const materials = homework.materials ?? [];
 
   return (
     <div className="space-y-6">
@@ -206,55 +177,49 @@ export function HomeworkDetails() {
                 </div>
               </div>
 
-              {/* Attachments Section */}
-              {attachments.length > 0 && (
+              {/* Materials Section — يستخدم homework.materials مباشرة */}
+              {materials.length > 0 && (
                 <div>
                   <h3 className="font-bold text-gray-900 mb-3">Attachments</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {attachments.map((file, index) => {
-                      const fileName = file.name;
-                      const fileSize = file.fileSize;
-                      const fileType = file.fileType;
-                      
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-all group cursor-pointer"
-                          onClick={() => handleOpenAttachment(file)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-indigo-50 p-2 rounded-lg group-hover:bg-indigo-600 transition-colors">
-                              <span className="text-xl">
-                                {getFileIcon(fileName)}
-                              </span>
-                            </div>
-                            <div className="overflow-hidden">
-                              <p className="font-bold text-sm text-gray-900 truncate max-w-[140px]">
-                                {fileName}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {(fileSize / 1024).toFixed(1)} KB
-                              </p>
-                            </div>
+                    {materials.map((material) => (
+                      <div
+                        key={material.oid}
+                        className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-all group cursor-pointer"
+                        onClick={() => handleOpenAttachment(material)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-indigo-50 p-2 rounded-lg group-hover:bg-indigo-600 transition-colors">
+                            <span className="text-xl">{getFileIcon(material.name)}</span>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenAttachment(file);
-                            }}
-                            disabled={downloading === fileName}
-                          >
-                            {downloading === fileName ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
-                            ) : (
-                              <Eye className="h-4 w-4 text-slate-500 group-hover:text-indigo-600" />
-                            )}
-                          </Button>
+                          <div className="overflow-hidden">
+                            {/* ✅ API: name */}
+                            <p className="font-bold text-sm text-gray-900 truncate max-w-[140px]">
+                              {material.name}
+                            </p>
+                            {/* ✅ API: fileSize (bytes) */}
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(material.fileSize)}
+                            </p>
+                          </div>
                         </div>
-                      );
-                    })}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenAttachment(material);
+                          }}
+                          disabled={downloading === material.oid}
+                        >
+                          {downloading === material.oid ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-slate-500 group-hover:text-indigo-600" />
+                          )}
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -273,14 +238,18 @@ export function HomeworkDetails() {
                   <Calendar className="h-4 w-4 text-indigo-500" />
                   <span className="text-sm font-medium">Assigned</span>
                 </div>
-                <span className="font-bold text-gray-900">{new Date(homework.assignedDate).toLocaleDateString()}</span>
+                <span className="font-bold text-gray-900">
+                  {new Date(homework.assignedDate).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex items-center justify-between py-3 border-b border-slate-50">
                 <div className="flex items-center gap-2 text-gray-500">
                   <Clock className="h-4 w-4 text-rose-500" />
                   <span className="text-sm font-medium">Due Date</span>
                 </div>
-                <span className="font-bold text-rose-600">{new Date(homework.dueDate).toLocaleDateString()}</span>
+                <span className="font-bold text-rose-600">
+                  {new Date(homework.dueDate).toLocaleDateString()}
+                </span>
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-2 text-gray-500">

@@ -182,7 +182,7 @@ function AttendanceButton({ lesson, isToday }) {
   const [attended, setAttended]         = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
-  if (!isToday) return null;
+  //if (!isToday) return null;
 
  const handleClick = async () => {
   setChecking(true);

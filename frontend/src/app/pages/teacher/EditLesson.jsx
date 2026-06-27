@@ -58,7 +58,7 @@ const EditLesson = () => {
         });
 
         const filesRes = await api.files.getEntityFiles("lesson", id);
-        setFiles(filesRes?.data || filesRes || []);
+       setFiles(Array.isArray(filesRes?.data) ? filesRes.data : []);
       } catch (err) {
         console.error("LOAD ERROR:", err);
       } finally {
@@ -124,14 +124,17 @@ const EditLesson = () => {
 
         classOid: lesson.classOid,
         subjectOid: lesson.subjectOid,
-        type: lesson.type ?? 1,
+     type: 4,
         status: typeof lesson.status === "number" ? lesson.status : 1,
 
-        objectives: form.objectives.map((o, i) => ({
-          ...(o.oid ? { oid: o.oid } : {}),
-          description: o.description,
-          order: i,
-        })),
+      objectives: form.objectives
+  .filter(o => o.description?.trim())
+  .map((o, i) => ({
+    ...(o.oid ? { oid: o.oid } : {}),
+    description: o.description,
+    order: i,
+    isDeleted: false
+  })),
 
         materials: lesson.materials || [],
         resourceLinks: lesson.resourceLinks || [],

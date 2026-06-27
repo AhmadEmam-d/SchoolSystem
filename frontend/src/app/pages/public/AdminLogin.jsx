@@ -6,7 +6,9 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+
 import { useAuth } from '../../context/AuthContext';
+const baseurl =`http://localhost:5073/api`;
 
 export function AdminLogin() {
   const { login } = useAuth();
@@ -22,7 +24,7 @@ export function AdminLogin() {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5073/api/Auth/login', {
+      const response = await fetch(`${baseurl}/Auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

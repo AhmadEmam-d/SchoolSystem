@@ -29,17 +29,69 @@ const DAY_SELECTED = {
   Saturday:  'bg-orange-500 border-orange-500 text-white',
 };
 
+const toMin = t => {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const timesOverlap = (start1, end1, start2, end2) => {
+  const s1 = toMin(start1), e1 = toMin(end1);
+  const s2 = toMin(start2), e2 = toMin(end2);
+  return s1 < e2 && s2 < e1;
+};
+
+const getConflicts = (form, timetable) => {
+  const errors = [];
+  const { classOid, teacherOid, day, startTime, endTime, period } = form;
+
+  if (!day || !startTime || !endTime || !period) return errors;
+
+  // endTime لازم بعد startTime
+  if (toMin(endTime) <= toMin(startTime)) {
+    errors.push('وقت الانتهاء لازم يكون بعد وقت البداية');
+    return errors;
+  }
+
+  const sameDay = timetable.filter(e => e.day === day);
+
+  for (const entry of sameDay) {
+    const overlap = timesOverlap(startTime, endTime, entry.startTime, entry.endTime);
+
+    // 1. نفس الكلاس + تعارض في الوقت
+    if (classOid && entry.classOid === classOid && overlap) {
+      errors.push(
+        `الفصل "${entry.className}" عنده حصة "${entry.subjectName}" من ${entry.startTime} لـ ${entry.endTime} في نفس الوقت`
+      );
+    }
+
+    // 2. نفس الكلاس + نفس الـ period
+    if (classOid && entry.classOid === classOid && String(entry.period) === String(period)) {
+      errors.push(
+        `الفصل "${entry.className}" عنده حصة "${entry.subjectName}" في نفس الحصة (Period ${period})`
+      );
+    }
+
+    // 3. نفس المدرس + تعارض في الوقت
+    if (teacherOid && entry.teacherOid === teacherOid && overlap) {
+      errors.push(
+        `المدرس "${entry.teacherName ?? 'المختار'}" عنده حصة "${entry.subjectName}" من ${entry.startTime} لـ ${entry.endTime} في نفس الوقت`
+      );
+    }
+  }
+
+  return [...new Set(errors)];
+};
+
 export function AddTimetable() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // ─── Dropdown data ────────────────────────────────────────────────────────
-  const [classes,  setClasses]  = useState([]);
-  const [subjects, setSubjects] = useState([]);
-  const [teachers, setTeachers] = useState([]);
+  const [classes,   setClasses]   = useState([]);
+  const [subjects,  setSubjects]  = useState([]);
+  const [teachers,  setTeachers]  = useState([]);
+  const [timetable, setTimetable] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // ─── Form state ───────────────────────────────────────────────────────────
   const [form, setForm] = useState({
     classOid:   '',
     subjectOid: '',
@@ -55,18 +107,19 @@ export function AddTimetable() {
   const [success, setSuccess] = useState(false);
   const [error,   setError]   = useState('');
 
-  // ─── Load dropdowns ───────────────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
       try {
-        const [cls, subj, teach] = await Promise.all([
+        const [cls, subj, teach, tt] = await Promise.all([
           api.classes.getAll(),
           api.subjects.getAll(),
           api.teachers.getAll(),
+          api.timetable.getAll(),
         ]);
         setClasses(Array.isArray(cls)   ? cls   : cls?.data  ?? []);
         setSubjects(Array.isArray(subj)  ? subj  : subj?.data ?? []);
         setTeachers(Array.isArray(teach) ? teach : teach?.data ?? []);
+        setTimetable(Array.isArray(tt)   ? tt    : tt?.data   ?? []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -78,9 +131,53 @@ export function AddTimetable() {
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
+  // ─── Filtered lists ───────────────────────────────────────────────────────
+  const filteredSubjects = form.teacherOid
+    ? (teachers.find(t => t.oid === form.teacherOid)?.subjects ?? [])
+    : subjects;
+
+  const filteredTeachers = form.subjectOid
+    ? teachers.filter(t => t.subjects?.some(s => s.oid === form.subjectOid))
+    : teachers;
+
+  // ─── Smart change handlers ────────────────────────────────────────────────
+  const handleTeacherChange = (teacherOid) => {
+    const teacherSubjects = teachers.find(t => t.oid === teacherOid)?.subjects ?? [];
+    const subjectStillValid = teacherSubjects.some(s => s.oid === form.subjectOid);
+    setForm(prev => ({
+      ...prev,
+      teacherOid,
+      subjectOid: subjectStillValid ? prev.subjectOid : '',
+    }));
+  };
+
+  const handleSubjectChange = (subjectOid) => {
+    const teacherHasSubject = teachers
+      .find(t => t.oid === form.teacherOid)
+      ?.subjects?.some(s => s.oid === subjectOid);
+    setForm(prev => ({
+      ...prev,
+      subjectOid,
+      teacherOid: teacherHasSubject ? prev.teacherOid : '',
+    }));
+  };
+
+  // ─── Conflict check (real-time) ───────────────────────────────────────────
+  const conflicts = getConflicts(form, timetable);
+
+  // ─── endTime valid ────────────────────────────────────────────────────────
+  const endTimeValid = !form.startTime || !form.endTime || toMin(form.endTime) > toMin(form.startTime);
+
+  // ─── Preview helpers ──────────────────────────────────────────────────────
+  const selectedClass   = classes.find(c  => (c.oid ?? c.id) === form.classOid);
+  const selectedSubject = filteredSubjects.find(s => s.oid === form.subjectOid);
+  const selectedTeacher = filteredTeachers.find(tc => tc.oid === form.teacherOid);
+
   const canSubmit =
     form.classOid && form.subjectOid && form.teacherOid &&
-    form.day && form.startTime && form.endTime && form.period;
+    form.day && form.startTime && form.endTime && form.period &&
+    endTimeValid &&
+    conflicts.length === 0;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -98,9 +195,13 @@ export function AddTimetable() {
         period:     parseInt(form.period, 10),
       };
       const res = await api.timetable.create(payload);
-      
       if (res?.success === false) {
-        throw new Error(res?.messages?.EN || res?.message || 'Failed to create timetable entry');
+        const backendError =
+          res?.errors?.[0] ||
+          res?.messages?.EN ||
+          res?.message ||
+          'Failed to create timetable entry';
+        throw new Error(backendError);
       }
       setSuccess(true);
       setTimeout(() => navigate('/admin/timetable'), 1500);
@@ -110,14 +211,6 @@ export function AddTimetable() {
       setSaving(false);
     }
   };
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────
-  const getLabel = (arr, oid, field = 'name') =>
-    arr.find(i => (i.oid ?? i.id) === oid)?.[field] ?? '—';
-
-  const selectedClass   = classes.find(c  => (c.oid  ?? c.id) === form.classOid);
-  const selectedSubject = subjects.find(s => (s.oid  ?? s.id) === form.subjectOid);
-  const selectedTeacher = teachers.find(tc => tc.oid === form.teacherOid);
 
   return (
     <div className="min-h-screen bg-background">
@@ -193,8 +286,13 @@ export function AddTimetable() {
                       type="time"
                       value={form.endTime}
                       onChange={e => set('endTime', e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                      className={`w-full px-3 py-2.5 rounded-lg border bg-background text-sm text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all ${
+                        !endTimeValid ? 'border-red-400 focus:ring-red-400' : 'border-border'
+                      }`}
                     />
+                    {!endTimeValid && (
+                      <p className="text-xs text-red-500">لازم يكون بعد وقت البداية</p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
@@ -239,11 +337,13 @@ export function AddTimetable() {
                     <p className="text-xs font-medium text-muted-foreground">Subject <span className="text-red-500">*</span></p>
                     <select
                       value={form.subjectOid}
-                      onChange={e => set('subjectOid', e.target.value)}
+                      onChange={e => handleSubjectChange(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                     >
-                      <option value="">Select subject...</option>
-                      {subjects.map(subj => (
+                      <option value="">
+                        {form.teacherOid ? 'Subjects by selected teacher...' : 'Select subject...'}
+                      </option>
+                      {filteredSubjects.map(subj => (
                         <option key={subj.oid ?? subj.id} value={subj.oid ?? subj.id}>
                           {subj.name ?? subj.subjectName}
                         </option>
@@ -261,11 +361,13 @@ export function AddTimetable() {
                 </label>
                 <select
                   value={form.teacherOid}
-                  onChange={e => set('teacherOid', e.target.value)}
+                  onChange={e => handleTeacherChange(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                 >
-                  <option value="">Select teacher...</option>
-                  {teachers.map(tc => (
+                  <option value="">
+                    {form.subjectOid ? 'Teachers for selected subject...' : 'Select teacher...'}
+                  </option>
+                  {filteredTeachers.map(tc => (
                     <option key={tc.oid} value={tc.oid}>
                       {tc.fullName ?? tc.name ?? tc.userName}
                     </option>
@@ -287,6 +389,18 @@ export function AddTimetable() {
                   className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                 />
               </div>
+
+              {/* ── Conflict Warnings ── */}
+              {conflicts.length > 0 && (
+                <div className="space-y-2">
+                  {conflicts.map((msg, i) => (
+                    <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                      <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                      <p className="text-sm text-amber-700 dark:text-amber-400">{msg}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Error */}
               {error && (
@@ -331,7 +445,6 @@ export function AddTimetable() {
               <div className="bg-card border border-border rounded-2xl p-5 space-y-4 sticky top-6">
                 <h3 className="text-sm font-semibold text-foreground">Preview</h3>
 
-                {/* Day badge */}
                 {form.day && (
                   <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium ${DAY_COLORS[form.day]}`}>
                     <Calendar className="h-3.5 w-3.5" />
@@ -340,22 +453,19 @@ export function AddTimetable() {
                 )}
 
                 <div className="space-y-3">
-                  {/* Time */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <Clock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Time</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {form.startTime && form.endTime
-                          ? `${form.startTime} – ${form.endTime}`
-                          : '—'}
+                      <p className={`text-sm font-medium ${!endTimeValid ? 'text-red-500' : 'text-foreground'}`}>
+                        {form.startTime && form.endTime ? `${form.startTime} – ${form.endTime}` : '—'}
+                        {!endTimeValid && ' ⚠️'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Period */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <Hash className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -368,7 +478,6 @@ export function AddTimetable() {
                     </div>
                   </div>
 
-                  {/* Class */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -381,7 +490,6 @@ export function AddTimetable() {
                     </div>
                   </div>
 
-                  {/* Subject */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -394,7 +502,6 @@ export function AddTimetable() {
                     </div>
                   </div>
 
-                  {/* Teacher */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <User className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
@@ -409,21 +516,26 @@ export function AddTimetable() {
                     </div>
                   </div>
 
-                  {/* Room */}
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                     <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
                       <MapPin className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Room</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {form.room || '—'}
-                      </p>
+                      <p className="text-sm font-medium text-foreground">{form.room || '—'}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Completion indicator */}
+                {conflicts.length > 0 && (
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''} detected
+                    </p>
+                  </div>
+                )}
+
                 <div className="pt-2 border-t border-border">
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
                     <span>Form completion</span>
