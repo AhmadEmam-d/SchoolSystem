@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { motion, AnimatePresence } from 'motion/react';
 
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
@@ -77,6 +77,7 @@ export function AIChat() {
   };
 
   const handleSend = async () => {
+    console.log(import.meta.env.VITE_GROQ_API_KEY)
     if (!input.trim() && attachments.length === 0) return;
 
     const userMsg = {
@@ -86,7 +87,6 @@ export function AIChat() {
       timestamp: new Date(),
       attachments: attachments.length > 0 ? [...attachments] : undefined,
     };
-    
 
     setMessages(prev => [...prev, userMsg]);
     const currentInput = input;
@@ -96,6 +96,7 @@ export function AIChat() {
     setIsLoading(true);
 
     try {
+      // بناء الـ content مع الملفات كـ text
       let messageContent = currentInput || '';
 
       for (const att of currentAttachments) {
@@ -107,6 +108,7 @@ export function AIChat() {
         }
       }
 
+      // بناء الـ history
       const history = messages
         .filter(m => m.id !== 'welcome')
         .map(m => ({
@@ -201,6 +203,7 @@ export function AIChat() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col max-w-4xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -229,6 +232,7 @@ export function AIChat() {
       </div>
 
       <Card className="flex-1 flex flex-col overflow-hidden border-gray-200 shadow-sm">
+        {/* Messages Area */}
         <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
           <AnimatePresence>
             {messages.map((msg) => (
@@ -252,6 +256,7 @@ export function AIChat() {
                   }`}>
                     <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
 
+                    {/* Attachments */}
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="mt-3 space-y-2">
                         {msg.attachments.map((attachment) => {
@@ -291,6 +296,7 @@ export function AIChat() {
             ))}
           </AnimatePresence>
 
+          {/* Loading dots */}
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
               <div className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
@@ -306,6 +312,7 @@ export function AIChat() {
           <div ref={messagesEndRef} />
         </CardContent>
 
+        {/* Input Area */}
         <div className="p-4 bg-white border-t border-gray-200">
           {attachments.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
