@@ -14,6 +14,8 @@ namespace SchoolSystem.Domain.Entities
         public DateTime PublishDate { get; set; }
         public DateTime? ExpiryDate { get; set; }
         public Guid? AuthorOid { get; set; }
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public string AuthorName { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
         public bool IsActive { get; set; }

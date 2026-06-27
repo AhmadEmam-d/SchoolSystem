@@ -12,8 +12,9 @@ namespace SchoolSystem.Domain.Entities
         public DateTime EndTime { get; set; }           
         public int Duration { get; set; }           
         public LessonStatus Status { get; set; }     
-        public LessonType Type { get; set; }       
-
+        public LessonType Type { get; set; }
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public Guid ClassOid { get; set; }              
         public Class? Class { get; set; }
 

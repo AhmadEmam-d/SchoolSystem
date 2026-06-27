@@ -53,8 +53,20 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<HomeworkSubmission> HomeworkSubmissions { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<ExamSubmission> ExamSubmissions { get; set; }
+        public DbSet<School> Schools { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<School>(entity =>
+            {
+                entity.HasKey(e => e.Oid);
+                entity.HasMany(s => s.Users).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(s => s.Students).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(s => s.Teachers).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(s => s.Classes).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(s => s.Subjects).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(s => s.Parents).WithOne(u => u.School).HasForeignKey(u => u.SchoolId).OnDelete(DeleteBehavior.Restrict);
+            });
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.Oid);

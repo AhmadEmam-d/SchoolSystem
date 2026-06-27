@@ -21,6 +21,14 @@ namespace SchoolSystem.Infrastructure.Services
                 return userIdClaim != null ? Guid.Parse(userIdClaim) : null;
             }
         }
+        public Guid? SchoolId
+        {
+            get
+            {
+                var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("SchoolId")?.Value;
+                return claim != null ? Guid.Parse(claim) : null;
+            }
+        }
 
         public string Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value!;
 

@@ -7,6 +7,7 @@ public class Section : BaseEntity
 
     public Guid ClassOid { get; set; }
     public Class? Class { get; set; }
-
+    public Guid? SchoolId { get; set; }
+    public School? School { get; set; }
     public ICollection<Student> Students { get; set; } = new List<Student>();
 }

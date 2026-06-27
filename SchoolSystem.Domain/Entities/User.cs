@@ -19,7 +19,8 @@ namespace SchoolSystem.Domain.Entities
         public string? EmployeeId { get; set; }
 
         public Student? Student { get; set; }
-
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public Teacher? Teacher { get; set; } 
 
         public Parent? Parent { get; set; } 

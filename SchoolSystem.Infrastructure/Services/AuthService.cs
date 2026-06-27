@@ -23,19 +23,23 @@ namespace SchoolSystem.Infrastructure.Services
         private readonly IGenericRepository<Student> _studentRepo;  
         private readonly IGenericRepository<Parent> _parentRepo;    
         private readonly IConfiguration _configuration;
+        private readonly IGenericRepository<School> _schoolRepo;
+
 
         public AuthService(
             IGenericRepository<User> userRepo,
             IGenericRepository<Teacher> teacherRepo,  
             IGenericRepository<Student> studentRepo,  
             IGenericRepository<Parent> parentRepo,    
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IGenericRepository<School> schoolRepo)
         {
             _userRepo = userRepo;
             _teacherRepo = teacherRepo;
             _studentRepo = studentRepo;
             _parentRepo = parentRepo;
             _configuration = configuration;
+            _schoolRepo = schoolRepo;
         }
 
         public async Task<List<RoleDto>> GetAllRolesAsync()
@@ -135,8 +139,7 @@ namespace SchoolSystem.Infrastructure.Services
             user.LastLoginAt = DateTime.UtcNow;
             await _userRepo.UpdateAsync(user);
 
-            var token = GenerateJwtToken(user);
-
+            var token = GenerateJwtToken(user, user.SchoolId);
             var redirectTo = GetRedirectUrl(user.Role);
 
             return new AuthResponseDto
@@ -144,7 +147,8 @@ namespace SchoolSystem.Infrastructure.Services
                 UserId = user.Oid,
                 TeacherId = user.Teacher?.Oid,  
                 StudentId = user.Student?.Oid,
-                ParentId = user.Parent?.Oid,  
+                ParentId = user.Parent?.Oid,
+                SchoolId = user.SchoolId,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role,
@@ -157,13 +161,27 @@ namespace SchoolSystem.Infrastructure.Services
         {
             try
             {
-                // التحقق من عدم وجود المستخدم
                 var existingUser = await _userRepo
                     .GetAllQueryable()
                     .FirstOrDefaultAsync(u => u.Email == registerDto.Email);
 
                 if (existingUser != null)
                     throw new Exception("User already exists");
+
+                // Create school first if Admin
+                Guid? schoolId = null;
+                if (registerDto.Role == UserRole.Admin)
+                {
+                    var school = new School
+                    {
+                        Name = registerDto.SchoolName ?? $"{registerDto.FullName}'s School",
+                        Email = registerDto.Email,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _schoolRepo.AddAsync(school);
+                    schoolId = school.Oid;
+                }
 
                 var user = new User
                 {
@@ -172,7 +190,8 @@ namespace SchoolSystem.Infrastructure.Services
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
                     PhoneNumber = registerDto.PhoneNumber,
                     Role = registerDto.Role,
-                    IsActive = true
+                    IsActive = true,
+                    SchoolId = schoolId   // link admin to his school
                 };
 
                 await _userRepo.AddAsync(user);
@@ -219,7 +238,7 @@ namespace SchoolSystem.Infrastructure.Services
                     parentId = parent.Oid;
                 }
 
-                var token = GenerateJwtToken(user);
+                var token = GenerateJwtToken(user, user.SchoolId);
                 var redirectTo = GetRedirectUrl(user.Role);
 
                 return new AuthResponseDto
@@ -228,6 +247,7 @@ namespace SchoolSystem.Infrastructure.Services
                     TeacherId = teacherId,
                     StudentId = studentId,
                     ParentId = parentId,
+                    SchoolId = schoolId,
                     FullName = user.FullName,
                     Email = user.Email,
                     Role = user.Role,
@@ -267,19 +287,23 @@ namespace SchoolSystem.Infrastructure.Services
             };
         }
 
-        private string GenerateJwtToken(User user)
+        private string GenerateJwtToken(User user, Guid? schoolId = null)
         {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Oid.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FullName),
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("role", user.Role.ToString()),
-                new Claim("UserId", user.Oid.ToString())  
-            };
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Oid.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.FullName),
+        new Claim(ClaimTypes.Role, user.Role.ToString()),
+        new Claim("role", user.Role.ToString()),
+        new Claim("UserId", user.Oid.ToString())
+    };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"] ?? "YourSuperSecretKeyForJWTTokenGeneration"));
+            if (schoolId.HasValue)
+                claims.Add(new Claim("SchoolId", schoolId.Value.ToString()));
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                _configuration["JWT:Secret"] ?? "YourSuperSecretKeyForJWTTokenGeneration"));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.Now.AddDays(7);
 

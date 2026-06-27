@@ -25,7 +25,8 @@ namespace SchoolSystem.Domain.Entities
 
         public Guid SectionOid { get; set; }
          public Section? Section { get; set; }
-
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public Guid ParentOid { get; set; }
         public Parent? Parent { get; set; }
         public Guid UserId { get; set; }
