@@ -15,6 +15,8 @@ namespace SchoolSystem.Domain.Entities
         public string Email { get; set; } = string.Empty;
         public Guid UserId { get; set; }
         public User? User { get; set; }
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public ICollection<Student> Students { get; set; } = new List<Student>();
     }
 

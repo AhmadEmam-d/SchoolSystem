@@ -48,6 +48,7 @@ namespace SchoolSystem.Application.Features.Auth.DTOs
 
         [Required]
         public UserRole Role { get; set; }
+        public string? SchoolName { get; set; }
     }
 
     public class AuthResponseDto
@@ -55,7 +56,8 @@ namespace SchoolSystem.Application.Features.Auth.DTOs
         public Guid UserId { get; set; }
         public Guid? TeacherId { get; set; }  
         public Guid? StudentId { get; set; }  
-        public Guid? ParentId { get; set; }   
+        public Guid? ParentId { get; set; }
+        public Guid? SchoolId { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public UserRole Role { get; set; }

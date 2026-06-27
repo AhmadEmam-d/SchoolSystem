@@ -16,7 +16,8 @@ namespace SchoolSystem.Domain.Entities
         public bool AllowLateSubmissions { get; set; }
         public bool NotifyParents { get; set; }
         public HomeworkStatus Status { get; set; } = HomeworkStatus.Active;
-
+        public Guid? SchoolId { get; set; }
+        public School? School { get; set; }
         public Guid TeacherOid { get; set; }
         public Teacher Teacher { get; set; } = null!;
 

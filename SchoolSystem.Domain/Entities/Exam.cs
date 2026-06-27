@@ -14,6 +14,8 @@ public class Exam : BaseEntity
     public Guid ClassOid { get; set; }
     public Class? Class { get; set; }
     public DateTime Date { get; set; }
+    public Guid? SchoolId { get; set; }
+    public School? School { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan Duration { get; set; }
     public int MaxScore { get; set; }
