@@ -15,6 +15,8 @@ namespace SchoolSystem.Application.Features.Classes.DTOs.Read
         public int StudentsCount { get; set; }     
         public int SectionsCount { get; set; }
         public List<StudentBasicInfoDto> Students { get; set; }=new List<StudentBasicInfoDto>();
+        public List<StudentNameDto> Studentsnames { get; set; } = new List<StudentNameDto>();
+
 
     }
 

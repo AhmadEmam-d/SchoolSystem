@@ -38,7 +38,14 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetAll
                 Level = c.Level ?? string.Empty,
                 CreatedAt = c.CreatedAt,
                 StudentsCount = c.Students?.Count(s => !s.IsDeleted) ?? 0,
-                SectionsCount = c.Sections?.Count(s => !s.IsDeleted) ?? 0
+                SectionsCount = c.Sections?.Count(s => !s.IsDeleted) ?? 0,
+                Studentsnames = c.Students?
+                .Where(s => !s.IsDeleted)
+                .Select(s => new StudentNameDto
+                {
+                    Oid = s.Oid,
+                    FullName = s.FullName,
+                }).ToList() ?? new List<StudentNameDto>()
             }).ToList();
         }
     }
