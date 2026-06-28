@@ -14,6 +14,7 @@ namespace SchoolSystem.Application.Features.Parents.DTOs.Read
         public string UserName { get; set; }= string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string Email { get; set; }=string.Empty;
+        public bool IsDeleted { get; set; }
         public List<StudentBasicInfoDto> Students { get; set; } = new();
     }
 

@@ -10,10 +10,11 @@ namespace SchoolSystem.Application.Features.Teachers.DTOs
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public Guid UserId { get; set; }
-        public string? UserName { get; set; }  // ✅ جعلها قابلة للـ null
+        public string? UserName { get; set; }
+        public bool IsDeleted { get; set; }
         public List<SubjectBasicDto> Subjects { get; set; } = new List<SubjectBasicDto>();
 
-        public TeacherAcademicSummaryDto? AcademicSummary { get; set; }  // ✅ جعلها قابلة للـ null
+        public TeacherAcademicSummaryDto? AcademicSummary { get; set; }  
         public List<StudentBasicDto> Students { get; set; } = new List<StudentBasicDto>();
 
         public class SubjectBasicDto
