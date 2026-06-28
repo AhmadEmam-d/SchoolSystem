@@ -123,8 +123,10 @@ export function Sidebar() {
       label: t('timetable'), 
       id: 'timetable',
       subItems: [
+          { label: t('AddTimetable'), path: '/admin/timetable/AddTimetable' },
         { label: t('byClass'), path: '/admin/timetable' },
         { label: t('byTeacher'), path: '/admin/timetable/by-teacher' },
+       
       ]
     },
     { 
@@ -209,9 +211,12 @@ export function Sidebar() {
     { icon: FileText, label: t('exams'), path: '/teacher/exams' },
     { icon: MessageSquare, label: t('messages'), path: '/teacher/messages' },
     { icon: Bot, label: t('smartTutor'), path: '/teacher/ai' },
+      { icon: Bell, label: t('Notifications'), path: '/teacher/Notifications' },
     { icon: HelpCircle, label: t('support'), path: '/teacher/support' },
     { icon: UserCircle, label: t('profile'), path: '/teacher/profile' },
     { icon: Settings, label: t('settings'), path: '/teacher/settings' },
+  
+
   ];
 
   const studentLinks = [

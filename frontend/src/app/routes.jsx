@@ -43,6 +43,7 @@ import { AIAnalytics } from "./pages/admin/AIAnalytics.jsx";
 import { MonthlyAttendance } from "./pages/admin/MonthlyAttendance.jsx";
 import { SentMessages } from "./pages/admin/SentMessages.jsx";
 import { TimetableByTeacher } from "./pages/admin/TimetableByTeacher.jsx";
+import {AddTimetable} from "./pages/admin/Addtimetable.jsx";
 import { TeacherDashboard, StudentDashboard, ParentDashboard } from "./pages/role-dashboards.jsx";
 import { TeacherClasses } from "./pages/teacher/Classes.jsx";
 import { TeacherHomework } from "./pages/teacher/Homework.jsx";
@@ -219,6 +220,7 @@ export const router = createBrowserRouter([
       { path: "admin/timetable", Component: AdminTimetable },
       { path: "admin/timetable/edit", Component: EditTimetable },
       { path: "admin/timetable/by-teacher", Component: TimetableByTeacher },
+        { path: "admin/timetable/AddTimetable", Component: AddTimetable },
       
       { path: "admin/attendance", Component: AdminAttendance },
       { path: "admin/attendance/monthly", Component: MonthlyAttendance },

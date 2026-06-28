@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Calendar, Users, BookOpen, Clock, Activity, TrendingUp, CheckCircle, ArrowRight, ArrowLeft, Bell, ClipboardCheck, MapPin, FileText, Loader2 } from 'lucide-react';
+import { Calendar, Users, BookOpen, Clock, Activity, TrendingUp, CheckCircle, ArrowRight, ArrowLeft, Bell, ClipboardCheck, MapPin, FileText, Loader2, QrCode, X, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useLanguage } from '../context/LanguageContext';
 import { useAttendance } from '../context/AttendanceContext';
 import { api } from '../lib/api';
+import { format } from 'date-fns';
 
+// ─── helper ───────────────────────────────────────────────────────────────────
+function toUTC(dateStr) {
+  if (!dateStr) return null;
+  return dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 export function TeacherDashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -16,102 +24,60 @@ export function TeacherDashboard() {
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
   const { sessions, endSession } = useAttendance();
 
-  // ─── API State ───────────────────────────────────────────────────────────────
-  const [lessons, setLessons]           = useState([]);
+  const [lessons, setLessons]               = useState([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
-  const [lessonsError, setLessonsError] = useState(null);
+  const [lessonsError, setLessonsError]     = useState(null);
+  const [homework, setHomework]             = useState([]);
+  const [hwLoading, setHwLoading]           = useState(true);
+  const [hwError, setHwError]               = useState(null);
+  const [exams, setExams]                   = useState([]);
+  const [examsLoading, setExamsLoading]     = useState(true);
+  const [examsError, setExamsError]         = useState(null);
 
-  const [homework, setHomework]         = useState([]);
-  const [hwLoading, setHwLoading]       = useState(true);
-  const [hwError, setHwError]           = useState(null);
-
-  const [exams, setExams] = useState([]);
-  const [examsLoading, setExamsLoading] = useState(true);
-  const [examsError, setExamsError] = useState(null);
-
-  // ─── Fetch lessons (Today's Schedule) ────────────────────────────────────────
   useEffect(() => {
     const loadLessons = async () => {
       try {
-        setLessonsError(null);
-        setLessonsLoading(true);
+        setLessonsError(null); setLessonsLoading(true);
         const res = await api.lessons.getAll();
-        const data = Array.isArray(res) ? res : res?.data || [];
-        setLessons(data);
-      } catch (err) {
-        console.error('Error loading lessons:', err);
-        setLessonsError('Failed to load schedule');
-      } finally {
-        setLessonsLoading(false);
-      }
+        setLessons(Array.isArray(res) ? res : res?.data || []);
+      } catch (err) { setLessonsError('Failed to load schedule'); }
+      finally { setLessonsLoading(false); }
     };
-    loadLessons();
-
     const loadExams = async () => {
       try {
-        setExamsLoading(true);
-        setExamsError(null);
+        setExamsLoading(true); setExamsError(null);
         const res = await api.exams.getAll();
         const data = Array.isArray(res) ? res : res?.data || [];
-        const upcoming = data
-          .filter(e => e.date && new Date(e.date) >= new Date())
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        setExams(upcoming);
-      } catch (err) {
-        console.error(err);
-        setExamsError('Failed to load exams');
-      } finally {
-        setExamsLoading(false);
-      }
+        setExams(data.filter(e => e.date && new Date(e.date) >= new Date()).sort((a, b) => new Date(a.date) - new Date(b.date)));
+      } catch { setExamsError('Failed to load exams'); }
+      finally { setExamsLoading(false); }
     };
-    loadExams();
+    loadLessons(); loadExams();
   }, []);
 
-  // ─── Fetch homework (Homework Overview) ──────────────────────────────────────
   useEffect(() => {
     const loadHomework = async () => {
       try {
-        setHwError(null);
-        setHwLoading(true);
+        setHwError(null); setHwLoading(true);
         const res = await api.homeworks.getTeacherHomeworks();
         const data = Array.isArray(res) ? res : res?.data || [];
-        const pending = data.filter(hw => hw.status === 'Active' || hw.status === 'Grading').slice(0, 3);
-        setHomework(pending);
-      } catch (err) {
-        console.error('Error loading homework:', err);
-        setHwError('Failed to load homework');
-      } finally {
-        setHwLoading(false);
-      }
+        setHomework(data.filter(hw => hw.status === 'Active' || hw.status === 'Grading').slice(0, 3));
+      } catch { setHwError('Failed to load homework'); }
+      finally { setHwLoading(false); }
     };
     loadHomework();
   }, []);
 
-  // ─── Static data ─────────────────────────────────────────────────────────────
-  const upcomingExams = exams
-    .filter(exam => exam.date && new Date(exam.date) >= new Date())
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 3);
-
-  const recentAnnouncements = [
-    { title: 'Parent-Teacher Meeting',  date: 'March 5, 2026',  priority: 'high'   },
-    { title: 'Math Department Meeting', date: 'March 10, 2026', priority: 'normal' },
-  ];
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────────
   const getLessonStatus = (lesson) => {
-    const now   = new Date();
+    const now = new Date();
     const today = now.toISOString().split('T')[0];
     const lessonDate = lesson.date ? new Date(lesson.date).toISOString().split('T')[0] : null;
-
     if (lessonDate && lessonDate < today) return 'completed';
     if (!lessonDate || lessonDate > today) return 'upcoming';
-
     if (lesson.startTime) {
-      const [h, m]  = lesson.startTime.split(':').map(Number);
-      const start   = new Date(now);
-      start.setHours(h, m, 0, 0);
-      const end     = new Date(start.getTime() + 45 * 60 * 1000);
+      const [h, m] = lesson.startTime.split(':').map(Number);
+      const start = new Date(now); start.setHours(h, m, 0, 0);
+      const end = new Date(start.getTime() + 45 * 60 * 1000);
       if (now >= start && now <= end) return 'ongoing';
       if (now > end) return 'completed';
     }
@@ -119,23 +85,15 @@ export function TeacherDashboard() {
   };
 
   const today = new Date().toISOString().split('T')[0];
-
-  const todayLessons = lessons.filter(lesson => {
-    if (!lesson.date) return false;
-    const lessonDate = new Date(lesson.date).toISOString().split('T')[0];
-    const status = getLessonStatus(lesson);
-    return lessonDate === today && status !== 'completed';
-  });
-
+  const todayLessons = lessons.filter(l => l.date && new Date(l.date).toISOString().split('T')[0] === today && getLessonStatus(l) !== 'completed');
+  const upcomingExams = exams.slice(0, 3);
   const hwSubmissionPercent = (hw) => {
     if (!hw.totalStudents || hw.totalStudents === 0) return 0;
     return Math.round(((hw.submissions ?? hw.submissionsCount ?? 0) / hw.totalStudents) * 100);
   };
-
   const ongoingCount  = todayLessons.filter(l => getLessonStatus(l) === 'ongoing').length;
   const upcomingCount = todayLessons.filter(l => getLessonStatus(l) === 'upcoming').length;
 
-  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -145,339 +103,206 @@ export function TeacherDashboard() {
         </div>
       </div>
 
-      {/* ── Stats Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Link to="/teacher/classes">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('todaysClasses')}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {lessonsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : todayLessons.length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {ongoingCount} {t('ongoing')}, {upcomingCount} {t('upcoming')}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/teacher/homework">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pendingHomework')}</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {hwLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : homework.length}
-              </div>
-              <p className="text-xs text-muted-foreground">{t('submissionsToGrade')}</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/teacher/exams">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('upcomingExams')}</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {examsLoading ? '...' : exams.length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {exams.length > 0
-                  ? `Next: ${exams[0].className || ''} - ${exams[0].type || ''}`
-                  : 'No upcoming exams'}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/teacher/messages">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('newMessages')}</CardTitle>
-              <Bell className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">3 from parents, 2 admin</p>
-            </CardContent>
-          </Card>
-        </Link>
+        <Link to="/teacher/classes"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('todaysClasses')}</CardTitle><BookOpen className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{lessonsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : todayLessons.length}</div><p className="text-xs text-muted-foreground">{ongoingCount} {t('ongoing')}, {upcomingCount} {t('upcoming')}</p></CardContent></Card></Link>
+        <Link to="/teacher/homework"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('pendingHomework')}</CardTitle><Activity className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{hwLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : homework.length}</div><p className="text-xs text-muted-foreground">{t('submissionsToGrade')}</p></CardContent></Card></Link>
+        <Link to="/teacher/exams"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('upcomingExams')}</CardTitle><Calendar className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{examsLoading ? '...' : exams.length}</div><p className="text-xs text-muted-foreground">{exams.length > 0 ? `Next: ${exams[0].className || ''} - ${exams[0].type || ''}` : 'No upcoming exams'}</p></CardContent></Card></Link>
+        <Link to="/teacher/messages"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('newMessages')}</CardTitle><Bell className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">5</div><p className="text-xs text-muted-foreground">3 from parents, 2 admin</p></CardContent></Card></Link>
       </div>
 
-      {/* ── Main Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Today's Schedule */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('todaysSchedule')}</CardTitle>
-            <Link to="/teacher/classes" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-              {t('viewAll')} <ArrowIcon className="h-4 w-4" />
-            </Link>
+            <Link to="/teacher/classes" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">{t('viewAll')} <ArrowIcon className="h-4 w-4" /></Link>
           </CardHeader>
           <CardContent>
-            {lessonsLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
-              </div>
-            ) : lessonsError ? (
-              <div className="text-center py-10 text-red-500 text-sm">{lessonsError}</div>
-            ) : todayLessons.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">No lessons for today.</div>
-            ) : (
-              <div className="space-y-3">
-                {todayLessons.map((lesson, i) => {
-                  const status    = getLessonStatus(lesson);
-                  const session   = sessions[i];
-                  const isActive  = session?.attendanceStatus === 'active';
-                  const isDone    = session?.attendanceStatus === 'completed' || status === 'completed';
-
-                  const timeLabel = lesson.startTime
-                    ? `${lesson.startTime}${lesson.endTime ? ' - ' + lesson.endTime : ''}`
-                    : lesson.date
-                    ? new Date(lesson.date).toLocaleDateString('en-GB')
-                    : '—';
-
-                  return (
-                    <div
-                      key={lesson.id || lesson.oid || i}
-                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-3 ${
-                        isDone
-                          ? 'bg-muted/50 dark:bg-muted/30 border-border'
-                          : isActive || status === 'ongoing'
-                          ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800'
-                          : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Clock className={`h-5 w-5 ${
-                          isDone                           ? 'text-muted-foreground'                    :
-                          isActive || status === 'ongoing' ? 'text-green-600 dark:text-green-400'       :
-                                                             'text-blue-600 dark:text-blue-400'
-                        }`} />
-                        <div className="space-y-0.5">
-                          <div className="font-semibold text-foreground">
-                            {lesson.title || lesson.subject || 'Untitled Lesson'}
-                            {lesson.className ? ` — ${lesson.className}` : ''}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {timeLabel}
-                            {lesson.room ? ` • ${lesson.room}` : ''}
-                          </div>
-                          {isActive && (
-                            <div className="text-xs font-medium text-green-700 dark:text-green-400 mt-1 flex items-center gap-2">
-                              <span className="h-2 w-2 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
-                              Active Session: {session.attendanceMethod}
-                              {session.correctNumber && session.attendanceMethod === 'number' && ` (Target: ${session.correctNumber})`}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 justify-end">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          isDone
-                            ? 'bg-muted text-muted-foreground'
-                            : isActive || status === 'ongoing'
-                            ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                            : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                        }`}>
-                          {isActive ? 'Session Live' : isDone ? 'Attendance Completed' : t(status)}
-                        </span>
-
-                        {isActive && (
-                          <Button size="sm" variant="destructive" onClick={() => endSession(i)}>
-                            End Session
-                          </Button>
-                        )}
+            {lessonsLoading ? <div className="flex items-center justify-center py-16"><Loader2 className="h-8 w-8 text-indigo-500 animate-spin" /></div>
+              : lessonsError ? <div className="text-center py-10 text-red-500 text-sm">{lessonsError}</div>
+              : todayLessons.length === 0 ? <div className="text-center py-10 text-muted-foreground text-sm">No lessons for today.</div>
+              : <div className="space-y-3">{todayLessons.map((lesson, i) => {
+                const status = getLessonStatus(lesson);
+                const session = sessions[i];
+                const isActive = session?.attendanceStatus === 'active';
+                const isDone = session?.attendanceStatus === 'completed' || status === 'completed';
+                const timeLabel = lesson.startTime ? `${lesson.startTime}${lesson.endTime ? ' - ' + lesson.endTime : ''}` : lesson.date ? new Date(lesson.date).toLocaleDateString('en-GB') : '—';
+                return (
+                  <div key={lesson.id || lesson.oid || i} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-3 ${isDone ? 'bg-muted/50 border-border' : isActive || status === 'ongoing' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+                    <div className="flex items-center gap-4">
+                      <Clock className={`h-5 w-5 ${isDone ? 'text-muted-foreground' : isActive || status === 'ongoing' ? 'text-green-600' : 'text-blue-600'}`} />
+                      <div className="space-y-0.5">
+                        <div className="font-semibold text-foreground">{lesson.title || lesson.subject || 'Untitled Lesson'}{lesson.className ? ` — ${lesson.className}` : ''}</div>
+                        <div className="text-sm text-muted-foreground">{timeLabel}{lesson.room ? ` • ${lesson.room}` : ''}</div>
+                        {isActive && <div className="text-xs font-medium text-green-700 mt-1 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />Active Session: {session.attendanceMethod}</div>}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div className="flex items-center gap-3 justify-end">
+                      <span className={`text-xs px-2 py-1 rounded-full ${isDone ? 'bg-muted text-muted-foreground' : isActive || status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{isActive ? 'Session Live' : isDone ? 'Attendance Completed' : t(status)}</span>
+                      {isActive && <Button size="sm" variant="destructive" onClick={() => endSession(i)}>End Session</Button>}
+                    </div>
+                  </div>
+                );
+              })}</div>}
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
         <Card>
-          <CardHeader>
-            <CardTitle>{t('quickActions')}</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('quickActions')}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Link
-                to="/teacher/lessons/add"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">{t('addLesson')}</div>
-                  <div className="text-xs text-muted-foreground">{t('createLessonPlan')}</div>
-                </div>
-              </Link>
-
-              <Link
-                to="/teacher/homework"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-300 dark:hover:border-green-700 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-                  <BookOpen className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">{t('assignHomework')}</div>
-                  <div className="text-xs text-muted-foreground">{t('createAssignment')}</div>
-                </div>
-              </Link>
-
-              <Link
-                to="/teacher/exams"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:border-amber-300 dark:hover:border-amber-700 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">{t('scheduleExam')}</div>
-                  <div className="text-xs text-muted-foreground">{t('setupExam')}</div>
-                </div>
-              </Link>
-
-              <Link
-                to="/teacher/messages"
-                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                  <Bell className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">{t('sendMessage')}</div>
-                  <div className="text-xs text-muted-foreground">{t('contactParentsStudents')}</div>
-                </div>
-              </Link>
+              {[
+                { to: '/teacher/lessons/add', color: 'blue',   icon: <FileText className="h-5 w-5 text-blue-600" />,   title: t('addLesson'),       desc: t('createLessonPlan') },
+                { to: '/teacher/homework',    color: 'green',  icon: <BookOpen className="h-5 w-5 text-green-600" />,  title: t('assignHomework'),  desc: t('createAssignment') },
+                { to: '/teacher/exams',       color: 'amber',  icon: <Calendar className="h-5 w-5 text-amber-600" />,  title: t('scheduleExam'),    desc: t('setupExam') },
+                { to: '/teacher/messages',    color: 'purple', icon: <Bell className="h-5 w-5 text-purple-600" />,     title: t('sendMessage'),     desc: t('contactParentsStudents') },
+              ].map(({ to, color, icon, title, desc }) => (
+                <Link key={to} to={to} className={`flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-${color}-50 hover:border-${color}-300 transition-colors`}>
+                  <div className={`h-10 w-10 rounded-lg bg-${color}-100 flex items-center justify-center`}>{icon}</div>
+                  <div className="flex-1"><div className="font-semibold text-foreground">{title}</div><div className="text-xs text-muted-foreground">{desc}</div></div>
+                </Link>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── Bottom Row ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Homework Overview */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('homeworkOverview')}</CardTitle>
-            <Link to="/teacher/homework" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-              {t('viewAll')} <ArrowIcon className="h-4 w-4" />
-            </Link>
+            <Link to="/teacher/homework" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">{t('viewAll')} <ArrowIcon className="h-4 w-4" /></Link>
           </CardHeader>
           <CardContent>
-            {hwLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-7 w-7 text-indigo-500 animate-spin" />
-              </div>
-            ) : hwError ? (
-              <div className="text-center py-8 text-red-500 text-sm">{hwError}</div>
-            ) : homework.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">No pending homework.</div>
-            ) : (
-              <div className="space-y-3">
-                {homework.map((hw, i) => {
-                  const submitted = hw.submissions ?? hw.submissionsCount ?? 0;
-                  const total     = hw.totalStudents ?? 0;
-                  const percent   = hwSubmissionPercent(hw);
-                  const dueLabel  = hw.dueDate
-                    ? new Date(hw.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                    : '—';
-
-                  return (
-                    <div
-                      key={hw.oid || hw.id || i}
-                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/teacher/homework/${hw.oid || hw.id}`)}
-                    >
-                      <div className="space-y-0.5 flex-1 min-w-0">
-                        <div className="font-semibold text-foreground truncate">
-                          {hw.className ? `${hw.className}: ` : ''}{hw.title}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {total > 0 ? `${submitted}/${total} ${t('submitted')} • ` : ''}
-                          {t('due')} {dueLabel}
-                        </div>
-                        {total > 0 && (
-                          <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${
-                                percent === 100 ? 'bg-green-500' : percent >= 60 ? 'bg-indigo-500' : 'bg-amber-500'
-                              }`}
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right ml-4 shrink-0">
-                        {total > 0 && (
-                          <>
-                            <div className="text-sm font-semibold text-indigo-600">{percent}%</div>
-                            <div className="text-xs text-muted-foreground">{t('completed')}</div>
-                          </>
-                        )}
-                        <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                          hw.status === 'Active' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {hw.status}
-                        </span>
-                      </div>
+            {hwLoading ? <div className="flex items-center justify-center py-10"><Loader2 className="h-7 w-7 text-indigo-500 animate-spin" /></div>
+              : hwError ? <div className="text-center py-8 text-red-500 text-sm">{hwError}</div>
+              : homework.length === 0 ? <div className="text-center py-8 text-muted-foreground text-sm">No pending homework.</div>
+              : <div className="space-y-3">{homework.map((hw, i) => {
+                const submitted = hw.submissions ?? hw.submissionsCount ?? 0;
+                const total = hw.totalStudents ?? 0;
+                const percent = hwSubmissionPercent(hw);
+                const dueLabel = hw.dueDate ? new Date(hw.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—';
+                return (
+                  <div key={hw.oid || hw.id || i} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/teacher/homework/${hw.oid || hw.id}`)}>
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <div className="font-semibold text-foreground truncate">{hw.className ? `${hw.className}: ` : ''}{hw.title}</div>
+                      <div className="text-sm text-muted-foreground">{total > 0 ? `${submitted}/${total} ${t('submitted')} • ` : ''}{t('due')} {dueLabel}</div>
+                      {total > 0 && <div className="mt-1.5 h-1.5 w-full bg-muted rounded-full overflow-hidden"><div className={`h-full rounded-full ${percent === 100 ? 'bg-green-500' : percent >= 60 ? 'bg-indigo-500' : 'bg-amber-500'}`} style={{ width: `${percent}%` }} /></div>}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <div className="text-right ml-4 shrink-0">
+                      {total > 0 && <><div className="text-sm font-semibold text-indigo-600">{percent}%</div><div className="text-xs text-muted-foreground">{t('completed')}</div></>}
+                      <span className={`mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-bold ${hw.status === 'Active' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>{hw.status}</span>
+                    </div>
+                  </div>
+                );
+              })}</div>}
           </CardContent>
         </Card>
 
-        {/* Upcoming Exams */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('upcomingExams')}</CardTitle>
-            <Link to="/teacher/exams" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
-              {t('viewAll')} <ArrowIcon className="h-4 w-4" />
-            </Link>
+            <Link to="/teacher/exams" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">{t('viewAll')} <ArrowIcon className="h-4 w-4" /></Link>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {upcomingExams.map((exam, i) => (
                 <div key={i} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
-                      <Calendar className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                    </div>
+                    <div className="h-12 w-12 rounded-lg bg-indigo-100 flex items-center justify-center"><Calendar className="h-6 w-6 text-indigo-600" /></div>
                     <div className="space-y-0.5">
                       <div className="font-semibold text-foreground">{exam.className} - {exam.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(exam.date).toLocaleDateString('en-GB')}
-                        {exam.time && ` at ${exam.time}`}
-                      </div>
+                      <div className="text-sm text-muted-foreground">{new Date(exam.date).toLocaleDateString('en-GB')}{exam.time && ` at ${exam.time}`}</div>
                     </div>
                   </div>
-                  <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs rounded-full">
-                    {t('upcoming')}
-                  </span>
+                  <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">{t('upcoming')}</span>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ─── Student Attendance Modal ─────────────────────────────────────────────────
+function StudentAttendanceModal({ session, onClose, onSuccess }) {
+  const [selectedNumber, setSelectedNumber] = useState(null);
+  const [submitting, setSubmitting]         = useState(false);
+  const [result, setResult]                 = useState(null);
+
+  const isQR     = session?.method === 2;
+  const isNumber = session?.method === 3;
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const res   = await api.attendance.studentSubmit({
+        sessionId:      session.sessionId,
+        selectedNumber: isNumber ? selectedNumber : null,
+        remarks:        null,
+      });
+      const inner = res.data?.data;
+      if (res.ok && inner?.success) {
+        setResult({ success: true, message: inner?.message || 'Attendance recorded!' });
+        setTimeout(() => { onSuccess(session.sessionId); onClose(); }, 1800);
+      } else {
+        const errMsg = res.data?.errors?.[0] || inner?.message || 'Failed.';
+        if (errMsg.toLowerCase().includes('already')) { onSuccess(session.sessionId); onClose(); return; }
+        setResult({ success: false, message: errMsg });
+      }
+    } catch (e) {
+      setResult({ success: false, message: e.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:50, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div style={{ background:'var(--color-background-primary)', borderRadius:12, padding:'1.5rem', width:'100%', maxWidth:400, boxShadow:'0 8px 40px rgba(0,0,0,0.18)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem' }}>
+          <div>
+            <p style={{ fontSize:18, fontWeight:500, margin:0 }}>Mark Attendance</p>
+            <p style={{ fontSize:13, color:'var(--color-text-secondary)', margin:'2px 0 0' }}>{session?.className}</p>
+          </div>
+          <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer' }}><X size={18} /></button>
+        </div>
+
+        {result ? (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'1.5rem 0' }}>
+            {result.success ? <CheckCircle size={48} color="green" /> : <AlertCircle size={48} color="red" />}
+            <p style={{ textAlign:'center', color: result.success ? 'green' : 'red', fontWeight:500 }}>{result.message}</p>
+          </div>
+        ) : (
+          <>
+            {isQR && session?.qrCodeBase64 && (
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, marginBottom:'1rem' }}>
+                <p style={{ fontSize:13, color:'var(--color-text-secondary)', margin:0 }}>Scan this QR code</p>
+                <img src={`data:image/png;base64,${session.qrCodeBase64}`} alt="QR" style={{ width:180, height:180, borderRadius:8, border:'1px solid #e5e7eb' }} />
+              </div>
+            )}
+            {isNumber && session?.randomNumbers?.length > 0 && (
+              <div style={{ marginBottom:'1rem' }}>
+                <p style={{ fontSize:13, color:'var(--color-text-secondary)', marginBottom:10 }}>Select the number shown by your teacher</p>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {session.randomNumbers.map((num) => (
+                    <button key={num} onClick={() => setSelectedNumber(num)} style={{ width:52, height:52, borderRadius:8, border: selectedNumber === num ? '2px solid #4f46e5' : '1px solid #e5e7eb', background: selectedNumber === num ? '#eef2ff' : '#f9fafb', color: selectedNumber === num ? '#4f46e5' : '#111', fontSize:16, cursor:'pointer' }}>{num}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {session?.expiresAt && (
+              <p style={{ fontSize:12, color:'#9ca3af', marginBottom:'1rem' }}>
+                Expires at {format(new Date(toUTC(session.expiresAt)), 'hh:mm a')}
+              </p>
+            )}
+            <button onClick={handleSubmit} disabled={submitting || (isNumber && selectedNumber === null)} style={{ width:'100%', padding:'10px 0', borderRadius:8, border:'none', background: (submitting || (isNumber && selectedNumber === null)) ? '#e5e7eb' : '#4f46e5', color:'#fff', fontWeight:500, fontSize:14, cursor: submitting || (isNumber && selectedNumber === null) ? 'not-allowed' : 'pointer' }}>
+              {submitting ? 'Submitting...' : 'Confirm Attendance'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -490,11 +315,40 @@ export function StudentDashboard() {
   const { currentLanguage } = useLanguage();
   const isRTL = currentLanguage === 'ar';
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
-  const { sessions, studentStatus, completeStudentAttendance } = useAttendance();
 
-  // ─── FIX: exams state معرّفة هنا داخل StudentDashboard ───────────────────
-  const [exams, setExams] = useState([]);
+  const [exams, setExams]               = useState([]);
   const [examsLoading, setExamsLoading] = useState(true);
+
+  // ─── Active Session State ──────────────────────────────────────────────────
+  const [activeSession, setActiveSession]   = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [showModal, setShowModal]           = useState(false);
+  const [attended, setAttended]             = useState(false);
+
+  // ─── Poll الـ session كل 15 ثانية ─────────────────────────────────────────
+  const fetchActiveSession = useCallback(async () => {
+    try {
+      const res = await api.attendance.getStudentActiveSession();
+      if (res.ok && res.data) {
+        setActiveSession(res.data);
+        const key = `attended_${res.data.sessionId}`;
+        setAttended(localStorage.getItem(key) === 'true');
+      } else {
+        setActiveSession(null);
+        setAttended(false);
+      }
+    } catch {
+      setActiveSession(null);
+    } finally {
+      setSessionLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveSession();
+    const interval = setInterval(fetchActiveSession, 15000);
+    return () => clearInterval(interval);
+  }, [fetchActiveSession]);
 
   useEffect(() => {
     const loadExams = async () => {
@@ -502,55 +356,63 @@ export function StudentDashboard() {
         setExamsLoading(true);
         const res = await api.exams.getAll();
         const data = Array.isArray(res) ? res : res?.data || [];
-        const upcoming = data
-          .filter(e => e.date && new Date(e.date) >= new Date())
-          .sort((a, b) => new Date(a.date) - new Date(b.date));
-        setExams(upcoming);
-      } catch (err) {
-        console.error('Error loading exams:', err);
-        setExams([]);
-      } finally {
-        setExamsLoading(false);
-      }
+        setExams(data.filter(e => e.date && new Date(e.date) >= new Date()).sort((a, b) => new Date(a.date) - new Date(b.date)));
+      } catch { setExams([]); }
+      finally { setExamsLoading(false); }
     };
     loadExams();
   }, []);
 
-  const todayClasses = [
-    { time: '09:00 AM', subject: 'Mathematics', teacher: 'Mr. Nash',   room: 'Room 302' },
-    { time: '10:00 AM', subject: 'English',     teacher: 'Ms. Smith',  room: 'Room 205' },
-    { time: '11:00 AM', subject: 'Science',     teacher: 'Dr. Brown',  room: 'Lab 101'  },
-    { time: '02:00 PM', subject: 'History',     teacher: 'Mr. Wilson', room: 'Room 310' },
-  ];
-
-  const [activeModal, setActiveModal] = useState(null);
-
-  const handleStudentJoin = (index) => {
-    const session = sessions[index];
-    if (!session || !session.attendanceEnabled) return;
-    if (session.attendanceMethod === 'manual') return;
-    setActiveModal({
-      classIndex:    index,
-      method:        session.attendanceMethod,
-      numberOptions: session.numberOptions,
-      correctNumber: session.correctNumber,
-      subject:       todayClasses[index].subject,
-      time:          todayClasses[index].time,
-    });
-  };
-
-  const handleAttendanceSuccess = (methodUsed) => {
-    if (!activeModal) return;
-    completeStudentAttendance(activeModal.classIndex, methodUsed);
-    setActiveModal(null);
+  const handleAttendanceSuccess = (sessionId) => {
+    localStorage.setItem(`attended_${sessionId}`, 'true');
+    setAttended(true);
+    setShowModal(false);
   };
 
   const assignments = [
-    { subject: 'History',     title: 'Essay on World War II',    due: 'Tomorrow',  status: 'pending',   priority: 'high'   },
-    { subject: 'Science',     title: 'Lab Report - Chemistry',   due: 'In 3 days', status: 'pending',   priority: 'medium' },
-    { subject: 'English',     title: 'Book Report',              due: 'Friday',    status: 'pending',   priority: 'medium' },
-    { subject: 'Mathematics', title: 'Algebra Problem Set',      due: 'Submitted', status: 'completed', priority: 'low'    },
+    { subject: 'History',     title: 'Essay on World War II',  due: 'Tomorrow',  status: 'pending',   priority: 'high'   },
+    { subject: 'Science',     title: 'Lab Report - Chemistry', due: 'In 3 days', status: 'pending',   priority: 'medium' },
+    { subject: 'English',     title: 'Book Report',            due: 'Friday',    status: 'pending',   priority: 'medium' },
+    { subject: 'Mathematics', title: 'Algebra Problem Set',    due: 'Submitted', status: 'completed', priority: 'low'    },
   ];
+
+  // ─── Attendance Banner ─────────────────────────────────────────────────────
+  const renderAttendanceBanner = () => {
+    if (sessionLoading || !activeSession) return null;
+
+    const expiresAt = new Date(toUTC(activeSession.expiresAt));
+    const timeLeft  = Math.max(0, Math.floor((expiresAt - new Date()) / 1000));
+    const mins      = Math.floor(timeLeft / 60);
+    const secs      = timeLeft % 60;
+
+    if (attended) {
+      return (
+        <div className="flex items-center gap-3 px-5 py-4 rounded-xl border-2 border-green-200 bg-green-50">
+          <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-green-800">Attendance Recorded ✓</p>
+            <p className="text-sm text-green-600">{activeSession.className}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-xl border-2 border-indigo-200 bg-indigo-50">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shrink-0" />
+          <div>
+            <p className="font-semibold text-indigo-800">Active Attendance Session — {activeSession.className}</p>
+            <p className="text-sm text-indigo-600">Expires in {mins}:{secs.toString().padStart(2, '0')}</p>
+          </div>
+        </div>
+        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shrink-0">
+          <QrCode className="h-4 w-4" />
+          Mark Attendance
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -559,77 +421,24 @@ export function StudentDashboard() {
           <h1 className="text-3xl font-bold text-foreground">{t('studentDashboard')}</h1>
           <p className="text-muted-foreground mt-1">{t('studentDashboardDesc')}</p>
         </div>
-        <Link
-          to="/student/schedule"
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <Calendar className="h-4 w-4" />
-          {t('viewFullSchedule')}
+        <Link to="/student/schedule" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          <Calendar className="h-4 w-4" />{t('viewFullSchedule')}
         </Link>
       </div>
 
-      {/* Stats Cards */}
+      {/* ✅ Attendance Banner */}
+      {renderAttendanceBanner()}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Link to="/student/schedule">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('todaysClasses')}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">4</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('nextMathClass')}</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/student/homework">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('pendingHomework')}</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">3</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('pending1DueTomorrow')}</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/student/grades">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('averageGrade')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">87%</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('averageGradeVal')}</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link to="/student/messages">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('newMessages')}</CardTitle>
-              <Bell className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">2</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('fromTeachers')}</p>
-            </CardContent>
-          </Card>
-        </Link>
+        <Link to="/student/schedule"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('todaysClasses')}</CardTitle><BookOpen className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">4</div><p className="text-xs text-muted-foreground mt-1">{t('nextMathClass')}</p></CardContent></Card></Link>
+        <Link to="/student/homework"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('pendingHomework')}</CardTitle><Activity className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">3</div><p className="text-xs text-muted-foreground mt-1">{t('pending1DueTomorrow')}</p></CardContent></Card></Link>
+        <Link to="/student/grades"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('averageGrade')}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">87%</div><p className="text-xs text-muted-foreground mt-1">{t('averageGradeVal')}</p></CardContent></Card></Link>
+        <Link to="/student/messages"><Card className="hover:shadow-lg transition-shadow cursor-pointer"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('newMessages')}</CardTitle><Bell className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">2</div><p className="text-xs text-muted-foreground mt-1">{t('fromTeachers')}</p></CardContent></Card></Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Next Class */}
         <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('nextClass')}</CardTitle>
-            <CardDescription>{t('nextClassDesc')}</CardDescription>
-          </CardHeader>
+          <CardHeader><CardTitle>{t('nextClass')}</CardTitle><CardDescription>{t('nextClassDesc')}</CardDescription></CardHeader>
           <CardContent>
             <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg text-white">
               <div className="text-3xl font-bold mb-2">Mathematics</div>
@@ -642,158 +451,30 @@ export function StudentDashboard() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
         <Card>
           <CardHeader><CardTitle>{t('quickActions')}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Link to="/student/homework" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-                  <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <div className="flex-1 space-y-0.5">
-                  <div className="font-semibold text-foreground">{t('submitHomework')}</div>
-                  <div className="text-xs text-muted-foreground">{t('submitHomeworkDesc')}</div>
-                </div>
-              </Link>
-
-              <Link to="/student/grades" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
-                  <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex-1 space-y-0.5">
-                  <div className="font-semibold text-foreground">{t('viewGrades')}</div>
-                  <div className="text-xs text-muted-foreground">{t('viewGradesDesc')}</div>
-                </div>
-              </Link>
-
-              <Link to="/student/ai" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-700 transition-colors">
-                <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
-                  <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="flex-1 space-y-0.5">
-                  <div className="font-semibold text-foreground">{t('aiTutor')}</div>
-                  <div className="text-xs text-muted-foreground">{t('aiTutorDesc')}</div>
-                </div>
-              </Link>
+              <Link to="/student/homework" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-indigo-50 hover:border-indigo-300 transition-colors"><div className="h-10 w-10 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0"><BookOpen className="h-5 w-5 text-indigo-600" /></div><div className="flex-1 space-y-0.5"><div className="font-semibold text-foreground">{t('submitHomework')}</div><div className="text-xs text-muted-foreground">{t('submitHomeworkDesc')}</div></div></Link>
+              <Link to="/student/grades" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-green-50 hover:border-green-300 transition-colors"><div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0"><TrendingUp className="h-5 w-5 text-green-600" /></div><div className="flex-1 space-y-0.5"><div className="font-semibold text-foreground">{t('viewGrades')}</div><div className="text-xs text-muted-foreground">{t('viewGradesDesc')}</div></div></Link>
+              <Link to="/student/ai" className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-purple-50 hover:border-purple-300 transition-colors"><div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0"><Activity className="h-5 w-5 text-purple-600" /></div><div className="flex-1 space-y-0.5"><div className="font-semibold text-foreground">{t('aiTutor')}</div><div className="text-xs text-muted-foreground">{t('aiTutorDesc')}</div></div></Link>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Today's Schedule */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{t('todaysSchedule')}</CardTitle>
-          <Link to="/student/schedule" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1">
-            {t('viewFullSchedule')} <ArrowIcon className="h-4 w-4" />
-          </Link>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {todayClasses.map((cls, i) => {
-              const session   = sessions[i];
-              const attStatus = studentStatus[i]?.status || 'pending';
-              const isEnabled = session?.attendanceEnabled && attStatus !== 'completed';
-
-              let statusLabel = 'Waiting for teacher...';
-              let dotColor    = 'bg-muted-foreground/50';
-              let textColor   = 'text-muted-foreground';
-              let borderColor = 'border-border';
-              let bgColor     = 'bg-muted/40';
-
-              if (attStatus === 'completed') {
-                statusLabel = 'Attendance recorded';
-                dotColor    = 'bg-green-500';
-                textColor   = 'text-green-600 dark:text-green-400';
-                borderColor = 'border-green-200 dark:border-green-800';
-                bgColor     = 'bg-green-50 dark:bg-green-900/10';
-              } else if (attStatus === 'absent' || (!session?.attendanceEnabled && session?.attendanceStatus === 'completed')) {
-                statusLabel = 'Session ended — Absent';
-                dotColor    = 'bg-red-500';
-                textColor   = 'text-red-500 dark:text-red-400';
-                borderColor = 'border-red-200 dark:border-red-800';
-                bgColor     = 'bg-red-50 dark:bg-red-900/10';
-              } else if (isEnabled) {
-                statusLabel = 'Session active';
-                dotColor    = 'bg-indigo-500 animate-pulse';
-                textColor   = 'text-indigo-600 dark:text-indigo-400';
-                borderColor = 'border-indigo-200 dark:border-indigo-700';
-                bgColor     = 'bg-indigo-50 dark:bg-indigo-900/10';
-              }
-
-              return (
-                <div key={i} className={`rounded-xl border overflow-hidden transition-all duration-300 ${borderColor}`}>
-                  <div className={`p-4 ${bgColor}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <Clock className={`h-5 w-5 shrink-0 ${textColor}`} />
-                        <div className="min-w-0">
-                          <div className="font-semibold text-foreground">{cls.subject}</div>
-                          <div className="text-sm text-muted-foreground">{cls.teacher} • {cls.room}</div>
-                        </div>
-                      </div>
-                      <span className="text-sm font-medium text-muted-foreground shrink-0">{cls.time}</span>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-between gap-2">
-                      <span className={`text-xs flex items-center gap-1.5 ${textColor}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotColor}`} />
-                        {statusLabel}
-                      </span>
-                      <AttendanceButton
-                        attendanceEnabled={isEnabled}
-                        attendanceStatus={attStatus}
-                        onJoin={() => handleStudentJoin(i)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {activeModal && (
-            <AttendanceModal
-              isOpen={true}
-              method={activeModal.method}
-              numberOptions={activeModal.numberOptions}
-              correctNumber={activeModal.correctNumber}
-              subject={activeModal.subject}
-              time={activeModal.time}
-              onComplete={handleAttendanceSuccess}
-              onClose={() => setActiveModal(null)}
-            />
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Assignments Due */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t('assignmentsDue')}</CardTitle>
-            <Link to="/student/homework" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1">
-              {t('viewAll')} <ArrowIcon className="h-4 w-4" />
-            </Link>
-          </CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between"><CardTitle>{t('assignmentsDue')}</CardTitle><Link to="/student/homework" className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1">{t('viewAll')} <ArrowIcon className="h-4 w-4" /></Link></CardHeader>
           <CardContent>
             <div className="space-y-3">
               {assignments.map((assignment, i) => (
                 <div key={i} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-foreground">{assignment.subject}</div>
-                    <div className="text-sm text-muted-foreground">{assignment.title}</div>
-                  </div>
+                  <div className="space-y-0.5"><div className="font-semibold text-foreground">{assignment.subject}</div><div className="text-sm text-muted-foreground">{assignment.title}</div></div>
                   <div className="flex items-center gap-2">
-                    {assignment.status === 'completed' ? (
-                      <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                        <CheckCircle className="h-4 w-4" />{assignment.due}
-                      </span>
-                    ) : (
-                      <span className={`text-sm ${assignment.priority === 'high' ? 'text-red-500 dark:text-red-400 font-medium' : 'text-muted-foreground'}`}>
-                        {assignment.due}
-                      </span>
-                    )}
+                    {assignment.status === 'completed'
+                      ? <span className="flex items-center gap-1 text-sm text-green-600"><CheckCircle className="h-4 w-4" />{assignment.due}</span>
+                      : <span className={`text-sm ${assignment.priority === 'high' ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>{assignment.due}</span>}
                   </div>
                 </div>
               ))}
@@ -801,66 +482,38 @@ export function StudentDashboard() {
           </CardContent>
         </Card>
 
-        {/* Upcoming Exams */}
         <Card>
           <CardHeader><CardTitle>{t('upcomingExams')}</CardTitle></CardHeader>
           <CardContent>
-            {examsLoading ? (
-              <div className="text-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto text-indigo-500" />
-              </div>
-            ) : exams.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">No upcoming exams</div>
-            ) : (
-              <div className="space-y-3">
-                {exams.map((exam, i) => (
-                  <div
-                    key={exam.id || i}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                        <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="font-semibold text-foreground">
-                          {exam.className} - {exam.type}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date(exam.date).toLocaleDateString()}{' '}
-                          {exam.time && `at ${exam.time}`}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">
-                      {t('upcoming')}
-                    </span>
+            {examsLoading ? <div className="text-center py-6"><Loader2 className="h-6 w-6 animate-spin mx-auto text-indigo-500" /></div>
+              : exams.length === 0 ? <div className="text-center py-6 text-muted-foreground">No upcoming exams</div>
+              : <div className="space-y-3">{exams.map((exam, i) => (
+                <div key={exam.id || i} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center shrink-0"><Calendar className="h-6 w-6 text-amber-600" /></div>
+                    <div className="space-y-0.5"><div className="font-semibold text-foreground">{exam.className} - {exam.type}</div><div className="text-sm text-muted-foreground">{new Date(exam.date).toLocaleDateString()}{exam.time && ` at ${exam.time}`}</div></div>
                   </div>
-                ))}
-              </div>
-            )}
+                  <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">{t('upcoming')}</span>
+                </div>
+              ))}</div>}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button onClick={() => navigate('/student/grades')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
-          <FileText className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
-          <div className="font-semibold text-foreground text-base mb-1">{t('viewGrades')}</div>
-          <div className="text-sm text-muted-foreground">{t('detailedGradeReport')}</div>
-        </button>
-        <button onClick={() => navigate('/student/schedule')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
-          <Calendar className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
-          <div className="font-semibold text-foreground text-base mb-1">{t('viewFullSchedule')}</div>
-          <div className="text-sm text-muted-foreground">{t('classTimetable')}</div>
-        </button>
-        <button onClick={() => navigate('/student/messages')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer">
-          <Users className="h-8 w-8 mb-3 text-indigo-600 dark:text-indigo-400" />
-          <div className="font-semibold text-foreground text-base mb-1">{t('contactTeachers')}</div>
-          <div className="text-sm text-muted-foreground">{t('sendMessages')}</div>
-        </button>
+        <button onClick={() => navigate('/student/grades')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"><FileText className="h-8 w-8 mb-3 text-indigo-600" /><div className="font-semibold text-foreground text-base mb-1">{t('viewGrades')}</div><div className="text-sm text-muted-foreground">{t('detailedGradeReport')}</div></button>
+        <button onClick={() => navigate('/student/schedule')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"><Calendar className="h-8 w-8 mb-3 text-indigo-600" /><div className="font-semibold text-foreground text-base mb-1">{t('viewFullSchedule')}</div><div className="text-sm text-muted-foreground">{t('classTimetable')}</div></button>
+        <button onClick={() => navigate('/student/messages')} className="flex flex-col items-center justify-center h-auto py-6 px-4 border border-border rounded-lg hover:bg-muted/50 hover:border-primary/50 transition-colors cursor-pointer"><Users className="h-8 w-8 mb-3 text-indigo-600" /><div className="font-semibold text-foreground text-base mb-1">{t('contactTeachers')}</div><div className="text-sm text-muted-foreground">{t('sendMessages')}</div></button>
       </div>
+
+      {/* ✅ Attendance Modal */}
+      {showModal && activeSession && (
+        <StudentAttendanceModal
+          session={activeSession}
+          onClose={() => setShowModal(false)}
+          onSuccess={handleAttendanceSuccess}
+        />
+      )}
     </div>
   );
 }
@@ -870,12 +523,12 @@ export function ParentDashboard() {
   const { t } = useTranslation();
   const { currentLanguage } = useLanguage();
   const isRTL = currentLanguage === 'ar';
- 
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState(null);
-  const [selectedChildIdx, setSelectedChildIdx] = useState(0);
- 
+
+  const [dashboardData, setDashboardData]         = useState(null);
+  const [loading, setLoading]                     = useState(true);
+  const [error, setError]                         = useState(null);
+  const [selectedChildIdx, setSelectedChildIdx]   = useState(0);
+
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -883,7 +536,6 @@ export function ParentDashboard() {
         const data = await api.parents.getDashboard();
         setDashboardData(data);
       } catch (err) {
-        console.error('Failed to fetch parent dashboard:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -891,114 +543,55 @@ export function ParentDashboard() {
     };
     fetchDashboard();
   }, []);
- 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
- 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">{error}</p>
-      </div>
-    );
-  }
- 
-  const children        = dashboardData?.children          ?? [];
-  const upcomingEvents  = dashboardData?.upcomingEvents    ?? [];
-  const recentActivities = dashboardData?.recentActivities ?? [];
-  const subjectPerf     = dashboardData?.subjectPerformance?.subjects ?? [];
-  const parentName      = dashboardData?.parentName        ?? '';
- 
-  const selectedChild   = children[selectedChildIdx] ?? null;
- 
-  const getGpaColor = (gpa) => {
-    if (gpa >= 3.7) return 'text-green-600 dark:text-green-400';
-    if (gpa >= 3.0) return 'text-blue-600 dark:text-blue-400';
-    if (gpa >= 2.0) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
-  };
- 
-  const getAttendanceColor = (pct) => {
-    if (pct >= 90) return 'text-green-600 dark:text-green-400';
-    if (pct >= 70) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
-  };
- 
+
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  if (error)   return <div className="flex items-center justify-center h-64"><p className="text-destructive">{error}</p></div>;
+
+  const children         = dashboardData?.children          ?? [];
+  const upcomingEvents   = dashboardData?.upcomingEvents    ?? [];
+  const recentActivities = dashboardData?.recentActivities  ?? [];
+  const subjectPerf      = dashboardData?.subjectPerformance?.subjects ?? [];
+  const parentName       = dashboardData?.parentName        ?? '';
+  const selectedChild    = children[selectedChildIdx]       ?? null;
+
+  const getGpaColor = (gpa) => gpa >= 3.7 ? 'text-green-600' : gpa >= 3.0 ? 'text-blue-600' : gpa >= 2.0 ? 'text-yellow-600' : 'text-red-600';
+  const getAttendanceColor = (pct) => pct >= 90 ? 'text-green-600' : pct >= 70 ? 'text-yellow-600' : 'text-red-600';
   const getEventIcon = (type) => {
-    switch (type?.toLowerCase()) {
-      case 'exams':   return <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
-      case 'homework': return <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
-      case 'meeting': return <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
-      default:        return <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400 shrink-0" />;
-    }
+    const cls = "h-5 w-5 text-indigo-600 shrink-0";
+    return type?.toLowerCase() === 'homework' ? <BookOpen className={cls} /> : type?.toLowerCase() === 'meeting' ? <Users className={cls} /> : <Calendar className={cls} />;
   };
- 
   const getEventTypeBadge = (type) => {
     switch (type?.toLowerCase()) {
-      case 'exams':    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-      case 'homework': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'meeting':  return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'exams':    return 'bg-red-100 text-red-700';
+      case 'homework': return 'bg-blue-100 text-blue-700';
+      case 'meeting':  return 'bg-purple-100 text-purple-700';
       default:         return 'bg-muted text-muted-foreground';
     }
   };
- 
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold text-foreground">{t('parentDashboard')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {parentName ? `${t('welcome')}, ${parentName}` : t('parentDashboardDesc')}
-          </p>
+          <p className="text-muted-foreground mt-1">{parentName ? `${t('welcome')}, ${parentName}` : t('parentDashboardDesc')}</p>
         </div>
-        <Link
-          to="/parent/messages"
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <Bell className="h-4 w-4" />
-          {t('contactTeachers')}
-        </Link>
+        <Link to="/parent/messages" className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"><Bell className="h-4 w-4" />{t('contactTeachers')}</Link>
       </div>
- 
-      {/* Child Selector */}
+
       {children.length > 0 && (
         <Card>
           <CardHeader><CardTitle>{t('selectChild')}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {children.map((child, index) => (
-                <div
-                  key={`${child.studentOid ?? child.name}-${index}`}
-                  onClick={() => setSelectedChildIdx(index)}
-                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedChildIdx === index
-                      ? 'border-primary bg-primary/10'
-                      : 'border-transparent bg-muted/50 hover:bg-muted'
-                  }`}
-                >
+                <div key={`${child.studentOid ?? child.name}-${index}`} onClick={() => setSelectedChildIdx(index)} className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedChildIdx === index ? 'border-primary bg-primary/10' : 'border-transparent bg-muted/50 hover:bg-muted'}`}>
                   <div className="flex flex-col items-center gap-2 text-center">
-                    <div className={`h-11 w-11 rounded-full flex items-center justify-center text-lg font-bold shrink-0 relative ${
-                      selectedChildIdx === index
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
+                    <div className={`h-11 w-11 rounded-full flex items-center justify-center text-lg font-bold shrink-0 relative ${selectedChildIdx === index ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                       {child.name?.[0]?.toUpperCase() ?? '?'}
-                      {selectedChildIdx === index && (
-                        <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background flex items-center justify-center">
-                          <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                        </span>
-                      )}
+                      {selectedChildIdx === index && <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-background flex items-center justify-center"><CheckCircle className="h-3.5 w-3.5 text-primary" /></span>}
                     </div>
-                    <div className="min-w-0 w-full">
-                      <div className="font-medium text-foreground text-sm truncate">{child.name}</div>
-                      <div className="text-xs text-muted-foreground">{child.gradeLevel}</div>
-                    </div>
+                    <div className="min-w-0 w-full"><div className="font-medium text-foreground text-sm truncate">{child.name}</div><div className="text-xs text-muted-foreground">{child.gradeLevel}</div></div>
                   </div>
                 </div>
               ))}
@@ -1006,124 +599,46 @@ export function ParentDashboard() {
           </CardContent>
         </Card>
       )}
- 
-      {/* Selected Child Stats */}
+
       {selectedChild && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('attendance')}</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getAttendanceColor(selectedChild.attendance)}`}>
-                {selectedChild.attendance}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{t('presentThisMonth')}</p>
-            </CardContent>
-          </Card>
- 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('subjects')}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{selectedChild.subjectsCount}</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('enrolledSubjects', 'Enrolled subjects')}</p>
-            </CardContent>
-          </Card>
- 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('gpa')}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${getGpaColor(selectedChild.gpa)}`}>
-                {selectedChild.gpa?.toFixed(1)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{t('outOf', 'out of')} 4.0</p>
-            </CardContent>
-          </Card>
- 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t('gradeLevelLabel')}</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{selectedChild.gradeLevel}</div>
-              <p className="text-xs text-muted-foreground mt-1">{t('currentGrade', 'Current grade level')}</p>
-            </CardContent>
-          </Card>
+          <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('attendance')}</CardTitle><Clock className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className={`text-2xl font-bold ${getAttendanceColor(selectedChild.attendance)}`}>{selectedChild.attendance}%</div><p className="text-xs text-muted-foreground mt-1">{t('presentThisMonth')}</p></CardContent></Card>
+          <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('subjects')}</CardTitle><BookOpen className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">{selectedChild.subjectsCount}</div><p className="text-xs text-muted-foreground mt-1">{t('enrolledSubjects', 'Enrolled subjects')}</p></CardContent></Card>
+          <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('gpa')}</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className={`text-2xl font-bold ${getGpaColor(selectedChild.gpa)}`}>{selectedChild.gpa?.toFixed(1)}</div><p className="text-xs text-muted-foreground mt-1">{t('outOf', 'out of')} 4.0</p></CardContent></Card>
+          <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{t('gradeLevelLabel')}</CardTitle><Activity className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold text-foreground">{selectedChild.gradeLevel}</div><p className="text-xs text-muted-foreground mt-1">{t('currentGrade', 'Current grade level')}</p></CardContent></Card>
         </div>
       )}
- 
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
- 
-        {/* Recent Activity */}
         <Card>
           <CardHeader><CardTitle>{t('recentActivity')}</CardTitle></CardHeader>
           <CardContent>
-            {recentActivities.length === 0 || recentActivities[0]?.status === 'N/A' ? (
-              <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
-                {t('noRecentActivity', 'No recent activity.')}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentActivities.map((item, idx) => (
-                  <div key={idx} className="flex gap-4">
-                    <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="font-medium text-foreground">{item.activity}</p>
-                      {item.timeAgo && (
-                        <p className="text-xs text-muted-foreground">{item.timeAgo}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {recentActivities.length === 0 || recentActivities[0]?.status === 'N/A'
+              ? <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">{t('noRecentActivity', 'No recent activity.')}</div>
+              : <div className="space-y-4">{recentActivities.map((item, idx) => (
+                <div key={idx} className="flex gap-4">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center shrink-0"><CheckCircle className="h-5 w-5 text-green-600" /></div>
+                  <div className="space-y-0.5"><p className="font-medium text-foreground">{item.activity}</p>{item.timeAgo && <p className="text-xs text-muted-foreground">{item.timeAgo}</p>}</div>
+                </div>
+              ))}</div>}
           </CardContent>
         </Card>
- 
-        {/* Upcoming Events */}
+
         <Card>
           <CardHeader><CardTitle>{t('upcomingEventsLabel')}</CardTitle></CardHeader>
           <CardContent>
-            {upcomingEvents.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
-                {t('noUpcomingEvents', 'No upcoming events.')}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingEvents.map((event, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex gap-3 items-center">
-                      {getEventIcon(event.type)}
-                      <div className="space-y-0.5">
-                        <p className="font-medium text-foreground">{event.title}</p>
-                        <p className="text-sm text-muted-foreground">{event.date}</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeBadge(event.type)}`}>
-                      {event.type}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {upcomingEvents.length === 0
+              ? <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">{t('noUpcomingEvents', 'No upcoming events.')}</div>
+              : <div className="space-y-3">{upcomingEvents.map((event, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors">
+                  <div className="flex gap-3 items-center">{getEventIcon(event.type)}<div className="space-y-0.5"><p className="font-medium text-foreground">{event.title}</p><p className="text-sm text-muted-foreground">{event.date}</p></div></div>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getEventTypeBadge(event.type)}`}>{event.type}</span>
+                </div>
+              ))}</div>}
           </CardContent>
         </Card>
       </div>
- 
-      {/* Subject Performance */}
+
       {subjectPerf.length > 0 && (
         <Card>
           <CardHeader><CardTitle>{t('subjectPerformanceTitle')}</CardTitle></CardHeader>
@@ -1131,20 +646,8 @@ export function ParentDashboard() {
             <div className="space-y-4">
               {subjectPerf.map((subj, idx) => (
                 <div key={idx} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-foreground capitalize">{subj.name}</span>
-                    <span className="text-muted-foreground">{subj.percentage}%</span>
-                  </div>
-                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        subj.percentage >= 90 ? 'bg-green-500' :
-                        subj.percentage >= 70 ? 'bg-blue-500' :
-                        subj.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${subj.percentage}%` }}
-                    />
-                  </div>
+                  <div className="flex items-center justify-between text-sm"><span className="font-medium text-foreground capitalize">{subj.name}</span><span className="text-muted-foreground">{subj.percentage}%</span></div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden"><div className={`h-full rounded-full ${subj.percentage >= 90 ? 'bg-green-500' : subj.percentage >= 70 ? 'bg-blue-500' : subj.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${subj.percentage}%` }} /></div>
                 </div>
               ))}
             </div>
@@ -1154,169 +657,14 @@ export function ParentDashboard() {
     </div>
   );
 }
-// ─── AttendanceButton ─────────────────────────────────────────────────────────
+
+// ─── AttendanceButton (للـ StudentDashboard القديم — مش بتستخدم دلوقتي) ──────
 function AttendanceButton({ attendanceEnabled, attendanceStatus, onJoin }) {
-  if (attendanceStatus === 'completed') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40 rounded-full border border-green-200 dark:border-green-700">
-        <CheckCircle className="h-3.5 w-3.5 shrink-0" />
-        Attendance Completed
-      </span>
-    );
-  }
-  if (attendanceStatus === 'absent') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 rounded-full border border-red-200 dark:border-red-700">
-        <span className="h-2 w-2 rounded-full bg-red-500 dark:bg-red-400 shrink-0" />
-        Absent
-      </span>
-    );
-  }
+  if (attendanceStatus === 'completed') return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded-full border border-green-200"><CheckCircle className="h-3.5 w-3.5 shrink-0" />Attendance Completed</span>;
+  if (attendanceStatus === 'absent')    return <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 rounded-full border border-red-200"><span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />Absent</span>;
   return (
-    <button
-      onClick={attendanceEnabled ? onJoin : undefined}
-      disabled={!attendanceEnabled}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 ${
-        !attendanceEnabled
-          ? 'text-muted-foreground bg-muted border-border cursor-not-allowed opacity-60'
-          : 'text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/40 border-indigo-300 dark:border-indigo-600 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 hover:shadow-sm cursor-pointer active:scale-95'
-      }`}
-    >
-      <ClipboardCheck className="h-3.5 w-3.5 shrink-0" />
-      Join Attendance
+    <button onClick={attendanceEnabled ? onJoin : undefined} disabled={!attendanceEnabled} className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 ${!attendanceEnabled ? 'text-muted-foreground bg-muted border-border cursor-not-allowed opacity-60' : 'text-indigo-700 bg-indigo-100 border-indigo-300 hover:bg-indigo-200 cursor-pointer active:scale-95'}`}>
+      <ClipboardCheck className="h-3.5 w-3.5 shrink-0" />Join Attendance
     </button>
-  );
-}
-
-// ─── AttendanceModal ──────────────────────────────────────────────────────────
-function AttendanceModal({ isOpen, method, numberOptions, correctNumber, subject, time, onComplete, onClose }) {
-  const [selectedNum, setSelectedNum] = useState(null);
-  const [scanning, setScanning]       = useState(false);
-  const [error, setError]             = useState('');
-  const [done, setDone]               = useState(false);
-
-  useEffect(() => {
-    if (isOpen) { setSelectedNum(null); setScanning(false); setError(''); setDone(false); }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const triggerComplete = () => {
-    setDone(true);
-    setTimeout(() => onComplete(method), 700);
-  };
-
-  const handleQRScan = async () => {
-    if (scanning || done) return;
-    setScanning(true);
-    await new Promise((r) => setTimeout(r, 1800));
-    triggerComplete();
-  };
-
-  const handleNumberPick = (num) => {
-    if (selectedNum !== null || done) return;
-    setSelectedNum(num);
-    if (num === correctNumber) {
-      triggerComplete();
-    } else {
-      setError('Wrong number! Try again.');
-      setTimeout(() => { setSelectedNum(null); setError(''); }, 1200);
-    }
-  };
-
-  const metaDict = {
-    qr:     { title: 'Scan QR Code',            icon: '📷', hint: 'Point your camera at the QR code your teacher is displaying.' },
-    number: { title: 'Select the Right Number', icon: '🔢', hint: 'Tap the number your teacher has highlighted on screen.' },
-  };
-  const currentMeta = metaDict[method] || { title: 'Select Attendance Method', icon: '📋', hint: 'Choose a method to join attendance.' };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-card rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm overflow-hidden border border-border">
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl leading-none">{currentMeta.icon}</span>
-            <div className="space-y-0.5">
-              <p className="font-bold text-foreground text-base leading-tight">{currentMeta.title}</p>
-              <p className="text-xs text-muted-foreground">{subject} · {time}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground transition-colors text-lg">✕</button>
-        </div>
-
-        <p className="text-xs text-muted-foreground text-center px-5 pt-4 pb-0">{currentMeta.hint}</p>
-
-        <div className="p-5 pt-4">
-          {method === 'qr' && (
-            <div className="flex flex-col items-center gap-4">
-              <div className={`relative w-52 h-52 rounded-xl overflow-hidden flex items-center justify-center transition-colors duration-500 ${done ? 'bg-green-900' : 'bg-gray-900'}`}>
-                {['top-3 left-3 border-t-2 border-l-2','top-3 right-3 border-t-2 border-r-2','bottom-3 left-3 border-b-2 border-l-2','bottom-3 right-3 border-b-2 border-r-2'].map((cls, pi) => (
-                  <span key={pi} className={`absolute ${cls} h-6 w-6 rounded ${done ? 'border-green-400' : 'border-indigo-400'} transition-colors duration-500`} />
-                ))}
-                {done ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <CheckCircle className="h-14 w-14 text-green-400" />
-                    <span className="text-green-300 text-sm font-medium">Verified!</span>
-                  </div>
-                ) : scanning ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="h-9 w-9 border-[3px] border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-gray-400 text-xs">Scanning…</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3 opacity-40">
-                    <div className="grid grid-cols-5 gap-0.5 w-24 h-24">
-                      {[1,1,1,1,1,1,0,0,0,1,1,0,1,0,1,1,0,0,0,1,1,1,1,1,1].map((v, k) => (
-                        <div key={k} className={`rounded-sm ${v ? 'bg-white' : 'bg-transparent'}`} />
-                      ))}
-                    </div>
-                    <span className="text-gray-400 text-xs">Ready to scan</span>
-                  </div>
-                )}
-              </div>
-              {!scanning && !done && (
-                <button onClick={handleQRScan} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-medium transition-colors">
-                  Simulate QR Scan
-                </button>
-              )}
-            </div>
-          )}
-
-          {method === 'number' && (
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-3">
-                {numberOptions?.map((num, idx) => {
-                  const picked  = selectedNum === num;
-                  const correct = picked && num === correctNumber;
-                  const wrong   = picked && num !== correctNumber;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleNumberPick(num)}
-                      disabled={selectedNum !== null}
-                      className={`flex-1 h-20 rounded-xl text-3xl font-bold border-2 transition-all duration-300 ${
-                        correct            ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 scale-105 shadow-md' :
-                        wrong              ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-500 animate-bounce' :
-                        selectedNum!==null ? 'border-border text-muted-foreground opacity-40' :
-                        'border-border text-foreground hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:scale-105 active:scale-95'
-                      }`}
-                    >
-                      {num}
-                    </button>
-                  );
-                })}
-              </div>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-              {done && (
-                <div className="flex items-center justify-center gap-2 py-1 text-green-600 dark:text-green-400">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Correct! Attendance recorded.</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
   );
 }

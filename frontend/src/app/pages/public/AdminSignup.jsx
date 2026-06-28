@@ -7,6 +7,25 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { api } from '../../lib/api';
+
+const InputField = ({ id, name, type, value, placeholder, icon: Icon, required = true, onChange, isRTL }) => (
+  <div className="relative">
+    <div className={`absolute inset-y-0 flex items-center pointer-events-none ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'}`}>
+      <Icon className="h-5 w-5 text-muted-foreground" />
+    </div>
+    <input
+      id={id}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={`block w-full py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-background text-foreground placeholder:text-muted-foreground ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3'}`}
+      required={required}
+    />
+  </div>
+);
 
 export function AdminSignup() {
   const { login } = useAuth();
@@ -14,11 +33,12 @@ export function AdminSignup() {
   const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const isRTL = i18n.language === 'ar';
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     schoolName: '',
     password: '',
     confirmPassword: '',
@@ -28,38 +48,42 @@ export function AdminSignup() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       toast.error(t('passwordsDoNotMatch'));
       return;
     }
-    login('admin');
-    navigate('/admin/dashboard');
+
+    setLoading(true);
+    try {
+      const res = await api.auth.register({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        phoneNumber: formData.phoneNumber,
+        role: 1,
+      });
+
+     if (res?.success) {
+  console.log('token:', res.data?.token);
+  console.log('full data:', res.data);
+  localStorage.setItem('token', res.data?.token);
+  login({ ...res.data, role: 'admin' });
+  navigate('/admin/dashboard');
+} else {
+        const msg = isRTL ? res?.messages?.AR : res?.messages?.EN;
+        toast.error(msg || res?.errors?.[0] || t('registrationFailed'));
+      }
+    } catch (err) {
+      toast.error(t('registrationFailed'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-
-  const inputClass = (extra = '') =>
-    `block w-full py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-background text-foreground placeholder:text-muted-foreground ${extra}`;
-
-  const InputField = ({ id, name, type, value, placeholder, icon: Icon, required = true }) => (
-    <div className="relative">
-      <div className={`absolute inset-y-0 flex items-center pointer-events-none ${isRTL ? 'right-0 pr-3' : 'left-0 pl-3'}`}>
-        <Icon className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <input
-        id={id}
-        name={name}
-        type={type}
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={inputClass(isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-3')}
-        required={required}
-      />
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -92,28 +116,28 @@ export function AdminSignup() {
                   <label htmlFor="fullName" className="block text-sm font-medium text-foreground">
                     {t('fullNameLabel')}
                   </label>
-                  <InputField id="fullName" name="fullName" type="text" value={formData.fullName} placeholder="" icon={User} />
+                  <InputField id="fullName" name="fullName" type="text" value={formData.fullName} placeholder="" icon={User} onChange={handleChange} isRTL={isRTL} />
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="email" className="block text-sm font-medium text-foreground">
                     {t('emailAddress')}
                   </label>
-                  <InputField id="email" name="email" type="email" value={formData.email} placeholder="admin@edusmart.com" icon={Mail} />
+                  <InputField id="email" name="email" type="email" value={formData.email} placeholder="admin@edusmart.com" icon={Mail} onChange={handleChange} isRTL={isRTL} />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">
                     {t('phoneNumber')}
                   </label>
-                  <InputField id="phone" name="phone" type="tel" value={formData.phone} placeholder="+20 123 456 7890" icon={Phone} />
+                  <InputField id="phoneNumber" name="phoneNumber" type="tel" value={formData.phoneNumber} placeholder="+20 123 456 7890" icon={Phone} onChange={handleChange} isRTL={isRTL} />
                 </div>
 
                 <div className="space-y-1.5">
                   <label htmlFor="schoolName" className="block text-sm font-medium text-foreground">
                     {t('schoolNameLabel')}
                   </label>
-                  <InputField id="schoolName" name="schoolName" type="text" value={formData.schoolName} placeholder="" icon={Building} />
+                  <InputField id="schoolName" name="schoolName" type="text" value={formData.schoolName} placeholder="" icon={Building} onChange={handleChange} isRTL={isRTL} />
                 </div>
 
                 <div className="space-y-1.5">
@@ -131,7 +155,7 @@ export function AdminSignup() {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder={t('enterPasswordPlaceholder')}
-                      className={inputClass(isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12')}
+                      className={`block w-full py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-background text-foreground placeholder:text-muted-foreground ${isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'}`}
                       required
                     />
                     <button
@@ -161,7 +185,7 @@ export function AdminSignup() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder={t('confirmNewPasswordPlaceholder')}
-                      className={inputClass(isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12')}
+                      className={`block w-full py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-background text-foreground placeholder:text-muted-foreground ${isRTL ? 'pr-10 pl-12 text-right' : 'pl-10 pr-12'}`}
                       required
                     />
                     <button
@@ -178,9 +202,10 @@ export function AdminSignup() {
 
                 <Button
                   type="submit"
+                  disabled={loading}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium shadow-lg"
                 >
-                  {t('createAccount')}
+                  {loading ? t('loading') : t('createAccount')}
                 </Button>
               </form>
 

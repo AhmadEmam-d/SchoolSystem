@@ -6,44 +6,56 @@ import { Button } from '../../components/ui/button';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { api } from '../../lib/api';
 
+// ─── helper: هل الرسالة معناها "سبق تسجيل الحضور"؟ ──────────────────────────
+function isAlreadySubmitted(text = '') {
+  const t = text.toLowerCase();
+  return (
+    t.includes('already') ||
+    t.includes('submitted') ||
+    t.includes('سبق') ||
+    t.includes('مسجل')
+  );
+}
+
 // ─── Attendance Modal ──────────────────────────────────────────────────────────
 function AttendanceModal({ session, onClose, onSuccess }) {
   const [selectedNumber, setSelectedNumber] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
+  const [submitting, setSubmitting]         = useState(false);
+  const [result, setResult]                 = useState(null);
 
-  const isQR = session?.method === 2;
+  const isQR     = session?.method === 2;
   const isNumber = session?.method === 3;
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
       const payload = {
-        sessionId: session.sessionId,
+        sessionId:      session.sessionId,
         selectedNumber: isNumber ? selectedNumber : null,
-        attendances: [],
+        remarks:        null,
       };
 
-      console.log("📤 submit payload:", payload);
+      const res   = await api.attendance.studentSubmit(payload);
+      const inner = res.data?.data; // StudentSubmitAttendanceResponseDto
 
-      const res = await api.attendance.studentSubmit(payload);
+      if (res.ok && inner?.success) {
+        setResult({ success: true, message: inner?.message || 'Attendance recorded!' });
+        setTimeout(() => { onSuccess(); onClose(); }, 1800);
+      } else {
+        const errMsg =
+          res.data?.errors?.[0] ||
+          inner?.message ||
+          res.data?.messages?.EN ||
+          'Failed to record attendance.';
 
-      console.log("📥 submit response:", res);
-
-      if (res.data?.success) {
-        setResult({
-          success: true,
-          message: res.data.messages?.EN || 'Attendance recorded!',
-        });
-        setTimeout(() => {
+        // لو السبب إنه سجل قبل كده → close وعلّم كـ attended
+        if (isAlreadySubmitted(errMsg)) {
           onSuccess();
           onClose();
-        }, 1800);
-      } else {
-        setResult({
-          success: false,
-          message: res.data?.errors?.[0] || res.data?.messages?.EN || 'Failed.',
-        });
+          return;
+        }
+
+        setResult({ success: false, message: errMsg });
       }
     } catch (e) {
       setResult({ success: false, message: e.message });
@@ -63,11 +75,11 @@ function AttendanceModal({ session, onClose, onSuccess }) {
     >
       <div style={{
         background: 'var(--color-background-primary)',
-        borderRadius: '12px',
-        padding: '1.5rem',
+        borderRadius: '12px', padding: '1.5rem',
         width: '100%', maxWidth: 400,
         boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
       }}>
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div>
             <p style={{ fontSize: 18, fontWeight: 500, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -82,18 +94,17 @@ function AttendanceModal({ session, onClose, onSuccess }) {
           </button>
         </div>
 
+        {/* Result */}
         {result ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '1.5rem 0' }}>
-            {result.success
-              ? <CheckCircle size={48} color="green" />
-              : <AlertCircle size={48} color="red" />
-            }
+            {result.success ? <CheckCircle size={48} color="green" /> : <AlertCircle size={48} color="red" />}
             <p style={{ textAlign: 'center', color: result.success ? 'green' : 'red', fontWeight: 500 }}>
               {result.message}
             </p>
           </div>
         ) : (
           <>
+            {/* QR */}
             {isQR && session?.qrCodeBase64 && (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: '1rem' }}>
                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', margin: 0 }}>
@@ -107,6 +118,7 @@ function AttendanceModal({ session, onClose, onSuccess }) {
               </div>
             )}
 
+            {/* Number */}
             {isNumber && session?.randomNumbers?.length > 0 && (
               <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
@@ -118,8 +130,7 @@ function AttendanceModal({ session, onClose, onSuccess }) {
                       key={num}
                       onClick={() => setSelectedNumber(num)}
                       style={{
-                        width: 52, height: 52,
-                        borderRadius: 8,
+                        width: 52, height: 52, borderRadius: 8,
                         border: selectedNumber === num ? '2px solid #4f46e5' : '1px solid #e5e7eb',
                         background: selectedNumber === num ? '#eef2ff' : '#f9fafb',
                         color: selectedNumber === num ? '#4f46e5' : '#111',
@@ -134,12 +145,16 @@ function AttendanceModal({ session, onClose, onSuccess }) {
               </div>
             )}
 
+            {/* Expiry */}
             {session?.expiresAt && (
               <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: '1rem' }}>
-                Expires at {format(new Date(session.expiresAt), 'hh:mm a')}
+                Expires at {format(new Date(
+                  session.expiresAt.endsWith('Z') ? session.expiresAt : session.expiresAt + 'Z'
+                ), 'hh:mm a')}
               </p>
             )}
 
+            {/* Confirm */}
             <button
               onClick={handleSubmit}
               disabled={submitting || (isNumber && selectedNumber === null)}
@@ -162,59 +177,56 @@ function AttendanceModal({ session, onClose, onSuccess }) {
 
 // ─── Attendance Button ─────────────────────────────────────────────────────────
 function AttendanceButton({ lesson, isToday }) {
-  const [checking, setChecking] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [attended, setAttended] = useState(false);
+  const [checking, setChecking]         = useState(false);
+  const [showModal, setShowModal]       = useState(false);
+  const [attended, setAttended]         = useState(false);
   const [activeSession, setActiveSession] = useState(null);
 
-  if (!isToday) return null;
+  //if (!isToday) return null;
 
-  const handleClick = async () => {
-    setChecking(true);
-    try {
-      const response = await api.attendance.getStudentActiveSession();
-      console.log("🎯 activeSession:", JSON.stringify(response.data, null, 2));
+ const handleClick = async () => {
+  setChecking(true);
+  try {
+    const response = await api.attendance.getStudentActiveSession();
 
-      if (response.ok && response.data) {
-        setActiveSession(response.data);
-        setShowModal(true);
+    if (response.ok && response.data) {
+      // ✅ في session نشطة → افتح الـ modal
+      setActiveSession(response.data);
+      setShowModal(true);
+    } else {
+      // مفيش session نشطة — شوف السبب
+      const errMsg =
+        response.data?.errors?.[0] ||
+        response.data?.messages?.EN ||
+        '';
+
+      if (
+        errMsg.toLowerCase().includes('already') ||
+        errMsg.toLowerCase().includes('submitted')
+      ) {
+        // ✅ الطالب سجل حضوره قبل كده
+        setAttended(true);
       } else {
-        if (lesson.sessionId) {
-          setActiveSession({
-            sessionId: lesson.sessionId,
-            className: lesson.subjectName,
-            method: lesson.attendanceMethod || 1,
-            expiresAt: lesson.expiresAt,
-            qrCodeBase64: lesson.qrCodeBase64,
-            randomNumbers: lesson.randomNumbers,
-          });
-          setShowModal(true);
-        } else {
-          alert('لا توجد جلسة حضور نشطة لهذه الحصة');
-        }
+        alert('لا توجد جلسة حضور نشطة لهذه الحصة');
       }
-    } catch (error) {
-      console.error('Error fetching active session:', error);
-      alert('حدث خطأ في الاتصال بالخادم');
-    } finally {
-      setChecking(false);
     }
-  };
+  } catch (error) {
+    alert('حدث خطأ في الاتصال بالخادم');
+  } finally {
+    setChecking(false);
+  }
+};
 
-  // ✅ لو سجل حضوره → علامة صح والزرار disabled
   if (attended) {
     return (
       <div style={{
         marginTop: 8,
         display: 'flex', alignItems: 'center', gap: 5,
-        padding: '5px 10px',
-        borderRadius: 6,
+        padding: '5px 10px', borderRadius: 6,
         border: '1px solid #16a34a',
         background: '#f0fdf4',
         color: '#16a34a',
         fontSize: 11, fontWeight: 500,
-        cursor: 'not-allowed',
-        opacity: 0.8,
       }}>
         <CheckCircle size={12} />
         Attendance Recorded ✓
@@ -230,11 +242,9 @@ function AttendanceButton({ lesson, isToday }) {
         style={{
           marginTop: 8,
           display: 'flex', alignItems: 'center', gap: 5,
-          padding: '5px 10px',
-          borderRadius: 6,
+          padding: '5px 10px', borderRadius: 6,
           border: '1px solid #4f46e5',
-          background: '#eef2ff',
-          color: '#4f46e5',
+          background: '#eef2ff', color: '#4f46e5',
           fontSize: 11, fontWeight: 500,
           cursor: checking ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s',
@@ -271,13 +281,13 @@ function AttendanceButton({ lesson, isToday }) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 export function StudentSchedule() {
   const { t } = useTranslation();
-  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentWeek, setCurrentWeek]       = useState(new Date());
   const [weeklyTimetable, setWeeklyTimetable] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]               = useState(false);
+  const [error, setError]                   = useState(null);
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
+  const weekDays  = Array.from({ length: 5 }, (_, i) => addDays(weekStart, i));
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -285,7 +295,7 @@ export function StudentSchedule() {
       setError(null);
       try {
         const localDate = weekStart.toLocaleDateString('en-CA');
-        const result = await api.timetable.getStudentWeeklySchedule(localDate);
+        const result    = await api.timetable.getStudentWeeklySchedule(localDate);
 
         if (result.ok && result.data) {
           const allDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
@@ -316,16 +326,16 @@ export function StudentSchedule() {
 
   const getSubjectColor = (subject) => {
     const colors = {
-      'Mathematics': 'bg-blue-100 text-blue-800 border-blue-200',
-      'math': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Science': 'bg-green-100 text-green-800 border-green-200',
-      'English': 'bg-purple-100 text-purple-800 border-purple-200',
-      'History': 'bg-orange-100 text-orange-800 border-orange-200',
-      'Art': 'bg-pink-100 text-pink-800 border-pink-200',
+      'Mathematics':        'bg-blue-100 text-blue-800 border-blue-200',
+      'math':               'bg-blue-100 text-blue-800 border-blue-200',
+      'Science':            'bg-green-100 text-green-800 border-green-200',
+      'English':            'bg-purple-100 text-purple-800 border-purple-200',
+      'History':            'bg-orange-100 text-orange-800 border-orange-200',
+      'Art':                'bg-pink-100 text-pink-800 border-pink-200',
       'Physical Education': 'bg-red-100 text-red-800 border-red-200',
-      'Chemistry': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'Biology': 'bg-teal-100 text-teal-800 border-teal-200',
-      'arabic': 'bg-rose-100 text-rose-800 border-rose-200',
+      'Chemistry':          'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'Biology':            'bg-teal-100 text-teal-800 border-teal-200',
+      'arabic':             'bg-rose-100 text-rose-800 border-rose-200',
     };
     return colors[subject] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
@@ -343,6 +353,7 @@ export function StudentSchedule() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t('myScheduleTitle')}</h1>
@@ -367,6 +378,7 @@ export function StudentSchedule() {
           </div>
         )}
 
+        {/* Weekly Summary */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {weekDays.map((date, index) => {
             const dayName = format(date, 'EEEE');
@@ -390,6 +402,7 @@ export function StudentSchedule() {
           })}
         </div>
 
+        {/* Detailed Schedule */}
         <Card className="border-none shadow-md">
           <CardHeader className="border-b bg-gray-50">
             <CardTitle>{t('weeklyTimetable')}</CardTitle>
