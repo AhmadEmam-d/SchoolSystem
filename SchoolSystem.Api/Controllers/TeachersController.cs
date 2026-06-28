@@ -92,11 +92,11 @@ namespace SchoolSystem.API.Controllers
                 var teacherOid = await _mediator.Send(command);
                 return Ok(ApiResponseFactory.Success(teacherOid, "TeacherCreatedSuccessfully", _messageService));
             }
-            catch
+            catch (Exception ex) // 👈 catch the exception
             {
                 return BadRequest(ApiResponseFactory.Failure<object>(
                     "TeacherCreationFailed", _messageService,
-                    new List<string> { "An error occurred while creating the teacher." }
+                    new List<string> { ex.Message } // 👈 return real error
                 ));
             }
         }
