@@ -209,12 +209,15 @@ console.log(token,'token');
         },
         body: JSON.stringify(data)
       }).then(res => res.json()),
-    
-    delete: (id) =>
-      fetch(`${API_BASE_URL}/Students/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      }).then(res => res.json())
+  delete: (id) =>
+  fetch(`${API_BASE_URL}/Students/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      'Content-Type': 'application/json'
+    },
+   body: JSON.stringify({ id: id })
+  }).then(res => res.json())
   },
   
   // Parents endpoints

@@ -22,7 +22,9 @@ export function AdminTeachers() {
     const fetchTeachers = async () => {
       setLoading(true);
       try {
-        const data = await api.teachers.getAll();
+     const data = await api.teachers.getAll();
+    
+console.log("📥 Teachers:", JSON.stringify(data, null, 2));
         setTeachers(data || []);
       } catch (error) {
         console.error(error);
