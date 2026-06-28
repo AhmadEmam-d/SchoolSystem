@@ -34,6 +34,7 @@ namespace SchoolSystem.Application.Features.Classes.Queries.Get
             try
             {
                 var baseQuery = _classRepo.GetAllQueryable()
+                                            .Include(c => c.Students)
                                             .Include(c => c.Sections)
                                             .AsNoTracking();
 
@@ -69,10 +70,14 @@ namespace SchoolSystem.Application.Features.Classes.Queries.Get
                 var paged = await pagedQuery.ToListAsync(ct);
 
                 // Map to DTO (you'll need to create ParentResponseDto)
-                var items = _mapper.Map<List<ClassResponseDto>>(paged).Cast<object>().ToList();
+                var items = _mapper.Map<List<ClassResponseDto>>(paged);
 
-                // Build response
-                res.Data = items;
+                foreach (var item in items)
+                {
+                    item.Students = new List<Classes.DTOs.Read.StudentBasicInfoDto>();
+                }
+
+                res.Data = items.Cast<object>().ToList();
                 res.TotalItems = totalItems;
                 res.TotalPages = getAll
                     ? (totalItems > 0 ? 1 : 0)

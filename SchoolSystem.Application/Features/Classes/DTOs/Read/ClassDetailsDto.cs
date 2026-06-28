@@ -8,7 +8,11 @@
         public string Phone { get; set; } = string.Empty;
         public StudentDetailsDto Details { get; set; } = new StudentDetailsDto();
     }
-
+    public class StudentNameDto
+    {
+        public Guid Oid { get; set; }
+        public string FullName { get; set; } = string.Empty;
+    }
     public class StudentDetailsDto
     {
         public List<LessonInfoDto> Lessons { get; set; } = new List<LessonInfoDto>();
