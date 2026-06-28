@@ -39,16 +39,21 @@ export function AdminStudents() {
   const handleViewStudent = (id) => navigate(`/admin/students/${id}`);
   const handleEditStudent = (id) => navigate(`/admin/students/edit/${id}`);
 
-  const handleDeleteClick = async (student) => {
-    if (!confirm("Delete student?")) return;
-    try {
-      await api.students.delete(student.oid);
+ const handleDeleteClick = async (student) => {
+  if (!confirm("Delete student?")) return;
+  try {
+    const res = await api.students.delete(student.oid);
+    
+    if (res.success) {
       setStudents(prev => prev.filter(s => s.oid !== student.oid));
       toast.success("Deleted");
-    } catch {
-      toast.error("Delete failed");
+    } else {
+      toast.error(res.message || "Delete failed");
     }
-  };
+  } catch {
+    toast.error("Delete failed");
+  }
+};
 
   // ================= FILTER =================
   const filteredStudents = students.filter(s => {

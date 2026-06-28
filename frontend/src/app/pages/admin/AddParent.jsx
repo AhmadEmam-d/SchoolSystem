@@ -30,6 +30,8 @@ export function AddParent() {
     try {
       // إرسال البيانات للـ API
       const response = await api.parents.create(formData);
+      
+console.log("📥 Response:", JSON.stringify(response, null, 2));
 
       if (response.success) {
         toast.success(t('parentAddedSuccess') || 'تم إضافة ولي الأمر بنجاح');
