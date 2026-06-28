@@ -51,8 +51,9 @@ export function AdminParents() {
     setLoading(true);
     try {
       // بناءً على ملف api.js الخاص بك، البيانات تعود مباشرة من التابع
-      const data = await api.parents.getAll();
-      setParents(Array.isArray(data) ? data : []);
+    const data = await api.parents.getAll();
+const all = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+setParents(all.filter(p => !p.isDeleted));
     } catch (error) {
       console.error("Fetch Error:", error);
       toast.error(t('errorFetchingData'));
@@ -70,6 +71,7 @@ export function AdminParents() {
     if (window.confirm(t('confirmDeleteParent'))) {
       try {
         const response = await api.parents.delete(parent.oid);
+        
         if (response.success) {
           toast.success(t('parentDeletedSuccess'));
           fetchParents(); // تحديث القائمة بعد الحذف
