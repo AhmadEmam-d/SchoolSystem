@@ -19,6 +19,7 @@ namespace SchoolSystem.Application.Features.Students.DTOs.Read
         public Guid ParentOid { get; set; } = new Guid();
         public Guid UserId { get; set; } = new Guid();
         public string UserName { get; set; } = string.Empty;
+        public bool IsDeleted { get; set; }
         public ClassBasicInfoDto Class { get; set; } = new ClassBasicInfoDto();
         public SectionBasicInfoDto Section { get; set; }= new SectionBasicInfoDto();
         public ParentBasicInfoDto Parent { get; set; } = new ParentBasicInfoDto();
