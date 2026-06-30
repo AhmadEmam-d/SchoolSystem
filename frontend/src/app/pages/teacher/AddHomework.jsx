@@ -32,34 +32,34 @@ export function AddHomework() {
   });
 
   // ================= LOAD =================
-  useEffect(() => {
-    if (!user?.teacherId) return;
+ useEffect(() => {
+  if (!user?.teacherId) return;
 
-    const load = async () => {
-      try {
-        const headers = { Authorization: `Bearer ${token}` };
+  const load = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
 
-        const [allSubjectsRes, classRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
-          fetch(`${API_BASE_URL}/Classes`, { headers }).then(r => r.json()),
-        ]);
+      const [allSubjectsRes, classRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/Classes/teacher`, { headers }).then(r => r.json()),
+      ]);
 
-        const allSubjects = allSubjectsRes.data || [];
+      const allSubjects = allSubjectsRes.data || [];
 
-        // فلتر المواد الخاصة بالمدرس بس
-        const mySubjects = allSubjects.filter(s =>
-          s.teachers?.some(t => t?.oid === user.teacherId)
-        );
+      // فلتر المواد الخاصة بالمدرس بس
+      const mySubjects = allSubjects.filter(s =>
+        s.teachers?.some(t => t?.oid === user.teacherId)
+      );
 
-        setSubjects(mySubjects);
-        setClasses(classRes.data || classRes || []);
-      } catch (err) {
-        console.error(err);
-        toast.error("Error loading data");
-      }
-    };
-    load();
-  }, [user]);
+      setSubjects(mySubjects);
+      setClasses(classRes.data || classRes || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error loading data");
+    }
+  };
+  load();
+}, [user]);
 
   // ================= FILES =================
   const handleFileChange = (e) => setFiles([...files, ...Array.from(e.target.files)]);
@@ -288,16 +288,16 @@ export function AddHomework() {
                 <label className="text-sm text-slate-300 mb-2 block">
                   Class <span className="text-red-400">*</span>
                 </label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl bg-white text-gray-900"
-                  value={formData.classId}
-                  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                >
-                  <option value="">Select a class</option>
-                  {classes.map((c) => (
-                    <option key={c.oid || c.id} value={c.oid || c.id}>{c.name}</option>
-                  ))}
-                </select>
+               <select
+  className="w-full px-4 py-3 rounded-xl bg-white text-gray-900"
+  value={formData.classId}
+  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
+>
+  <option value="">Select a class</option>
+  {classes.map((c) => (
+    <option key={c.oid || c.id} value={c.oid || c.id}>{c.name}</option>
+  ))}
+</select>
               </div>
 
               <div>

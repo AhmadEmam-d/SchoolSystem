@@ -30,35 +30,35 @@ export function AddExam() {
   });
 
   // ================= LOAD =================
-  useEffect(() => {
-    if (!user?.teacherId) return;
+useEffect(() => {
+  if (!user?.teacherId) return;
 
-    const load = async () => {
-      try {
-        const headers = { Authorization: `Bearer ${token}` };
+  const load = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
 
-        const [allSubjectsRes, classRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
-          fetch(`${API_BASE_URL}/Classes`, { headers }).then(r => r.json()),
-        ]);
+      const [allSubjectsRes, classRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/Classes/teacher`, { headers }).then(r => r.json()),
+      ]);
 
-        const allSubjects = allSubjectsRes.data || [];
+      const allSubjects = allSubjectsRes.data || [];
 
-        // فلتر المواد الخاصة بالمدرس بس
-        const mySubjects = allSubjects.filter(s =>
-          s.teachers?.some(t => t?.oid === user.teacherId)
-        );
+      // فلتر المواد الخاصة بالمدرس بس
+      const mySubjects = allSubjects.filter(s =>
+        s.teachers?.some(t => t?.oid === user.teacherId)
+      );
 
-        setSubjects(mySubjects);
-        setClasses(classRes.data || classRes || []);
-      } catch (err) {
-        console.error(err);
-        alert("Error loading data");
-      }
-    };
+      setSubjects(mySubjects);
+      setClasses(classRes.data || classRes || []);
+    } catch (err) {
+      console.error(err);
+      alert("Error loading data");
+    }
+  };
 
-    load();
-  }, [user]);
+  load();
+}, [user]);
 
   // ================= FILE =================
   const handleFileChange = (e) => {

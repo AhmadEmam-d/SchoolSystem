@@ -24,22 +24,22 @@ export function AddLesson() {
     date: '', startTime: '', endTime: '', objectives: [''], notes: '',
   });
 
-  useEffect(() => {
-    if (!user?.teacherId) return;
-    const load = async () => {
-      try {
-        const headers = { Authorization: `Bearer ${token}` };
-        const [allSubjectsRes, classRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
-          fetch(`${API_BASE_URL}/Classes`, { headers }).then(r => r.json()),
-        ]);
-        const mySubjects = (allSubjectsRes.data || []).filter(s => s.teachers?.some(t => t?.oid === user.teacherId));
-        setSubjects(mySubjects);
-        setClasses(classRes.data || classRes || []);
-      } catch (err) { console.error(err); }
-    };
-    load();
-  }, [user]);
+useEffect(() => {
+  if (!user?.teacherId) return;
+  const load = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [allSubjectsRes, classRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/Classes/teacher`, { headers }).then(r => r.json()),
+      ]);
+      const mySubjects = (allSubjectsRes.data || []).filter(s => s.teachers?.some(t => t?.oid === user.teacherId));
+      setSubjects(mySubjects);
+      setClasses(classRes.data || classRes || []);
+    } catch (err) { console.error(err); }
+  };
+  load();
+}, [user]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleFileChange = (e) => setFiles([...files, ...Array.from(e.target.files)]);
