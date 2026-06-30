@@ -12,8 +12,8 @@ namespace SchoolSystem.Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string Level { get; set; }= string.Empty;
-        public Guid? TeacherOid { get; set; }
-        public Teacher? Teacher { get; set; }
+        //public Guid? TeacherOid { get; set; }
+        //public Teacher? Teacher { get; set; }
         public Guid? SchoolId { get; set; }
         public School? School { get; set; }
         public ICollection<Student> Students { get; set; } = new List<Student>();
@@ -21,6 +21,8 @@ namespace SchoolSystem.Domain.Entities
         public ICollection<SchoolSystem.Domain.Entities.Timetable> Timetables { get; set; } = new List<SchoolSystem.Domain.Entities.Timetable>();
         public ICollection<Homework> Homeworks { get; set; } = new List<Homework>();
         public ICollection<AttendanceSession> AttendanceSessions { get; set; } = new List<AttendanceSession>();
+            public ICollection<ClassTeacher> ClassTeachers { get; set; } = new List<ClassTeacher>(); 
+
     }
 
 

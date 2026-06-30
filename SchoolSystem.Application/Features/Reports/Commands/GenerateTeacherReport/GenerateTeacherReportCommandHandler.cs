@@ -51,7 +51,7 @@ namespace SchoolSystem.Application.Features.Reports.Commands.GenerateTeacherRepo
                 throw new Exception("Teacher not found");
 
             var classes = await _classRepo.GetAllQueryable()
-                .Where(c => c.TeacherOid == request.Dto.TeacherOid)
+                .Where(c => c.ClassTeachers.Any(ct => ct.TeacherOid == request.Dto.TeacherOid && !ct.IsDeleted))
                 .ToListAsync(cancellationToken);
 
             var classOids = classes.Select(c => c.Oid).ToList();

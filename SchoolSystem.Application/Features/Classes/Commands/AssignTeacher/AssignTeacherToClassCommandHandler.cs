@@ -9,13 +9,16 @@ namespace SchoolSystem.Application.Features.Classes.Commands.AssignTeacher
     {
         private readonly IGenericRepository<Class> _classRepo;
         private readonly IGenericRepository<Teacher> _teacherRepo;
+        private readonly IGenericRepository<ClassTeacher> _classTeacherRepo;
 
         public AssignTeacherToClassCommandHandler(
             IGenericRepository<Class> classRepo,
-            IGenericRepository<Teacher> teacherRepo)
+            IGenericRepository<Teacher> teacherRepo,
+            IGenericRepository<ClassTeacher> classTeacherRepo)
         {
             _classRepo = classRepo;
             _teacherRepo = teacherRepo;
+            _classTeacherRepo = classTeacherRepo;
         }
 
         public async Task<bool> Handle(AssignTeacherToClassCommand request, CancellationToken cancellationToken)
@@ -28,10 +31,22 @@ namespace SchoolSystem.Application.Features.Classes.Commands.AssignTeacher
             if (teacher == null)
                 throw new Exception("Teacher not found");
 
-            classEntity.TeacherOid = teacher.Oid;
-            classEntity.UpdatedAt = DateTime.UtcNow;
+            var alreadyAssigned = await _classTeacherRepo
+                .GetAllQueryable()
+                .AnyAsync(ct => ct.ClassOid == classEntity.Oid && ct.TeacherOid == teacher.Oid && !ct.IsDeleted, cancellationToken);
 
-            await _classRepo.UpdateAsync(classEntity);
+            if (alreadyAssigned)
+                return true; 
+
+            var classTeacher = new ClassTeacher
+            {
+                Oid = Guid.NewGuid(),
+                ClassOid = classEntity.Oid,
+                TeacherOid = teacher.Oid,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _classTeacherRepo.AddAsync(classTeacher);
             return true;
         }
     }

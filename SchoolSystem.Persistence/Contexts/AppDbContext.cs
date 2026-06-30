@@ -54,6 +54,7 @@ namespace SchoolSystem.Persistence.Contexts
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<ExamSubmission> ExamSubmissions { get; set; }
         public DbSet<School> Schools { get; set; }
+        public DbSet<ClassTeacher> ClassTeachers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -189,7 +190,24 @@ namespace SchoolSystem.Persistence.Contexts
             {
                 entity.HasKey(e => e.Oid);
             });
+            modelBuilder.Entity<ClassTeacher>()
+                .HasKey(ct => ct.Oid);
 
+            modelBuilder.Entity<ClassTeacher>()
+                .HasOne(ct => ct.Class)
+                .WithMany(c => c.ClassTeachers)
+                .HasForeignKey(ct => ct.ClassOid)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClassTeacher>()
+                .HasOne(ct => ct.Teacher)
+                .WithMany(t => t.ClassTeachers)
+                .HasForeignKey(ct => ct.TeacherOid)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClassTeacher>()
+                .HasIndex(ct => new { ct.ClassOid, ct.TeacherOid })
+                .IsUnique();
             // -------------------------
             // Section
             // -------------------------

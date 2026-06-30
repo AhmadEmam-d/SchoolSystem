@@ -62,7 +62,7 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
 
                 var classes = await _classRepo
                     .GetAllQueryable()
-                    .Where(c => c.TeacherOid == teacher.Oid && !c.IsDeleted)
+                    .Where(c => c.ClassTeachers.Any(ct => ct.TeacherOid == teacher.Oid && !ct.IsDeleted) && !c.IsDeleted)
                     .ProjectTo<TeacherClassBasicDto>(_mapper.ConfigurationProvider)
                     .ToListAsync(cancellationToken);
 
@@ -127,10 +127,13 @@ namespace SchoolSystem.Application.Features.Teachers.Query.GetAll
                     .ToListAsync(cancellationToken);
 
                 var teacherAttendances = await _attendanceRepo
-                    .GetAllQueryable()
-                    .Include(a => a.Class)
-                    .Where(a => a.Class != null && a.Class.TeacherOid == teacher.Oid && !a.IsDeleted)
-                    .ToListAsync(cancellationToken);
+                     .GetAllQueryable()
+                     .Include(a => a.Class)
+                         .ThenInclude(c => c.ClassTeachers)
+                     .Where(a => a.Class != null
+                         && a.Class.ClassTeachers.Any(ct => ct.TeacherOid == teacher.Oid && !ct.IsDeleted)
+                         && !a.IsDeleted)
+                     .ToListAsync(cancellationToken);
 
                 var teacherPresentCount = teacherAttendances.Count(a => a.Status == AttendanceStatus.Present);
                 var teacherTotalDays = teacherAttendances.Count;

@@ -51,8 +51,7 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                 .GetAllQueryable()
                 .Include(c => c.Students)
                 .Include(c => c.Sections)
-                .Where(c => c.TeacherOid == teacher.Oid && !c.IsDeleted)
-                .ToListAsync(cancellationToken);
+                .Where(c => c.ClassTeachers.Any(ct => ct.TeacherOid == teacher.Oid && !ct.IsDeleted) && !c.IsDeleted).ToListAsync(cancellationToken);
 
             var result = new List<ClassResponseDto>();
 
