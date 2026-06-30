@@ -117,33 +117,51 @@ export function StudentHomework() {
 
   // ── Submit homework ──────────────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!selectedHomework) return;
-    setSubmitting(true);
-    try {
-      const result = await api.studentHomework.submit(
-        selectedHomework.homeworkId ?? selectedHomework.id,
-        { submissionText, attachmentUrl }
-      );
-      if (!result.ok) { toast.error('Submission failed'); return; }
-      toast.success(t('homeworkSubmittedSuccess'));
-      setIsSubmitDialogOpen(false);
-      setSubmissionText('');
-      setAttachmentUrl('');
-      fetchHomeworks(); // refresh list
-    } catch (err) {
-      toast.error('Submission failed');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  if (!selectedHomework) return;
 
-  const openSubmitDialog = (homework) => {
-    setSelectedHomework(homework);
+  const daysUntilDue = getDaysUntilDue(selectedHomework.dueDate);
+  const isOverdue = selectedHomework.isOverdue ?? (daysUntilDue !== null && daysUntilDue < 0);
+
+  if (isOverdue) {
+    toast.error('عذرًا، انتهى موعد تسليم هذا الواجب ولا يمكن التسليم بعد الآن');
+    setIsSubmitDialogOpen(false);
+    return;
+  }
+
+  setSubmitting(true);
+  try {
+    const result = await api.studentHomework.submit(
+      selectedHomework.homeworkId ?? selectedHomework.id,
+      { submissionText, attachmentUrl }
+    );
+    if (!result.ok) { toast.error('Submission failed'); return; }
+    toast.success(t('homeworkSubmittedSuccess'));
+    setIsSubmitDialogOpen(false);
     setSubmissionText('');
     setAttachmentUrl('');
-    setIsSubmitDialogOpen(true);
-  };
+    fetchHomeworks(); // refresh list
+  } catch (err) {
+    toast.error('Submission failed');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
+// ── Submit dialog guard ──────────────────────────────────────────────────
+const openSubmitDialog = (homework) => {
+  const daysUntilDue = getDaysUntilDue(homework.dueDate);
+  const isOverdue = homework.isOverdue ?? (daysUntilDue !== null && daysUntilDue < 0);
+
+  if (isOverdue) {
+    toast.error('عذرًا، انتهى موعد تسليم هذا الواجب ولا يمكن التسليم بعد الآن');
+    return;
+  }
+
+  setSelectedHomework(homework);
+  setSubmissionText('');
+  setAttachmentUrl('');
+  setIsSubmitDialogOpen(true);
+};
   // ── Card ─────────────────────────────────────────────────────────────────
 // ── Card ─────────────────────────────────────────────────────────────────
 const HomeworkCard = ({ homework }) => {

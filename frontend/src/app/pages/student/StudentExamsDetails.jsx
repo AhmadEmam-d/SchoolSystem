@@ -69,6 +69,19 @@ export function StudentExamDetails() {
     }
   };
 
+  // ── Exam time window helper ─────────────────────────────────────────────
+  const getExamWindow = (examData) => {
+    const start = new Date(examData.date);
+    const [h, m] = (examData.startTime || '00:00').split(':');
+    start.setHours(parseInt(h), parseInt(m), 0);
+
+    const end = new Date(start);
+    const [dh, dm] = (examData.duration || '00:00').split(':');
+    end.setMinutes(end.getMinutes() + parseInt(dh || 0) * 60 + parseInt(dm || 0));
+
+    return { start, end };
+  };
+
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case 'submitted':
@@ -166,7 +179,21 @@ export function StudentExamDetails() {
 
   const handleSubmitExam = async () => {
     if (!exam) return;
-    
+
+    // ── Time window guard ────────────────────────────────────────────────
+    const { start, end } = getExamWindow(exam);
+    const now = new Date();
+
+    if (now < start) {
+      toast.error('لسه معاد الامتحان ماجاش');
+      return;
+    }
+
+    if (now > end) {
+      toast.error('انتهى وقت الامتحان، لا يمكن التسليم الآن');
+      return;
+    }
+
     if (!answerText.trim() && !attachmentUrl) {
       toast.error('Please provide an answer or upload a file');
       return;
@@ -214,8 +241,13 @@ export function StudentExamDetails() {
     );
   }
 
+  // ── Derived state (submission + time window) ────────────────────────────
+  const { start: examStart, end: examEnd } = getExamWindow(exam);
+  const now = new Date();
   const isSubmitted = submitted || exam.mySubmission;
-  const canSubmit = !isSubmitted;
+  const examNotStarted = now < examStart;
+  const examEnded = now > examEnd;
+  const canSubmit = !isSubmitted && !examNotStarted && !examEnded;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-8">
@@ -298,8 +330,8 @@ export function StudentExamDetails() {
         </Card>
       )}
 
-      {/* Materials Card */}
-      {exam.materials && exam.materials.length > 0 && (
+      {/* Materials Card - only visible once the exam has started */}
+      {exam.materials && exam.materials.length > 0 && !examNotStarted && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -333,6 +365,19 @@ export function StudentExamDetails() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Materials placeholder - exam hasn't started yet */}
+      {exam.materials && exam.materials.length > 0 && examNotStarted && (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <FileText className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+            <p className="text-gray-500 font-medium">مواد الامتحان هتظهر مع بداية الامتحان</p>
+            <p className="text-sm text-gray-400 mt-1">
+              هيفتح يوم {formatDate(exam.date)} الساعة {exam.startTime}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -411,6 +456,22 @@ export function StudentExamDetails() {
                   Graded on: {new Date(exam.mySubmission.gradedAt).toLocaleString()}
                 </p>
               )}
+            </div>
+          ) : examNotStarted ? (
+            // Exam hasn't started yet
+            <div className="text-center py-8">
+              <Clock className="h-10 w-10 mx-auto mb-3 text-amber-500" />
+              <p className="text-gray-600 dark:text-gray-300 font-medium">لسه معاد الامتحان ماجاش</p>
+              <p className="text-sm text-gray-400 mt-1">
+                هيفتح يوم {formatDate(exam.date)} الساعة {exam.startTime}
+              </p>
+            </div>
+          ) : examEnded ? (
+            // Exam time window is over
+            <div className="text-center py-8">
+              <XCircle className="h-10 w-10 mx-auto mb-3 text-red-500" />
+              <p className="text-gray-600 dark:text-gray-300 font-medium">انتهى وقت الامتحان</p>
+              <p className="text-sm text-gray-400 mt-1">لم يعد بإمكانك التسليم الآن</p>
             </div>
           ) : (
             // Submit Form
