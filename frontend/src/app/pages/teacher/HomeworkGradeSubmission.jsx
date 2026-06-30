@@ -110,6 +110,7 @@ export function HomeworkGradeSubmission() {
         grade: gradeNum,
         feedback: feedbackVal.trim() || null
       });
+      console.log('Response من السيرفر:', result.data); // 
 
       if (result.ok) {
         toast.success(`Grade saved for ${submission.studentName || submission.student?.name || 'student'}`);
@@ -228,7 +229,11 @@ export function HomeworkGradeSubmission() {
           {submissions.map((submission) => {
             const sid = submission.id || submission.submissionId;
             const isExpanded = expandedId === sid;
-            const maxMarks = homework?.totalMarks || submission?.maxGrade || 100;
+          const maxMarks = (homework?.totalMarks && homework.totalMarks > 0) 
+  ? homework.totalMarks 
+  : (submission?.maxGrade && submission.maxGrade > 0)
+    ? submission.maxGrade
+    : null;
             const currentGrade = grades[sid] || { grade: '', feedback: '' };
             const isGraded = submission.status === 'graded' || (submission.grade !== null && submission.grade !== undefined);
 

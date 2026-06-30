@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { ArrowLeft, Upload, X, FileText } from "lucide-react";
 
 const API_BASE_URL = "https://localhost:7179/api";
 
 export function AddExam() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const token = localStorage.getItem("token");
 
   const [classes, setClasses] = useState([]);
@@ -29,18 +36,24 @@ export function AddExam() {
 
   // ================= LOAD =================
   useEffect(() => {
+    if (!user?.teacherId) return;
+
     const load = async () => {
       try {
-        const classRes = await fetch(`${API_BASE_URL}/Classes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then((r) => r.json());
+        const headers = { Authorization: `Bearer ${token}` };
 
-        const subjectRes = await fetch(`${API_BASE_URL}/Subjects`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then((r) => r.json());
+        const [allSubjectsRes, classRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+          fetch(`${API_BASE_URL}/Classes`, { headers }).then(r => r.json()),
+        ]);
 
+        const allSubjects = allSubjectsRes.data || [];
+        const mySubjects = allSubjects.filter(s =>
+          s.teachers?.some(t => t?.oid === user.teacherId)
+        );
+
+        setSubjects(mySubjects);
         setClasses(classRes.data || classRes || []);
-        setSubjects(subjectRes.data || subjectRes || []);
       } catch (err) {
         console.error(err);
         alert("Error loading data");
@@ -48,15 +61,15 @@ export function AddExam() {
     };
 
     load();
-  }, []);
+  }, [user]);
 
-  // ================= FILE =================
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
-  };
-
-  const removeFile = (i) => {
-    setFiles(files.filter((_, index) => index !== i));
+  const handleFileChange = (e) => setFiles([...files, ...Array.from(e.target.files)]);
+  const removeFile = (i) => setFiles(files.filter((_, index) => index !== i));
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 KB";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   // ================= SUBMIT =================
@@ -76,7 +89,6 @@ export function AddExam() {
         return timeStr.split(":").length === 2 ? `${timeStr}:00` : timeStr;
       };
 
-      // ================= 1. CREATE EXAM =================
       const createRes = await fetch(`${API_BASE_URL}/Exams`, {
         method: "POST",
         headers: {
@@ -90,39 +102,27 @@ export function AddExam() {
           duration: formatTime(formData.duration),
           maxScore: Number(formData.maxScore),
           passingScore: Number(formData.passingScore),
-          materials: [], // فاضي الأول
+          materials: [],
         }),
       });
 
       const created = await createRes.json();
-      console.log("Created Exam:", created);
-
-      const examId = created.data; // الـ backend بيرجع Guid في created.data
-      console.log("Created Exam ID:", examId);
+      const examId = created.data;
 
       if (!examId) {
         alert("فشل إنشاء الامتحان ❌");
         return;
       }
 
-      // ================= 2. UPLOAD FILES =================
       if (files.length > 0) {
         const fd = new FormData();
-        files.forEach((file) => fd.append("Files", file)); // ⚠️ مهم: "Files" جمع
+        files.forEach((file) => fd.append("Files", file));
 
-        const uploadRes = await fetch(
-          `${API_BASE_URL}/Files/upload-multiple/Exam/${examId}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: fd,
-          }
-        );
-
-        const uploadData = await uploadRes.json();
-        console.log("Uploaded Files:", uploadData);
+        await fetch(`${API_BASE_URL}/Files/upload-multiple/Exam/${examId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
       }
 
       alert("تم إنشاء الامتحان + رفع الملفات ✅");
@@ -136,125 +136,193 @@ export function AddExam() {
     }
   };
 
-  // ================= UI =================
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Add Exam</h2>
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
 
-      <form onSubmit={handleSubmit}>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+        <h2 className="text-2xl font-bold">Add Exam</h2>
+      </div>
 
-        <input
-          placeholder="Exam Name"
-          required
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        />
+      <form onSubmit={handleSubmit} className="space-y-4">
 
-        <br /><br />
+        {/* BASIC INFO */}
+        <Card>
+          <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
 
-        <select onChange={(e) => setFormData({ ...formData, classOid: e.target.value })}>
-          <option value="">Class</option>
-          {classes.map((c) => (
-            <option key={c.id || c.oid} value={c.id || c.oid}>{c.name}</option>
-          ))}
-        </select>
+            <Input
+              placeholder="Exam Name"
+              required
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
 
-        <br /><br />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Subject</label>
+                <select
+                  className="w-full border border-gray-300 p-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData({ ...formData, subjectOid: e.target.value })}
+                >
+                  <option value="">Select Subject</option>
+                  {subjects.map((s) => (
+                    <option key={s.oid} value={s.oid}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
 
-        <select onChange={(e) => setFormData({ ...formData, subjectOid: e.target.value })}>
-          <option value="">Subject</option>
-          {subjects.map((s) => (
-            <option key={s.id || s.oid} value={s.id || s.oid}>{s.name}</option>
-          ))}
-        </select>
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Class</label>
+                <select
+                  className="w-full border border-gray-300 p-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData({ ...formData, classOid: e.target.value })}
+                >
+                  <option value="">Select Class</option>
+                  {classes.map((c) => (
+                    <option key={c.oid || c.id} value={c.oid || c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-        <br /><br />
+            <div className="space-y-1">
+              <label className="text-sm text-gray-600">Exam Type</label>
+              <select
+                className="w-full border border-gray-300 p-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                defaultValue="Final"
+              >
+                <option value="Final">Final</option>
+                <option value="Midterm">Midterm</option>
+                <option value="Quiz">Quiz</option>
+              </select>
+            </div>
 
-        <select onChange={(e) => setFormData({ ...formData, type: e.target.value })} defaultValue="Final">
-          <option value="Final">Final</option>
-          <option value="Midterm">Midterm</option>
-          <option value="Quiz">Quiz</option>
-        </select>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Date</label>
+                <Input
+                  type="date"
+                  required
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Start Time</label>
+                <Input
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Duration (HH:mm)</label>
+                <Input
+                  placeholder="02:00"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                />
+              </div>
+            </div>
 
-        <br /><br />
+          </CardContent>
+        </Card>
 
-        <input
-          type="date"
-          required
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        />
+        {/* GRADING */}
+        <Card>
+          <CardHeader><CardTitle>Grading</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Max Score</label>
+                <Input
+                  type="number"
+                  value={formData.maxScore}
+                  onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm text-gray-600">Passing Score</label>
+                <Input
+                  type="number"
+                  value={formData.passingScore}
+                  onChange={(e) => setFormData({ ...formData, passingScore: e.target.value })}
+                />
+              </div>
+            </div>
 
-        <br /><br />
+            <div className="space-y-1">
+              <label className="text-sm text-gray-600">Room</label>
+              <Input
+                placeholder="Room 301"
+                onChange={(e) => setFormData({ ...formData, room: e.target.value })}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-        <input
-          type="time"
-          value={formData.startTime}
-          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-        />
+        {/* DESCRIPTION */}
+        <Card>
+          <CardHeader><CardTitle>Description & Instructions</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <Textarea
+              placeholder="Description"
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            <Textarea
+              placeholder="Instructions for students"
+              required
+              onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+            />
+          </CardContent>
+        </Card>
 
-        <br /><br />
+        {/* ATTACHMENTS */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Attachments</CardTitle>
+              <div className="relative">
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                />
+                <Button variant="outline" size="sm" type="button">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Files
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {files.length > 0 ? (
+              files.map((file, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 border rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-indigo-600" />
+                    <div>
+                      <p className="font-medium text-sm">{file.name}</p>
+                      <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => removeFile(i)} className="text-red-500">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-6">No files selected</p>
+            )}
+          </CardContent>
+        </Card>
 
-        <input
-          placeholder="Duration (HH:mm)"
-          value={formData.duration}
-          onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-        />
-
-        <br /><br />
-
-        <input
-          type="number"
-          placeholder="Max Score"
-          value={formData.maxScore}
-          onChange={(e) => setFormData({ ...formData, maxScore: e.target.value })}
-        />
-
-        <br /><br />
-
-        <input
-          type="number"
-          placeholder="Passing Score"
-          value={formData.passingScore}
-          onChange={(e) => setFormData({ ...formData, passingScore: e.target.value })}
-        />
-
-        <br /><br />
-
-        <input
-          placeholder="Room (e.g. Room 301)"
-          onChange={(e) => setFormData({ ...formData, room: e.target.value })}
-        />
-
-        <br /><br />
-
-        <textarea
-          placeholder="Description"
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        />
-
-        <br /><br />
-
-        <textarea
-          placeholder="Instructions for students"
-          required
-          onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-        />
-
-        <br /><br />
-
-        <input type="file" multiple onChange={handleFileChange} />
-
-        {files.map((file, i) => (
-          <div key={i}>
-            {file.name}
-            <button type="button" onClick={() => removeFile(i)}>حذف</button>
-          </div>
-        ))}
-
-        <br /><br />
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Loading..." : "Create Exam"}
-        </button>
+        <Button type="submit" disabled={loading} className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white">
+          {loading ? "Saving..." : "Create Exam"}
+        </Button>
 
       </form>
     </div>
