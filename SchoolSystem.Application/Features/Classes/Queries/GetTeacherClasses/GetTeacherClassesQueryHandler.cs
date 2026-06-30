@@ -51,7 +51,8 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                 .GetAllQueryable()
                 .Include(c => c.Students)
                 .Include(c => c.Sections)
-                .Where(c => c.ClassTeachers.Any(ct => ct.TeacherOid == teacher.Oid && !ct.IsDeleted) && !c.IsDeleted).ToListAsync(cancellationToken);
+                .Where(c => c.ClassTeachers.Any(ct => ct.TeacherOid == teacher.Oid && !ct.IsDeleted) && !c.IsDeleted)
+                .ToListAsync(cancellationToken);
 
             var result = new List<ClassResponseDto>();
 
@@ -68,6 +69,24 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                     Students = new List<StudentBasicInfoDto>()
                 };
 
+                // ⭐ OPTIMIZATION: Get all lessons/homeworks/exams for this class ONCE outside the student loop
+                var classLessons = await _lessonRepo
+                    .GetAllQueryable()
+                    .Where(l => l.ClassOid == classEntity.Oid && !l.IsDeleted && l.TeacherOid == teacher.Oid) // ⭐ FIXED: Added TeacherOid filter
+                    .ToListAsync(cancellationToken);
+
+                var classHomeworks = await _homeworkRepo
+                    .GetAllQueryable()
+                    .Where(h => h.ClassOid == classEntity.Oid && !h.IsDeleted && h.TeacherOid == teacher.Oid) // ⭐ FIXED: Added TeacherOid filter
+                    .ToListAsync(cancellationToken);
+
+                var classExams = await _examRepo
+                    .GetAllQueryable()
+                    .Where(e => e.ClassOid == classEntity.Oid && !e.IsDeleted && e.TeacherOid == teacher.Oid) // ⭐ FIXED: Added TeacherOid filter
+                    .ToListAsync(cancellationToken);
+
+                var examIds = classExams.Select(e => e.Oid).ToList();
+
                 foreach (var student in (classEntity.Students ?? new List<Student>()).Where(s => !s.IsDeleted))
                 {
                     var studentDto = new StudentBasicInfoDto
@@ -79,9 +98,8 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                         Details = new StudentDetailsDto()
                     };
 
-                    var lessons = await _lessonRepo
-                        .GetAllQueryable()
-                        .Where(l => l.ClassOid == classEntity.Oid && !l.IsDeleted)
+                    // Lessons - Now filtered by TeacherOid
+                    var lessons = classLessons
                         .Select(l => new LessonInfoDto
                         {
                             Oid = l.Oid,
@@ -89,12 +107,11 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                             Date = l.Date,
                             Status = l.Status.ToString()
                         })
-                        .ToListAsync(cancellationToken);
+                        .ToList();
                     studentDto.Details.Lessons = lessons;
 
-                    var homeworks = await _homeworkRepo
-                        .GetAllQueryable()
-                        .Where(h => h.ClassOid == classEntity.Oid && !h.IsDeleted)
+                    // Homeworks - Now filtered by TeacherOid
+                    var homeworks = classHomeworks
                         .Select(h => new HomeworkInfoDto
                         {
                             Oid = h.Oid,
@@ -102,36 +119,29 @@ namespace SchoolSystem.Application.Features.Classes.Queries.GetTeacherClasses
                             DueDate = h.DueDate,
                             Status = h.Status.ToString(),
                             Grade = _homeworkSubmissionRepo.GetAllQueryable()
-                                .FirstOrDefault(s => s.HomeworkOid == h.Oid && s.StudentOid == student.Oid) != null ?
-                                _homeworkSubmissionRepo.GetAllQueryable()
-                                    .First(s => s.HomeworkOid == h.Oid && s.StudentOid == student.Oid).Grade : null
+                                .FirstOrDefault(s => s.HomeworkOid == h.Oid && s.StudentOid == student.Oid)?.Grade
                         })
-                        .ToListAsync(cancellationToken);
+                        .ToList();
                     studentDto.Details.Homeworks = homeworks;
 
-                    var exams = await _examRepo
+                    // Exams - Now filtered by TeacherOid
+                    var examResults = await _examResultRepo
                         .GetAllQueryable()
-                        .Where(e => e.ClassOid == classEntity.Oid && !e.IsDeleted)
+                        .Cast<ExamResult>()
+                        .Where(r => r.ExamOid.HasValue && examIds.Contains(r.ExamOid.Value) && r.StudentOid == student.Oid)
                         .ToListAsync(cancellationToken);
 
-                    var examIds = exams.Select(e => e.Oid).ToList();
-
-                    var examResults = await _examResultRepo
-                         .GetAllQueryable()
-                         .Cast<ExamResult>()
-                         .Where(r => r.ExamOid.HasValue && examIds.Contains(r.ExamOid.Value) && r.StudentOid == student.Oid)
-                         .ToListAsync(cancellationToken);
-
-                    var examDtos = exams.Select(e => new ExamInfoDto
+                    var examDtos = classExams.Select(e => new ExamInfoDto
                     {
                         Oid = e.Oid,
                         Name = e.Name,
                         Date = e.Date,
-                        Score = examResults.FirstOrDefault(r => r.ExamOid == (Guid?)e.Oid)?.Score,
-                        Grade = examResults.FirstOrDefault(r => r.ExamOid == (Guid?)e.Oid)?.Grade ?? string.Empty
+                        Score = examResults.FirstOrDefault(r => r.ExamOid == e.Oid)?.Score,
+                        Grade = examResults.FirstOrDefault(r => r.ExamOid == e.Oid)?.Grade ?? string.Empty
                     }).ToList();
                     studentDto.Details.Exams = examDtos;
 
+                    // Attendance - Intentionally left UNFILTERED by TeacherOid (homeroom/class-wide)
                     var attendances = await _attendanceRepo
                         .GetAllQueryable()
                         .Where(a => a.StudentOid == student.Oid && a.ClassOid == classEntity.Oid && !a.IsDeleted)
