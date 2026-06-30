@@ -24,8 +24,10 @@ export function AdminStudents() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const res = await api.students.getAll();
-        setStudents(Array.isArray(res.data) ? res.data : []);
+       
+const res = await api.students.getAll();
+const all = Array.isArray(res.data) ? res.data : [];
+setStudents(all.filter(s => !s.isDeleted));
       } catch {
         toast.error("Failed to load students");
       } finally {
@@ -39,11 +41,12 @@ export function AdminStudents() {
   const handleViewStudent = (id) => navigate(`/admin/students/${id}`);
   const handleEditStudent = (id) => navigate(`/admin/students/edit/${id}`);
 
- const handleDeleteClick = async (student) => {
+const handleDeleteClick = async (student) => {
   if (!confirm("Delete student?")) return;
   try {
     const res = await api.students.delete(student.oid);
-    
+    console.log("Delete response:", JSON.stringify(res, null, 2));
+    console.log("Delete response:", res);
     if (res.success) {
       setStudents(prev => prev.filter(s => s.oid !== student.oid));
       toast.success("Deleted");
@@ -54,7 +57,6 @@ export function AdminStudents() {
     toast.error("Delete failed");
   }
 };
-
   // ================= FILTER =================
   const filteredStudents = students.filter(s => {
     const searchMatch =
