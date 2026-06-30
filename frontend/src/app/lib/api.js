@@ -380,7 +380,17 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
-    }).then(res => res.json())
+    }).then(res => res.json()),
+     assignTeacher: ({ classId, teacherId }) =>
+    fetch(`${API_BASE_URL}/Classes/assign-teacher`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ classId, teacherId })
+    })
+    .then(res => res.json()),
   },
   
   // Subjects endpoints
