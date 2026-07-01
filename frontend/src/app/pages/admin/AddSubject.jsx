@@ -1,285 +1,270 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/app/lib/api'; // تأكد من صحة مسار ملف الـ api لديك
-import { Button } from "@/app/components/ui/button";
+import { api } from '../../lib/api';
 
 export function AddSubject() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '', // الحقل المطلوب من الـ API
-  });
-
-  // ================= إرسال البيانات للـ API =================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // التحقق من وجود بيانات
-    if (!formData.name.trim()) {
-      toast.error(t('nameRequired') || 'Subject name is required');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // إرسال كائن يحتوي فقط على name كما هو مطلوب في الـ JSON
-      const response = await api.subjects.create({
-        name: formData.name,
-      });
-
-      if (response.success || response.oid) {
-        toast.success(t('subjectAddedSuccess') || 'Subject added successfully!');
-        navigate('/admin/subjects');
-      }
-    } catch (error) {
-      console.error('Add Subject Error:', error);
-      toast.error(t('errorAddingSubject') || 'Failed to add subject');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ name: '' });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-4">
-        <button
-          onClick={() => navigate('/admin/subjects')}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-        >
-          <ArrowLeft className={`h-5 w-5 text-gray-600 dark:text-gray-300 ${isRTL ? 'rotate-180' : ''}`} />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-            {t('addNewSubject')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t('addNewSubjectDesc')}
-          </p>
-        </div>
-      </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error(t('nameRequired') || 'Subject name is required');
+      return;
+    }
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-            {t('subjectInformation')}
-          </h2>
-          
-          <div className="grid grid-cols-1 gap-6">
-            {/* Subject Name Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('subjectName')} *
-              </label>
-              <input
-                type="text"
-                name="name" // مطابقة للحقل المطلوب في الـ API
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white outline-none transition-all"
-                placeholder={t('subjectPlaceholder') || "e.g. Mathematics"}
-              />
-              <p className="text-xs text-muted-foreground italic">
-                {t('subjectNameHelp') || "Enter the official name of the academic subject."}
-              </p>
-            </div>
+    setSubmitting(true);
+    try {
+      const response = await api.subjects.create({ name: formData.name });
+      if (response.success || response.oid) {
+        toast.success(t('subjectAddedSuccess') || 'Subject added successfully');
+        navigate('/admin/subjects');
+      } else {
+        toast.error(response.message || t('errorAddingSubject') || 'Failed to add subject');
+      }
+    } catch (error) {
+      toast.error(t('errorAddingSubject') || 'Failed to add subject');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+
+        {/* Header */}
+        <div style={styles.header}>
+          <button style={styles.backBtn} onClick={() => navigate('/admin/subjects')}>
+            <ArrowLeft size={18} style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }} />
+          </button>
+          <div style={styles.headerIcon}>
+            <BookOpen size={20} color="white" />
+          </div>
+          <div>
+            <h1 style={styles.title}>{t('AddNewSubject') || 'Add New Subject'}</h1>
+            <p style={styles.subtitle}>
+              {t('addNewSubjectDesc') || 'Fill in the details to create a subject'}
+            </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/admin/subjects')}
-            disabled={isSubmitting}
-          >
-            {t('cancel')}
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-purple-600 hover:bg-purple-700 text-white min-w-[140px]"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin ml-2 mr-2" />
-                {t('saving') || 'Saving...'}
-              </>
-            ) : (
-              <>
-                <Save className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {t('saveSubject')}
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
+        <form onSubmit={handleSubmit}>
+
+          {/* Subject Info */}
+          <div style={styles.section}>
+            <p style={styles.sectionLabel}>{t('subjectInformation') || 'Subject Information'}</p>
+
+            <Field label={t('subjectName') || 'Subject Name'} required>
+              <div style={styles.inputWrapper}>
+                <BookOpen size={15} style={{ ...styles.inputIcon, ...(isRTL ? styles.inputIconRTL : {}) }} />
+                <input
+                  style={{ ...styles.input, ...(isRTL ? styles.inputRTL : {}) }}
+                  name="name"
+                  placeholder={t('subjectPlaceholder') || 'e.g. Mathematics'}
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <p style={styles.helpText}>
+                {t('subjectNameHelp') || 'Enter the official name of the academic subject.'}
+              </p>
+            </Field>
+          </div>
+
+          {/* Actions */}
+          <div style={styles.actions}>
+            <button
+              type="button"
+              style={styles.cancelBtn}
+              disabled={submitting}
+              onClick={() => navigate('/admin/subjects')}
+            >
+              {t('cancel') || 'Cancel'}
+            </button>
+            <button type="submit" style={styles.submitBtn} disabled={submitting}>
+              {submitting
+                ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> {t('saving') || 'Saving...'}</>
+                : <><Save size={15} /> {t('saveSubject') || 'Save Subject'}</>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
   );
 }
-// import React, { useState } from 'react';
-// import { useNavigate } from 'react-router';
-// import { useTranslation } from 'react-i18next';
-// import { ArrowLeft, Save } from 'lucide-react';
-// import { toast } from 'sonner';
 
-// export function AddSubject() {
-//   const navigate = useNavigate();
-//   const { t } = useTranslation();
-//   const [formData, setFormData] = useState({
-//     subjectName: '',
-//     subjectNameAr: '',
-//     description: '',
-//     category: '',
-//     passingGrade: '50',
-//   });
+function Field({ label, required, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <label style={styles.label}>
+        {label}
+        {required && <span style={{ color: '#ef4444', marginLeft: '3px' }}>*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
 
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     toast.success(t('subjectAddedSuccess'));
-//     navigate('/admin/subjects');
-//   };
-
-//   const handleChange = (e) => {
-//     setFormData({ ...formData, [e.target.name]: e.target.value });
-//   };
-
-//   return (
-//     <div className="p-6 max-w-4xl mx-auto">
-//       <div className="mb-6 flex items-center gap-4">
-//         <button
-//           onClick={() => navigate('/admin/subjects')}
-//           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-//         >
-//           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-//         </button>
-//         <div>
-//           <h1 className="text-3xl font-bold text-purple-600 dark:text-purple-400">{t('addNewSubject')}</h1>
-//           <p className="text-gray-600 dark:text-gray-400 mt-1">{t('addNewSubjectDesc')}</p>
-//         </div>
-//       </div>
-
-//       <form onSubmit={handleSubmit} className="space-y-6">
-//         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-//           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">{t('subjectInformation')}</h2>
-          
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                 {t('subjectName')} *
-//               </label>
-//               <input
-//                 type="text"
-//                 name="subjectName"
-//                 value={formData.subjectName}
-//                 onChange={handleChange}
-//                 required
-//                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-//                 placeholder={t('subjectPlaceholder')}
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                 {t('subjectNameAr')} *
-//               </label>
-//               <input
-//                 type="text"
-//                 name="subjectNameAr"
-//                 value={formData.subjectNameAr}
-//                 onChange={handleChange}
-//                 required
-//                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-//                 placeholder={t('subjectPlaceholder')}
-//                 dir="rtl"
-//               />
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                 {t('category')} *
-//               </label>
-//               <select
-//                 name="category"
-//                 value={formData.category}
-//                 onChange={handleChange}
-//                 required
-//                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-//               >
-//                 <option value="">{t('selectCategory')}</option>
-//                 <option value="science">{t('scienceCategory')}</option>
-//                 <option value="math">{t('mathCategory')}</option>
-//                 <option value="language">{t('languageCategory')}</option>
-//                 <option value="social">{t('socialCategory')}</option>
-//                 <option value="arts">{t('artsCategory')}</option>
-//                 <option value="sports">{t('sportsCategory')}</option>
-//                 <option value="technology">{t('technologyCategory')}</option>
-//                 <option value="religion">{t('religionCategory')}</option>
-//               </select>
-//             </div>
-
-//             <div>
-//               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                 {t('passingGrade')} *
-//               </label>
-//               <input
-//                 type="number"
-//                 name="passingGrade"
-//                 value={formData.passingGrade}
-//                 onChange={handleChange}
-//                 required
-//                 min="0"
-//                 max="100"
-//                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-//                 placeholder={t('placeholderPassingGrade')}
-//               />
-//             </div>
-
-//             <div className="md:col-span-2">
-//               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                 {t('description')}
-//               </label>
-//               <textarea
-//                 name="description"
-//                 value={formData.description}
-//                 onChange={handleChange}
-//                 rows={3}
-//                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-//                 placeholder={t('subjectDescriptionPlaceholder')}
-//               />
-//             </div>
-//           </div>
-//         </div>
-
-//         <div className="flex items-center justify-end gap-4">
-//           <button
-//             type="button"
-//             onClick={() => navigate('/admin/subjects')}
-//             className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-//           >
-//             {t('cancel')}
-//           </button>
-//           <button
-//             type="submit"
-//             className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center gap-2"
-//           >
-//             <Save className="h-5 w-5" />
-//             {t('saveSubject')}
-//           </button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// }
+const styles = {
+  page: {
+    minHeight: '100vh',
+    backgroundColor: '#f8fafc',
+    padding: '32px 16px',
+    fontFamily: "'Inter', system-ui, sans-serif",
+  },
+  card: {
+    maxWidth: '700px',
+    margin: '0 auto',
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 8px 24px rgba(0,0,0,0.06)',
+    overflow: 'hidden',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    padding: '24px 28px',
+    borderBottom: '1px solid #f1f5f9',
+    background: 'linear-gradient(135deg, #f0f4ff 0%, #fafafa 100%)',
+  },
+  backBtn: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '8px',
+    border: '1.5px solid #e2e8f0',
+    backgroundColor: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    color: '#475569',
+    flexShrink: 0,
+  },
+  headerIcon: {
+    width: '44px',
+    height: '44px',
+    borderRadius: '11px',
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  title: {
+    margin: 0,
+    fontSize: '19px',
+    fontWeight: '700',
+    color: '#0f172a',
+    letterSpacing: '-0.3px',
+  },
+  subtitle: {
+    margin: '3px 0 0',
+    fontSize: '13px',
+    color: '#64748b',
+  },
+  section: {
+    padding: '22px 28px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  sectionLabel: {
+    margin: 0,
+    fontSize: '11px',
+    fontWeight: '600',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#94a3b8',
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#374151',
+  },
+  helpText: {
+    margin: '6px 0 0',
+    fontSize: '12px',
+    color: '#94a3b8',
+    fontStyle: 'italic',
+  },
+  inputWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: '12px',
+    color: '#94a3b8',
+    pointerEvents: 'none',
+  },
+  inputIconRTL: {
+    left: 'auto',
+    right: '12px',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 13px 10px 36px',
+    fontSize: '14px',
+    color: '#0f172a',
+    backgroundColor: '#f8fafc',
+    border: '1.5px solid #e2e8f0',
+    borderRadius: '8px',
+    outline: 'none',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit',
+  },
+  inputRTL: {
+    padding: '10px 36px 10px 13px',
+    textAlign: 'right',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    padding: '18px 28px 24px',
+    borderTop: '1px solid #f1f5f9',
+    marginTop: '8px',
+  },
+  cancelBtn: {
+    padding: '10px 20px',
+    fontSize: '14px',
+    fontWeight: '500',
+    color: '#64748b',
+    backgroundColor: '#f1f5f9',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  },
+  submitBtn: {
+    padding: '10px 22px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+  },
+};

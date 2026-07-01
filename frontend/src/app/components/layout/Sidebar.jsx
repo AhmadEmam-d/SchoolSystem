@@ -63,16 +63,17 @@ export function Sidebar() {
   };
 
   const adminLinks = [
-    { 
-      icon: LayoutDashboard, 
-      label: t('dashboard'), 
-      id: 'dashboard',
-      subItems: [
-        { label: t('overview'), path: '/admin/dashboard' },
-        { label: t('recentActivity'), path: '/admin/dashboard/activity' },
-        { label: t('aiUsageAnalytics'), path: '/admin/dashboard/ai-analytics' },
-      ]
-    },
+    // { 
+    //   icon: LayoutDashboard, 
+    //   label: t('dashboard'), 
+    //   id: 'dashboard',
+    //   subItems: [
+    //     { label: t('overview'), path: '/admin/dashboard' },
+    //     { label: t('recentActivity'), path: '/admin/dashboard/activity' },
+    //     { label: t('aiUsageAnalytics'), path: '/admin/dashboard/ai-analytics' },
+    //   ]
+    // },
+       { icon: LayoutDashboard, label: t('dashboard'), path: '/admin/dashboard'  },
     { 
       icon: Users, 
       label: t('students'), 
