@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Upload, X, FileText, Calendar, BookOpen, Users } from "lucide-react";
+import { Loader2, Upload, X, FileText, Calendar } from "lucide-react";
 
 const API_BASE_URL = "https://localhost:7179/api";
 
 export function AddHomework() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const token = localStorage.getItem("token");
 
   const [classes, setClasses] = useState([]);
@@ -22,85 +24,78 @@ export function AddHomework() {
     instructions: "",
     dueDate: "",
     totalMarks: 0,
-    submissionType: "Online", // ✅ Capital O
+    submissionType: "Online",
     allowLateSubmissions: true,
     notifyParents: true,
     classId: "",
     subjectId: "",
   });
 
-  // Load Classes & Subjects
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [classRes, subjectRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/Classes`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((r) => r.json()),
-          fetch(`${API_BASE_URL}/Subjects`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((r) => r.json()),
-        ]);
+  // ================= LOAD =================
+ useEffect(() => {
+  if (!user?.teacherId) return;
 
-        setClasses(classRes.data || classRes || []);
-        setSubjects(subjectRes.data || subjectRes || []);
-      } catch (err) {
-        console.error(err);
-        toast.error("Error loading data");
-      }
-    };
-    load();
-  }, [token]);
+  const load = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
 
-  // File handling
-  const handleFileChange = (e) => {
-    setFiles([...files, ...Array.from(e.target.files)]);
+      const [allSubjectsRes, classRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/Classes/teacher`, { headers }).then(r => r.json()),
+      ]);
+
+      const allSubjects = allSubjectsRes.data || [];
+
+      // فلتر المواد الخاصة بالمدرس بس
+      const mySubjects = allSubjects.filter(s =>
+        s.teachers?.some(t => t?.oid === user.teacherId)
+      );
+
+      setSubjects(mySubjects);
+      setClasses(classRes.data || classRes || []);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error loading data");
+    }
+  };
+  load();
+}, [user]);
+
+  // ================= FILES =================
+  const handleFileChange = (e) => setFiles([...files, ...Array.from(e.target.files)]);
+  const removeFile = (index) => setFiles(files.filter((_, i) => i !== index));
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 KB";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const removeFile = (index) => {
-    setFiles(files.filter((_, i) => i !== index));
-  };
-
-  // Submit
+  // ================= SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.classId) {
-      toast.error("Please select a class");
-      return;
-    }
-    if (!formData.subjectId) {
-      toast.error("Please select a subject");
-      return;
-    }
-    if (!formData.title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-    if (!formData.dueDate) {
-      toast.error("Due date is required");
-      return;
-    }
+    if (!formData.classId) { toast.error("Please select a class"); return; }
+    if (!formData.subjectId) { toast.error("Please select a subject"); return; }
+    if (!formData.title.trim()) { toast.error("Title is required"); return; }
+    if (!formData.dueDate) { toast.error("Due date is required"); return; }
 
     try {
       setLoading(true);
 
-      // 1. Create homework first (without attachments)
       const homeworkData = {
         title: formData.title.trim(),
         description: formData.description?.trim() || "",
         instructions: formData.instructions?.trim() || "",
         dueDate: new Date(formData.dueDate).toISOString(),
         totalMarks: Number(formData.totalMarks) || 0,
-        submissionType: "Online", // ✅ Important
+        submissionType: "Online",
         allowLateSubmissions: formData.allowLateSubmissions,
         notifyParents: formData.notifyParents,
         classId: formData.classId,
         subjectId: formData.subjectId,
-        attachments: [], // Empty initially
+        attachments: [],
       };
-
-      console.log("Creating homework:", homeworkData);
 
       const createResponse = await fetch(`${API_BASE_URL}/Homeworks`, {
         method: "POST",
@@ -112,44 +107,31 @@ export function AddHomework() {
       });
 
       const createResult = await createResponse.json();
-      console.log("Create response:", createResult);
 
       if (!createResponse.ok) {
-        throw new Error(createResult.title || "Failed to create homework");
+        throw new Error(createResult.errors?.[0] || "Failed to create homework");
       }
 
-      // Extract homework ID from response
       const homeworkId = createResult.data?.id || createResult.data || createResult;
-      console.log("Homework ID:", homeworkId);
 
-      if (!homeworkId) {
-        throw new Error("No homework ID returned");
-      }
+      if (!homeworkId) throw new Error("No homework ID returned");
 
-      // 2. Upload files if any
+      // UPLOAD FILES
       if (files.length > 0) {
         const formDataFile = new FormData();
-        files.forEach(file => {
-          formDataFile.append("files", file);
-        });
+        files.forEach(file => formDataFile.append("files", file));
 
         const uploadResponse = await fetch(
           `${API_BASE_URL}/Files/upload-multiple/homework/${homeworkId}`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
             body: formDataFile,
           }
         );
 
         if (!uploadResponse.ok) {
-          const error = await uploadResponse.json();
-          console.error("Upload error:", error);
           toast.warning("Homework created but files failed to upload");
-        } else {
-          toast.success("Files uploaded successfully");
         }
       }
 
@@ -157,24 +139,17 @@ export function AddHomework() {
       navigate("/teacher/homework");
 
     } catch (err) {
-      console.error("Submit error:", err);
+      console.error(err);
       toast.error(err.message || "Failed to create homework");
     } finally {
       setLoading(false);
     }
   };
 
-  // Format file size
-  const formatFileSize = (bytes) => {
-    if (!bytes) return "0 KB";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   return (
     <div className="space-y-6 p-6 max-w-[1400px] mx-auto">
-      {/* Header */}
+
+      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/teacher/homework")}>
@@ -186,9 +161,7 @@ export function AddHomework() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate("/teacher/homework")}>
-            Cancel
-          </Button>
+          <Button variant="outline" onClick={() => navigate("/teacher/homework")}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-600 hover:bg-indigo-700">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             {loading ? "Creating..." : "Create Homework"}
@@ -197,7 +170,8 @@ export function AddHomework() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
+
+        {/* MAIN */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-none shadow-lg rounded-[2rem]">
             <CardHeader className="bg-slate-50/50 border-b">
@@ -251,7 +225,7 @@ export function AddHomework() {
             </CardContent>
           </Card>
 
-          {/* Attachments */}
+          {/* ATTACHMENTS */}
           <Card className="border-none shadow-lg rounded-[2rem]">
             <CardHeader className="bg-slate-50/50 border-b">
               <div className="flex items-center justify-between">
@@ -299,7 +273,7 @@ export function AddHomework() {
           </Card>
         </div>
 
-        {/* Sidebar */}
+        {/* SIDEBAR */}
         <div className="space-y-6">
           <Card className="border-none shadow-lg rounded-[2rem] bg-gradient-to-br from-slate-900 to-slate-800 text-white">
             <CardHeader>
@@ -309,22 +283,21 @@ export function AddHomework() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+
               <div>
                 <label className="text-sm text-slate-300 mb-2 block">
                   Class <span className="text-red-400">*</span>
                 </label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl bg-white text-gray-900"
-                  value={formData.classId}
-                  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                >
-                  <option value="">Select a class</option>
-                  {classes.map((c) => (
-                    <option key={c.id || c.oid} value={c.id || c.oid}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+               <select
+  className="w-full px-4 py-3 rounded-xl bg-white text-gray-900"
+  value={formData.classId}
+  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
+>
+  <option value="">Select a class</option>
+  {classes.map((c) => (
+    <option key={c.oid || c.id} value={c.oid || c.id}>{c.name}</option>
+  ))}
+</select>
               </div>
 
               <div>
@@ -338,9 +311,7 @@ export function AddHomework() {
                 >
                   <option value="">Select a subject</option>
                   {subjects.map((s) => (
-                    <option key={s.id || s.oid} value={s.id || s.oid}>
-                      {s.name}
-                    </option>
+                    <option key={s.oid || s.id} value={s.oid || s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
@@ -363,9 +334,7 @@ export function AddHomework() {
                   step="0.5"
                   className="w-full px-4 py-3 rounded-xl bg-white text-gray-900"
                   value={formData.totalMarks}
-                  onChange={(e) =>
-                    setFormData({ ...formData, totalMarks: parseFloat(e.target.value) || 0 })
-                  }
+                  onChange={(e) => setFormData({ ...formData, totalMarks: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 
@@ -381,6 +350,7 @@ export function AddHomework() {
                   onChange={(val) => setFormData({ ...formData, notifyParents: val })}
                 />
               </div>
+
             </CardContent>
           </Card>
         </div>

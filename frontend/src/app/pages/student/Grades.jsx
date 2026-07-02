@@ -131,7 +131,7 @@ export function StudentGrades() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('myGradesTitle')}</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('MyGradesTitle')}</h1>
           <p className="text-muted-foreground mt-1">{t('myGradesDesc')}</p>
         </div>
         <Button variant="outline" onClick={handleExport}>

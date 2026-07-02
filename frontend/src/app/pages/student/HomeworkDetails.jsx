@@ -109,12 +109,13 @@ export function StudentHomeworkDetails() {
   };
 
   // ── Submit ───────────────────────────────────────────────────────────────
-  const handleSubmit = async () => {
-    if (!submissionText.trim() && !attachmentUrl) {
-      toast.error('Please enter your answer or upload a file');
-      return;
-    }
-    setSubmitting(true);
+const handleSubmit = async () => {
+  if (!submissionText.trim() && !attachmentUrl) {
+    toast.error('Please enter your answer or upload a file');
+    return;
+  }
+  setSubmitting(true);
+  
     try {
       const result = await api.studentHomework.submit(id, { 
         content: submissionText, 
@@ -185,9 +186,8 @@ export function StudentHomeworkDetails() {
   const instructions = parseInstructions(homework.instructions);
   const materials = homework.materials ?? [];  // ✅ changed from attachments to materials
   const isPending = status === 'pending' || status === 'late';
-  const mySubmission = homework.mySubmission;
-  const canSubmit = isPending && (!mySubmission || mySubmission.canResubmit !== false);
-
+const mySubmission = homework.mySubmission;
+const canSubmit = isPending && !isOverdue && (!mySubmission || mySubmission.canResubmit !== false);handleSubmit 
   return (
     <div className="space-y-6">
       {/* Header */}

@@ -203,6 +203,20 @@ export function AddTimetable() {
           'Failed to create timetable entry';
         throw new Error(backendError);
       }
+
+      // Assign teacher to class
+      console.log('🔵 Calling assignTeacher with:', { classId: form.classOid, teacherId: form.teacherOid });
+      try {
+        const assignRes = await api.classes.assignTeacher({
+          classId:   form.classOid,
+          teacherId: form.teacherOid,
+        });
+        console.log('🟢 assignTeacher response:', assignRes);
+      } catch (assignErr) {
+        console.error('🔴 assign-teacher failed:', assignErr);
+        // مش بنوقف العملية لو الـ timetable اتعمل بنجاح بالفعل
+      }
+
       setSuccess(true);
       setTimeout(() => navigate('/admin/timetable'), 1500);
     } catch (err) {

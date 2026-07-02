@@ -22,8 +22,9 @@ export function AdminTeachers() {
     const fetchTeachers = async () => {
       setLoading(true);
       try {
-        const data = await api.teachers.getAll();
-        setTeachers(data || []);
+    const data = await api.teachers.getAll();
+const all = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : []);
+setTeachers(all.filter(t => !t.isDeleted));
       } catch (error) {
         console.error(error);
         toast.error("فشل تحميل المدرسين");

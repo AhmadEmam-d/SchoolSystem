@@ -40,34 +40,34 @@ export function TeacherHomework() {
   const token = localStorage.getItem("token");
 
   // ================= FETCH =================
-  const fetchData = async () => {
-    setLoading(true);
+ const fetchData = async () => {
+  setLoading(true);
 
-    try {
-      const [hwRes, clsRes] = await Promise.all([
-        fetch(`${API}/Homeworks/teacher`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        fetch(`${API}/Classes`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
+  try {
+    const [hwRes, clsRes] = await Promise.all([
+      fetch(`${API}/Homeworks/teacher`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }),
+      fetch(`${API}/Classes/teacher`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    ]);
 
-      if (!hwRes.ok) throw new Error("Homework API Error");
-      if (!clsRes.ok) throw new Error("Classes API Error");
+    if (!hwRes.ok) throw new Error("Homework API Error");
+    if (!clsRes.ok) throw new Error("Classes API Error");
 
-      const hwData = await hwRes.json();
-      const clsData = await clsRes.json();
+    const hwData = await hwRes.json();
+    const clsData = await clsRes.json();
 
-      setHomework(hwData.data || []);
-      setClasses(clsData.data || []);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load data ❌");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setHomework(hwData.data || []);
+    setClasses(clsData.data || []);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load data ❌");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchData();
@@ -169,14 +169,14 @@ export function TeacherHomework() {
 
             <DropdownMenuSeparator />
 
-            {classes.map((c) => (
-              <DropdownMenuItem
-                key={c.oid}
-                onClick={() => setSelectedClass(c.name)}
-              >
-                {c.name}
-              </DropdownMenuItem>
-            ))}
+          {classes.map((c) => (
+  <DropdownMenuItem
+    key={c.oid}
+    onClick={() => setSelectedClass(c.name)}
+  >
+    {c.name}
+  </DropdownMenuItem>
+))}
           </DropdownMenuContent>
         </DropdownMenu>
 

@@ -274,7 +274,7 @@ export function StudentSubjects() {
                     className="flex-1"
                     onClick={() => navigate(`/student/subjects/${subject.subjectId}/materials`)}
                   >
-                    {t('viewMaterials')}
+                    {t('ViewMaterials')}
                   </Button>
                   <Button
                     size="sm"

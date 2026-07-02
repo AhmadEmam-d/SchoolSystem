@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 
 const API_BASE_URL = "https://localhost:7179/api";
 
 export function AddExam() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const token = localStorage.getItem("token");
 
   const [classes, setClasses] = useState([]);
@@ -28,27 +30,35 @@ export function AddExam() {
   });
 
   // ================= LOAD =================
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const classRes = await fetch(`${API_BASE_URL}/Classes`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then((r) => r.json());
+useEffect(() => {
+  if (!user?.teacherId) return;
 
-        const subjectRes = await fetch(`${API_BASE_URL}/Subjects`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }).then((r) => r.json());
+  const load = async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
 
-        setClasses(classRes.data || classRes || []);
-        setSubjects(subjectRes.data || subjectRes || []);
-      } catch (err) {
-        console.error(err);
-        alert("Error loading data");
-      }
-    };
+      const [allSubjectsRes, classRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/Subjects`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/Classes/teacher`, { headers }).then(r => r.json()),
+      ]);
 
-    load();
-  }, []);
+      const allSubjects = allSubjectsRes.data || [];
+
+      // فلتر المواد الخاصة بالمدرس بس
+      const mySubjects = allSubjects.filter(s =>
+        s.teachers?.some(t => t?.oid === user.teacherId)
+      );
+
+      setSubjects(mySubjects);
+      setClasses(classRes.data || classRes || []);
+    } catch (err) {
+      console.error(err);
+      alert("Error loading data");
+    }
+  };
+
+  load();
+}, [user]);
 
   // ================= FILE =================
   const handleFileChange = (e) => {
@@ -76,7 +86,6 @@ export function AddExam() {
         return timeStr.split(":").length === 2 ? `${timeStr}:00` : timeStr;
       };
 
-      // ================= 1. CREATE EXAM =================
       const createRes = await fetch(`${API_BASE_URL}/Exams`, {
         method: "POST",
         headers: {
@@ -90,39 +99,27 @@ export function AddExam() {
           duration: formatTime(formData.duration),
           maxScore: Number(formData.maxScore),
           passingScore: Number(formData.passingScore),
-          materials: [], // فاضي الأول
+          materials: [],
         }),
       });
 
       const created = await createRes.json();
-      console.log("Created Exam:", created);
-
-      const examId = created.data; // الـ backend بيرجع Guid في created.data
-      console.log("Created Exam ID:", examId);
+      const examId = created.data;
 
       if (!examId) {
         alert("فشل إنشاء الامتحان ❌");
         return;
       }
 
-      // ================= 2. UPLOAD FILES =================
       if (files.length > 0) {
         const fd = new FormData();
-        files.forEach((file) => fd.append("Files", file)); // ⚠️ مهم: "Files" جمع
+        files.forEach((file) => fd.append("Files", file));
 
-        const uploadRes = await fetch(
-          `${API_BASE_URL}/Files/upload-multiple/Exam/${examId}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: fd,
-          }
-        );
-
-        const uploadData = await uploadRes.json();
-        console.log("Uploaded Files:", uploadData);
+        await fetch(`${API_BASE_URL}/Files/upload-multiple/Exam/${examId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
       }
 
       alert("تم إنشاء الامتحان + رفع الملفات ✅");

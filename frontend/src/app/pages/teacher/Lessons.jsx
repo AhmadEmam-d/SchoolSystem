@@ -1,39 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { api } from "../../lib/api";
-
-import {
-  BookOpen,
-  Calendar,
-  Clock,
-  Trash2,
-  Edit,
-  Eye,
-  Plus
-} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { BookOpen, Calendar, Clock, Trash2, Edit, Eye, Plus } from "lucide-react";
 
 const TeacherLessons = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [lessons, setLessons] = useState([]);
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ================= LOAD =================
   useEffect(() => {
+    if (!user?.teacherId) return;
+
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const lessonsRes = await api.lessons.getAll();
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const lessonsRes = await fetch(
+          `https://localhost:7179/api/Lessons?TeacherOid=${user.teacherId}`,
+          { headers }
+        ).then(r => r.json());
+
         setLessons(lessonsRes?.data || []);
 
-        const statsRes = await api.lessons.getStats();
-        setStats(statsRes?.data || statsRes);
-
       } catch (err) {
+        console.error(err);
         setError("فشل تحميل البيانات");
       } finally {
         setLoading(false);
@@ -41,18 +38,39 @@ const TeacherLessons = () => {
     };
 
     loadData();
-  }, []);
+  }, [user]);
 
-  // ================= DELETE =================
   const handleDelete = async (id) => {
     if (!window.confirm("متأكد من حذف الدرس؟")) return;
-
     try {
-      await api.lessons.delete(id);
+      const token = localStorage.getItem("token");
+      await fetch(`https://localhost:7179/api/Lessons/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setLessons(prev => prev.filter(l => l.oid !== id));
     } catch {
       alert("فشل الحذف");
     }
+  };
+
+  const stats = {
+    totalLessons: lessons.length,
+    completedLessons: lessons.filter(l => l.status === "Completed").length,
+    upcomingLessons: lessons.filter(l => l.status === "Upcoming").length,
+    thisMonthLessons: lessons.filter(l => {
+      const d = new Date(l.date);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length,
+    thisWeekLessons: lessons.filter(l => {
+      const d = new Date(l.date);
+      const now = new Date();
+      const weekAgo = new Date();
+      weekAgo.setDate(now.getDate() - 7);
+      return d >= weekAgo && d <= now;
+    }).length,
+    totalMaterials: lessons.reduce((sum, l) => sum + (l.materialsCount || 0), 0),
   };
 
   if (loading) return <div className="p-10 text-center">⏳ جاري التحميل...</div>;
@@ -60,123 +78,58 @@ const TeacherLessons = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-
-      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">📚 Teacher Lessons</h1>
-
         <button
           onClick={() => navigate("/teacher/add-lesson")}
           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
         >
-          <Plus size={16} />
-          Add Lesson
+          <Plus size={16} /> Add Lesson
         </button>
       </div>
 
-      {/* ================= STATS ================= */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard title="Total" value={stats.totalLessons} />
-          <StatCard title="Completed" value={stats.completedLessons} green />
-          <StatCard title="Upcoming" value={stats.upcomingLessons} blue />
-          <StatCard title="Month" value={stats.thisMonthLessons} purple />
-          <StatCard title="Week" value={stats.thisWeekLessons} orange />
-          <StatCard title="Materials" value={stats.totalMaterials} />
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard title="Total" value={stats.totalLessons} />
+        <StatCard title="Completed" value={stats.completedLessons} green />
+        <StatCard title="Upcoming" value={stats.upcomingLessons} blue />
+        <StatCard title="Month" value={stats.thisMonthLessons} purple />
+        <StatCard title="Week" value={stats.thisWeekLessons} orange />
+        <StatCard title="Materials" value={stats.totalMaterials} />
+      </div>
 
-      {/* ================= LIST ================= */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {lessons.map((lesson) => (
-          <div
-            key={lesson.oid}
-            className="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition"
-          >
-            {/* TITLE */}
-            <h2 className="text-lg font-semibold mb-1">
-              {lesson.title}
-            </h2>
-
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-              {lesson.description}
-            </p>
-
-            {/* META */}
+          <div key={lesson.oid} className="bg-white border rounded-xl p-5 shadow-sm hover:shadow-md transition">
+            <h2 className="text-lg font-semibold mb-1">{lesson.title}</h2>
+            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{lesson.description}</p>
             <div className="text-xs text-gray-500 space-y-1 mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar size={14} />
-                {new Date(lesson.date).toLocaleDateString()}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Clock size={14} />
-                {lesson.startTime?.slice(11, 16)}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <BookOpen size={14} />
-                {lesson.subjectName}
-              </div>
+              <div className="flex items-center gap-2"><Calendar size={14} />{new Date(lesson.date).toLocaleDateString()}</div>
+              <div className="flex items-center gap-2"><Clock size={14} />{lesson.startTime?.slice(11, 16)}</div>
+              <div className="flex items-center gap-2"><BookOpen size={14} />{lesson.subjectName}</div>
             </div>
-
-            {/* STATUS */}
-            <span className={`inline-block text-xs px-2 py-1 rounded-full mb-3
-              ${lesson.status === "Completed"
-                ? "bg-green-100 text-green-700"
-                : "bg-blue-100 text-blue-700"}
-            `}>
+            <span className={`inline-block text-xs px-2 py-1 rounded-full mb-3 ${lesson.status === "Completed" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
               {lesson.status}
             </span>
-
-            {/* ACTIONS */}
             <div className="flex justify-between mt-3">
-
-              <button
-                onClick={() => navigate(`/teacher/lessons/${lesson.oid}`)}
-                className="flex items-center gap-1 text-indigo-600 hover:underline text-sm"
-              >
-                <Eye size={16} /> Details
-              </button>
-
-              <button
-                onClick={() => navigate(`/teacher/lessons/edit/${lesson.oid}`)}
-                className="flex items-center gap-1 text-yellow-600 hover:underline text-sm"
-              >
-                <Edit size={16} /> Edit
-              </button>
-
-              <button
-                onClick={() => handleDelete(lesson.oid)}
-                className="flex items-center gap-1 text-red-600 hover:underline text-sm"
-              >
-                <Trash2 size={16} /> Delete
-              </button>
-
+              <button onClick={() => navigate(`/teacher/lessons/${lesson.oid}`)} className="flex items-center gap-1 text-indigo-600 hover:underline text-sm"><Eye size={16} /> Details</button>
+              <button onClick={() => navigate(`/teacher/lessons/edit/${lesson.oid}`)} className="flex items-center gap-1 text-yellow-600 hover:underline text-sm"><Edit size={16} /> Edit</button>
+              <button onClick={() => handleDelete(lesson.oid)} className="flex items-center gap-1 text-red-600 hover:underline text-sm"><Trash2 size={16} /> Delete</button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* EMPTY */}
-      {lessons.length === 0 && (
-        <div className="text-center text-gray-500 mt-10">
-          مفيش دروس لسه 😅
-        </div>
-      )}
+      {lessons.length === 0 && <div className="text-center text-gray-500 mt-10">مفيش دروس لسه 😅</div>}
     </div>
   );
 };
 
-// ================= STAT CARD =================
 const StatCard = ({ title, value, green, blue, purple, orange }) => {
   let color = "text-gray-800";
-
   if (green) color = "text-green-600";
   if (blue) color = "text-blue-600";
   if (purple) color = "text-purple-600";
   if (orange) color = "text-orange-500";
-
   return (
     <div className="bg-white border rounded-xl p-4 text-center shadow-sm">
       <p className="text-xs text-gray-500">{title}</p>

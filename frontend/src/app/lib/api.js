@@ -211,10 +211,14 @@ console.log(token,'token');
       }).then(res => res.json()),
     
     delete: (id) =>
-      fetch(`${API_BASE_URL}/Students/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      }).then(res => res.json())
+  fetch(`${API_BASE_URL}/Students/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ id: id })
+  }).then(res => res.json())
   },
   
   // Parents endpoints
@@ -380,7 +384,17 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
-    }).then(res => res.json())
+    }).then(res => res.json()),
+     assignTeacher: ({ classId, teacherId }) =>
+    fetch(`${API_BASE_URL}/Classes/assign-teacher`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ classId, teacherId })
+    })
+    .then(res => res.json()),
   },
   
   // Subjects endpoints
@@ -611,136 +625,6 @@ console.log('❌ Errors:', json.errors);// 🔍
   }
   },
 
-//   // Attendance endpoints
-//  // Attendance endpoints
-//   // attendance: {
-//   //   getToday: (classOid) =>
-//   //     fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
-//   //       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//   //     }).then(res => res.json()),
-    
-//   //   getWeekly: (classOid, startDate) =>
-//   //     fetch(`${API_BASE_URL}/Attendance/weekly${classOid ? `?classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
-//   //       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//   //     }).then(res => res.json()),
-    
-//   //   getMonthlyReport: (year, month, classOid) =>
-//   //     fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
-//   //       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//   //     }).then(res => res.json()),
-    
-//   //   getAll: (classOid, date) =>
-//   //     fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
-//   //       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//   //     }).then(res => res.json()),
-    
-//   //   create: (data) =>
-//   //     fetch(`${API_BASE_URL}/Attendance`, {
-//   //       method: 'POST',
-//   //       headers: { 
-//   //         'Content-Type': 'application/json',
-//   //         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//   //       },
-//   //       body: JSON.stringify(data)
-//   //     }).then(res => res.json()),
-    
-//   //   update: (oid, data) =>
-//   //     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-//   //       method: 'PUT',
-//   //       headers: { 
-//   //         'Content-Type': 'application/json',
-//   //         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//   //       },
-//   //       body: JSON.stringify(data)
-//   //     }).then(res => res.json()),
-    
-//   //   delete: (oid) =>
-//   //     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-//   //       method: 'DELETE',
-//   //       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//   //     }).then(res => res.json())
-//   // }
-// //   attendance: {
-// //     getToday: (classOid) =>
-// //       fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-
-// //     getWeekly: (classOid, startDate) =>
-// //       fetch(`${API_BASE_URL}/Attendance/weekly${classOid ? `?classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-
-// //     getMonthlyReport: (year, month, classOid) =>
-// //       fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-
-// //     getAll: (classOid, date) =>
-// //       fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-
-// //     create: (data) =>
-// //       fetch(`${API_BASE_URL}/Attendance`, {
-// //         method: 'POST',
-// //         headers: { 
-// //           'Content-Type': 'application/json',
-// //           'Authorization': `Bearer ${localStorage.getItem('token')}`
-// //         },
-// //         body: JSON.stringify(data)
-// //       }).then(res => res.json()),
-
-// //     update: (oid, data) =>
-// //       fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-// //         method: 'PUT',
-// //         headers: { 
-// //           'Content-Type': 'application/json',
-// //           'Authorization': `Bearer ${localStorage.getItem('token')}`
-// //         },
-// //         body: JSON.stringify(data)
-// //       }).then(res => res.json()),
-
-// //     delete: (oid) =>
-// //       fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-// //         method: 'DELETE',
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-
-// //     // ==================== الـ Endpoints الجديدة ====================
-
-// //     /** بدء جلسة حضور جديدة */
-// //     startSession: (dto) =>
-// //       fetch(`${API_BASE_URL}/Attendance/start-session`, {
-// //         method: 'POST',
-// //         headers: { 
-// //           'Content-Type': 'application/json',
-// //           'Authorization': `Bearer ${localStorage.getItem('token')}`
-// //         },
-// //         body: JSON.stringify(dto)
-// //       }).then(res => res.json()),
-
-// //     /** تسليم (submit) جلسة الحضور */
-// //     submitSession: (dto) =>
-// //       fetch(`${API_BASE_URL}/Attendance/submit-session`, {
-// //         method: 'POST',
-// //         headers: { 
-// //           'Content-Type': 'application/json',
-// //           'Authorization': `Bearer ${localStorage.getItem('token')}`
-// //         },
-// //         body: JSON.stringify(dto)
-// //       }).then(res => res.json()),
-
-// //     // إضافة إحصائيات الفصل (موجودة بالفعل في الـ Controller)
-// //     getClassStats: (classOid) =>
-// //       fetch(`${API_BASE_URL}/Attendance/class-stats/${classOid}`, {
-// //         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-// //       }).then(res => res.json()),
-// // }
-// // Attendance endpoints - بنفس ستايل باقي الـ APIs
-// ============================================================
-// استبدل الـ attendance object الموجود في api.js بالكود ده
-// ============================================================
 
 attendance: {
 
@@ -1142,145 +1026,7 @@ getSubmissions: async (id) => {
     }
   }
 },
-  // Exams endpoints
-// Exams endpoints
-// exams: {
-//   getAll: () =>
-//     fetch(`${API_BASE_URL}/Exams`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//     .then(res => res.json())
-//     .then(data => data.success ? data.data : []),
 
-//   getSummary: () =>
-//     fetch(`${API_BASE_URL}/Exams/summary`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//     .then(res => res.json())
-//     .then(data => data.success ? data.data : null),
-
-//   getById: (oid) =>
-//     fetch(`${API_BASE_URL}/Exams/${oid}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//     .then(res => res.json())
-//     .then(data => data.success ? data.data : null),
-
-// create: async (data) => {
-//     const response = await fetch(`${API_BASE_URL}/Exams`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     });
-
-//     // إذا كان السيرفر أرجع خطأ (مثل 500 أو 400)
-//     if (!response.ok) {
-//       const errorText = await response.text(); // قراءة الخطأ كنص وليس JSON
-//       console.error("Server Error Details:", errorText);
-      
-//       // إرجاع كائن متوافق مع كود الـ UI لمنع انهيار التطبيق
-//       return { 
-//         success: false, 
-//         messages: { AR: "حدث خطأ في الخادم، يرجى مراجعة البيانات المرسلة", EN: "Server error, please check sent data" } 
-//       };
-//     }
-
-//     return response.json(); // إذا كان الرد ناجحاً، حوله لـ JSON
-//   },
-
-//   delete: (oid) =>
-//     fetch(`${API_BASE_URL}/Exams/${oid}`, {
-//       method: 'DELETE',
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     }).then(res => res.json()),
-
-//   getResults: (examOid) =>
-//     fetch(`${API_BASE_URL}/Exams/${examOid}/results`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : []),
-//       getTeacherExams: () =>
-//     fetch(`${API_BASE_URL}/Exams/teacher`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//     .then(res => res.json())
-//     .then(data => data.success ? data.data : []),
-//     getGrades: async (examId) => {
-//   try {
-//     // جربنا results بدل grades لأنها غالباً المعرفة في الـ Controller عندك
-//     const response = await fetch(`${API_BASE_URL}/Exams/${examId}/results`, { 
-//       headers: { 
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`,
-//         'Content-Type': 'application/json'
-//       }
-//     });
-
-//     if (!response.ok) throw new Error('Failed to fetch grades');
-
-//     const result = await response.json();
-    
-//     // هنا بنعمل Mapping للبيانات عشان تتماشى مع صفحة الـ UI اللي عملناها
-//     // لو السيرفر بيرجع الـ results مباشرة، بنحطها في format الصفحة محتاجه
-//     if (result.success) {
-//         return {
-//             exam: result.data.exam || {}, // تأكد أن السيرفر يرسل بيانات الامتحان
-//             grades: result.data.results || result.data // تأكد من مسمى قائمة الدرجات
-//         };
-//     }
-    
-//     return result;
-//   } catch (error) {
-//     console.error("Grades fetch error:", error);
-//     throw error;
-//   }
-// },
-
-//   /** تحديث بيانات اختبار موجود */
-//   update: (oid, data) =>
-//     fetch(`${API_BASE_URL}/Exams/${oid}`, {
-//       method: 'PUT',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     }).then(res => res.json()),
-
-//   // ==================== إدارة نتائج الطلاب (Exam Results) ====================
-
-//   /** إضافة نتيجة طالب جديدة للاختبار */
-//   addResult: (examOid, resultData) =>
-//     fetch(`${API_BASE_URL}/Exams/${examOid}/results`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(resultData)
-//     }).then(res => res.json()),
-
-//   /** تحديث نتيجة طالب موجودة */
-//   updateResult: (resultOid, resultData) =>
-//     fetch(`${API_BASE_URL}/Exams/results/${resultOid}`, {
-//       method: 'PUT',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(resultData)
-//     }).then(res => res.json()),
-
-//   /** حذف نتيجة طالب */
-//   deleteResult: (resultOid) =>
-//     fetch(`${API_BASE_URL}/Exams/results/${resultOid}`, {
-//       method: 'DELETE',
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     }).then(res => res.json()),
-// }
 exams: {
   getAll: () =>
     fetch(`${API_BASE_URL}/Exams`, {
@@ -1427,207 +1173,7 @@ exams: {
     }).then(res => res.json()),
 }
 ,
-helpSupport: {
 
-  // ✅ Create Ticket
- createTicket: async (data) => {
-    const res = await fetch(`${API_BASE_URL}/HelpSupport/tickets`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getHeaders()
-      },
-      body: JSON.stringify(data)
-    });
-
-    const text = await res.text();
-    const result = text ? JSON.parse(text) : null;
-
-    return {
-      ok: res.ok,
-      data: result
-    };
-  },
-
-  // ✅ Get My Tickets
-  getMyTickets: () =>
-    fetch(`${API_BASE_URL}/HelpSupport/my-tickets`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
-
-  // ✅ FAQs
-  getFAQs: (category, search) =>
-    fetch(`${API_BASE_URL}/HelpSupport/faqs?category=${category || ''}&search=${search || ''}`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
-
-  // ✅ Knowledge Base
-  getKnowledgeBase: (category) =>
-    fetch(`${API_BASE_URL}/HelpSupport/knowledge-base?category=${category || ''}`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
-
-  // ✅ Article Details
-  getArticleById: (id) =>
-    fetch(`${API_BASE_URL}/HelpSupport/knowledge-base/${id}`, {
-      headers: getHeaders()
-    }).then(res => res.json()),
-}
-
-// attendance: {
-
-//   // ✅ Get today attendance
-//   getToday: (classOid) =>
-//     fetch(`${API_BASE_URL}/Attendance/today${classOid ? `?classOid=${classOid}` : ''}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : []),
-
-//   // ✅ Weekly
-//   getWeekly: (classOid, startDate) =>
-//     fetch(`${API_BASE_URL}/Attendance/weekly?${classOid ? `classOid=${classOid}` : ''}${startDate ? `&startDate=${startDate}` : ''}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : []),
-
-//   // ✅ Monthly report
-//   getMonthlyReport: (year, month, classOid) =>
-//     fetch(`${API_BASE_URL}/Attendance/monthly-report?year=${year}&month=${month}${classOid ? `&classOid=${classOid}` : ''}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : null),
-
-//   // ✅ Get all (filters)
-//   getAll: (classOid, date) =>
-//     fetch(`${API_BASE_URL}/Attendance${classOid ? `?classOid=${classOid}` : ''}${date ? `&date=${date}` : ''}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : []),
-
-//   // ✅ Get by ID
-//   getById: (oid) =>
-//     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : null),
-
-//   // ✅ Create
-//   create: (data) =>
-//     fetch(`${API_BASE_URL}/Attendance`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     }).then(res => res.json()),
-
-//   // ✅ Update
-//   update: (oid, data) =>
-//     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-//       method: 'PUT',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     }).then(res => res.json()),
-
-//   // ✅ Delete
-//   delete: (oid) =>
-//     fetch(`${API_BASE_URL}/Attendance/${oid}`, {
-//       method: 'DELETE',
-//       headers: {
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       }
-//     }).then(res => res.json()),
-
-//   // ✅ Class Stats
-//   getClassStats: (classOid) =>
-//     fetch(`${API_BASE_URL}/Attendance/class-stats/${classOid}`, {
-//       headers: {
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       }
-//     })
-//       .then(res => res.json())
-//       .then(data => data.success ? data.data : null),
-
-//   // 🔥🔥🔥 Start Session
-//   startSession: (data) =>
-//     fetch(`${API_BASE_URL}/Attendance/start-session`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     }).then(res => res.json()),
-
-//   // 🔥🔥🔥 Submit Session
-//   submitSession: (data) =>
-//     fetch(`${API_BASE_URL}/Attendance/submit-session`, {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${localStorage.getItem('token')}`
-//       },
-//       body: JSON.stringify(data)
-//     }).then(res => res.json())
-// }
-,
-// messages: {
-//   getSummary: () =>
-//     fetch(`${API_BASE_URL}/Messages/summary`, {
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   getInbox: (isRead) =>
-//     fetch(`${API_BASE_URL}/Messages/inbox${isRead !== undefined ? `?isRead=${isRead}` : ''}`, {
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   getSent: () =>
-//     fetch(`${API_BASE_URL}/Messages/sent`, {
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   getConversations: () =>
-//     fetch(`${API_BASE_URL}/Messages/conversations`, {
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   getById: (id) =>
-//     fetch(`${API_BASE_URL}/Messages/${id}`, {
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   send: (data) =>
-//     fetch(`${API_BASE_URL}/Messages`, {
-//       method: 'POST',
-//       headers: {
-//         ...getHeaders(),
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify(data)
-//     }).then(r => r.json()),
-
-//   markAsRead: (id) =>
-//     fetch(`${API_BASE_URL}/Messages/${id}/read`, {
-//       method: 'PUT',
-//       headers: getHeaders()
-//     }).then(r => r.json()),
-
-//   delete: (id) =>
-//     fetch(`${API_BASE_URL}/Messages/${id}`, {
-//       method: 'DELETE',
-//       headers: getHeaders()
-//     }).then(r => r.json())
-// }
 messages: {
   // 1. Get summary (unread message count)
   getSummary: async () => {

@@ -47,8 +47,12 @@ export function HomeworkGradeSubmission() {
     try {
       // جلب تفاصيل الواجب
       const hwRes = await api.homeworks.getById(homeworkId);
-      if (hwRes?.success || hwRes?.data) {
-        setHomework(hwRes.data || hwRes);
+      const hwData = hwRes?.data || hwRes;
+      setHomework(hwData);
+
+      // تحذير في الـ console لو الدرجة الكلية صفر أو مش موجودة
+      if (!hwData?.totalMarks || hwData.totalMarks <= 0) {
+        console.warn('⚠️ هذا الواجب ليس له Total Marks محددة بشكل صحيح:', hwData?.totalMarks);
       }
 
       // جلب كل التقديمات
@@ -85,11 +89,28 @@ export function HomeworkGradeSubmission() {
     }));
   };
 
+  // ✅ دالة موحّدة لحساب الدرجة القصوى الحقيقية (مش fallback وهمي زي 100)
+  const getMaxMarks = (submission) => {
+    if (homework?.totalMarks && homework.totalMarks > 0) {
+      return homework.totalMarks;
+    }
+    if (submission?.maxGrade && submission.maxGrade > 0) {
+      return submission.maxGrade;
+    }
+    return null; // مفيش درجة كلية محددة فعليًا
+  };
+
   const handleSubmitGrade = async (submission) => {
     const sid = submission.id || submission.submissionId;
     const gradeVal = grades[sid]?.grade;
     const feedbackVal = grades[sid]?.feedback || '';
-    const maxMarks = homework?.totalMarks || submission?.maxGrade || 100;
+    const maxMarks = getMaxMarks(submission);
+
+    // ✅ منع التصحيح لو مفيش Total Marks أصلاً (بدل ما السيرفر يرفض الطلب بـ 400)
+    if (maxMarks === null) {
+      toast.error('لا يمكن رصد الدرجة: لم يتم تحديد الدرجة الكلية لهذا الواجب. برجاء تعديل الواجب أولاً.');
+      return;
+    }
 
     if (!gradeVal && gradeVal !== 0) {
       toast.error('Please enter a grade');
@@ -123,7 +144,14 @@ export function HomeworkGradeSubmission() {
         );
         setExpandedId(null);
       } else {
-        toast.error(result.data?.message || result.data?.messages?.EN || 'Failed to submit grade');
+        // ✅ عرض رسالة الخطأ الحقيقية الراجعة من الباك إند (errors array)
+        const serverMsg =
+          result.data?.errors?.[0] ||
+          result.data?.message ||
+          result.data?.messages?.EN ||
+          'Failed to submit grade';
+        toast.error(serverMsg);
+        console.error('Grade submission error details:', result.data);
       }
     } catch (err) {
       console.error('Error grading:', err);
@@ -184,6 +212,18 @@ export function HomeworkGradeSubmission() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </Button>
 
+      {/* ✅ تحذير لو الواجب مفيهوش Total Marks صحيحة */}
+      {(!homework?.totalMarks || homework.totalMarks <= 0) && (
+        <Card className="border-red-300 bg-red-50 dark:bg-red-950/30">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-300">
+              هذا الواجب ليس له "درجة كلية" محددة بشكل صحيح (Total Marks = 0). لن تتمكن من رصد أي درجة حتى يتم تعديل الواجب وتحديد الدرجة الكلية الصحيحة.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Homework Header */}
       <Card>
         <CardContent className="p-6">
@@ -228,7 +268,7 @@ export function HomeworkGradeSubmission() {
           {submissions.map((submission) => {
             const sid = submission.id || submission.submissionId;
             const isExpanded = expandedId === sid;
-            const maxMarks = homework?.totalMarks || submission?.maxGrade || 100;
+            const maxMarks = getMaxMarks(submission);
             const currentGrade = grades[sid] || { grade: '', feedback: '' };
             const isGraded = submission.status === 'graded' || (submission.grade !== null && submission.grade !== undefined);
 
@@ -301,18 +341,24 @@ export function HomeworkGradeSubmission() {
                       <div className="space-y-1">
                         <Label className="text-sm font-medium">
                           Grade <span className="text-red-500">*</span>
-                          <span className="text-gray-400 font-normal"> / {maxMarks}</span>
+                          <span className="text-gray-400 font-normal"> / {maxMarks ?? '—'}</span>
                         </Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          max={maxMarks}
-                          step="0.5"
-                          value={currentGrade.grade}
-                          onChange={e => handleGradeChange(sid, 'grade', e.target.value)}
-                          placeholder={`0 – ${maxMarks}`}
-                          className="text-center font-bold text-lg w-full"
-                        />
+                        {maxMarks === null ? (
+                          <p className="text-xs text-red-500 pt-1">
+                            لم يتم تحديد الدرجة الكلية لهذا الواجب. عدّل الواجب أولاً.
+                          </p>
+                        ) : (
+                          <Input
+                            type="number"
+                            min="0"
+                            max={maxMarks}
+                            step="0.5"
+                            value={currentGrade.grade}
+                            onChange={e => handleGradeChange(sid, 'grade', e.target.value)}
+                            placeholder={`0 – ${maxMarks}`}
+                            className="text-center font-bold text-lg w-full"
+                          />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <Label className="text-sm font-medium">Feedback <span className="text-gray-400 font-normal">(optional)</span></Label>
@@ -334,7 +380,7 @@ export function HomeworkGradeSubmission() {
                       <Button
                         size="sm"
                         onClick={() => handleSubmitGrade(submission)}
-                        disabled={submitting[sid] || !currentGrade.grade}
+                        disabled={submitting[sid] || !currentGrade.grade || maxMarks === null}
                         className="bg-indigo-600 hover:bg-indigo-700 gap-1"
                       >
                         {submitting[sid]
