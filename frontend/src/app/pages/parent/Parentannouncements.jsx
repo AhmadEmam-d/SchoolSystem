@@ -21,9 +21,9 @@ export function ParentAnnouncements() {
       const announcementsRes = await api.announcements.getAll();
 
       // عرض إعلانات ولي الأمر فقط + الإعلانات العامة
-      const parentAnnouncements = (announcementsRes.data || []).filter(a =>
-        ['parent', 'all'].includes(a.target?.toLowerCase())
-      );
+      const parentAnnouncements = (announcementsRes.data || []).filter(
+  a => a.target?.toLowerCase() === 'parent'
+);
 
       setAnnouncements(parentAnnouncements);
 

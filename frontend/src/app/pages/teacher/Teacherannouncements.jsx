@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Megaphone, Calendar, User } from 'lucide-react';
+import { Megaphone, Calendar, User , Trash2} from 'lucide-react';
+
 import { api } from '../../lib/api';
 
 export function TeacherAnnouncements() {
@@ -50,6 +51,36 @@ export function TeacherAnnouncements() {
       setLoading(false);
     }
   };
+  const handleDelete = async (oid) => {
+  if (!window.confirm(t('confirmDelete', 'Are you sure you want to delete this announcement?'))) {
+    return;
+  }
+
+  try {
+    const res = await api.announcements.delete(oid);
+
+    if (res.success) {
+      const updated = announcements.filter(a => a.oid !== oid);
+
+      setAnnouncements(updated);
+
+      setSummary({
+        totalAnnouncements: updated.length,
+        publishedCount: updated.filter(
+          a => a.status?.toLowerCase() === 'published'
+        ).length,
+        draftCount: updated.filter(
+          a => a.status?.toLowerCase() === 'draft'
+        ).length,
+        urgentCount: updated.filter(
+          a => a.priority?.toLowerCase() === 'urgent'
+        ).length,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   if (loading) return <p className="p-6">Loading...</p>;
 
@@ -129,7 +160,7 @@ export function TeacherAnnouncements() {
               key={announcement.oid}
               className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800"
             >
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
+     <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="space-y-1">
 
                   <CardTitle className="text-xl dark:text-white">
@@ -166,6 +197,15 @@ export function TeacherAnnouncements() {
 
                   </div>
                 </div>
+                <div className="flex items-center">
+  <Button
+    variant="ghost"
+    size="icon"
+    onClick={() => handleDelete(announcement.oid)}
+  >
+    <Trash2 className="h-4 w-4 text-red-500" />
+  </Button>
+</div>
               </CardHeader>
 
               <CardContent>
