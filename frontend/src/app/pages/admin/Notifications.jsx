@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Bell, Check, Trash2, Clock, AlertCircle, Info, CheckCircle
+  Bell, Check, Trash2,Plus, Clock, AlertCircle, Info, CheckCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -14,6 +15,7 @@ export function AdminNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // ================= FETCH =================
   useEffect(() => {
@@ -104,22 +106,27 @@ export function AdminNotifications() {
   return (
     <div className="space-y-6 p-6">
 
+     
       {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Notifications</h1>
-          <p className="text-gray-500 mt-1">
-            Manage system alerts and updates
-          </p>
-        </div>
+<div className="flex items-center justify-between">
+  <div>
+    <h1 className="text-3xl font-bold">Notifications</h1>
+    <p className="text-gray-500 mt-1">
+      Manage system alerts and updates
+    </p>
+  </div>
 
-        {unreadCount > 0 && (
-          <Button variant="outline" onClick={markAllAsRead}>
-            <Check className="h-4 w-4 mr-2" />
-            Mark All as Read
-          </Button>
-        )}
-      </div>
+  <div className="flex gap-2">
+    <Button onClick={() => navigate('/admin/notifications/add')}>
+      <Plus className="h-4 w-4 mr-2" />
+      Add Notification
+    </Button>
+
+  
+      
+  </div>
+</div>
+    
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -326,7 +326,36 @@ getPaged: async (filters = [], sort = {}, pagination = { getAll: true }) => {
   const data = await res.json();
   return data.success ? data.data : { items: [], totalCount: 0 };
 },
-  
+  getChildrenDashboard: async () => {
+  const res = await fetch(`${API_BASE_URL}/Parents/Children-Dashboard`, {
+    headers: getHeaders()
+  });
+
+  const data = await res.json();
+
+  if (data.success && data.data) {
+    return data.data;
+  }
+
+  return { children: [] };
+},
+
+getChildSchedule: async (studentOid) => {
+  const res = await fetch(
+    `${API_BASE_URL}/Parents/${studentOid}/schedule`,
+    {
+      headers: getHeaders()
+    }
+  );
+
+  const data = await res.json();
+
+  if (data.success && data.data) {
+    return data.data;
+  }
+
+  return null;
+},
   },
   
   // Classes endpoints
@@ -1334,12 +1363,76 @@ users: {
     }
   }
 ,
+// announcements: {
+//   getSummary: () =>
+//     fetch(`${API_BASE_URL}/Announcements/summary`, {
+//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+//     }).then(res => res.json()),
+
+//   create: (data) =>
+//     fetch(`${API_BASE_URL}/Announcements`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${localStorage.getItem('token')}`
+//       },
+//       body: JSON.stringify(data)
+//     }).then(res => res.json()),
+
+//   getAll: () =>
+//     fetch(`${API_BASE_URL}/Announcements`, {
+//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+//     }).then(res => res.json()),
+
+
+//   delete: (oid) =>
+//     fetch(`${API_BASE_URL}/Announcements/${oid}`, {
+//       method: 'DELETE',
+//       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+//     }).then(res => res.json())
+
+// }
 announcements: {
+  // GET: api/Announcements/summary
   getSummary: () =>
     fetch(`${API_BASE_URL}/Announcements/summary`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(res => res.json()),
 
+  // GET: api/Announcements  (supports optional filters)
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    ).toString();
+
+    return fetch(`${API_BASE_URL}/Announcements${query ? `?${query}` : ''}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => res.json());
+  },
+
+  // GET: api/Announcements/target/{target}
+  getByTarget: (target, take) => {
+    const query = take ? `?take=${take}` : '';
+    return fetch(`${API_BASE_URL}/Announcements/target/${target}${query}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => res.json());
+  },
+
+  // GET: api/Announcements/priority/{priority}
+  getByPriority: (priority, take) => {
+    const query = take ? `?take=${take}` : '';
+    return fetch(`${API_BASE_URL}/Announcements/priority/${priority}${query}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => res.json());
+  },
+
+  // GET: api/Announcements/{oid}
+  getById: (oid) =>
+    fetch(`${API_BASE_URL}/Announcements/${oid}`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    }).then(res => res.json()),
+
+  // POST: api/Announcements  (Admin, Teacher)
   create: (data) =>
     fetch(`${API_BASE_URL}/Announcements`, {
       method: 'POST',
@@ -1350,18 +1443,23 @@ announcements: {
       body: JSON.stringify(data)
     }).then(res => res.json()),
 
-  getAll: () =>
-    fetch(`${API_BASE_URL}/Announcements`, {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  // PUT: api/Announcements/{oid}  (Admin only)
+  update: (oid, data) =>
+    fetch(`${API_BASE_URL}/Announcements/${oid}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(data)
     }).then(res => res.json()),
 
-
+  // DELETE: api/Announcements/{oid}  (Admin only)
   delete: (oid) =>
     fetch(`${API_BASE_URL}/Announcements/${oid}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     }).then(res => res.json())
-
 }
 ,
 reports: {

@@ -44,6 +44,9 @@ import { MonthlyAttendance } from "./pages/admin/MonthlyAttendance.jsx";
 import { SentMessages } from "./pages/admin/SentMessages.jsx";
 import { TimetableByTeacher } from "./pages/admin/TimetableByTeacher.jsx";
 import {AddTimetable} from "./pages/admin/Addtimetable.jsx";
+import {AddNotification} from "./pages/admin/Addnotification.jsx";
+import {AddNotificationTeacher} from "./pages/teacher/AddNotification.jsx";
+
 import { TeacherDashboard, StudentDashboard, ParentDashboard } from "./pages/role-dashboards.jsx";
 import { TeacherClasses } from "./pages/teacher/Classes.jsx";
 import { TeacherHomework } from "./pages/teacher/Homework.jsx";
@@ -123,7 +126,10 @@ import {StudentExams} from "./pages/student/Exam.jsx"
 import {StudentExamDetails} from "./pages/student/StudentExamsDetails.jsx"
 import { StudentHomeworkSubmission } from "./pages/student/StudentHomeworkSubmission.jsx";
 import { HomeworkGradeSubmission } from "./pages/teacher/HomeworkGradeSubmission.jsx";
-
+import {TeacherAnnouncements} from "./pages/teacher/Teacherannouncements.jsx";
+import {StudentAnnouncements} from "./pages/student/announcements.jsx";
+import {ParentAnnouncements} from "./pages/parent/Parentannouncements.jsx";
+import {TeacherAddAnnouncement} from "./pages/teacher/TeacherAddAnnouncement.jsx";
 export const router = createBrowserRouter([
   {
     element: <Providers />,
@@ -192,9 +198,8 @@ export const router = createBrowserRouter([
       { path: "admin/students/add", Component: AddStudent },
       {path : "admin/students/:id" , Component : StudentDetails},
       {path : "admin/students/edit/:id" , Component : EditStudent},
-
-
-      
+      { path  : "admin/notifications/add", Component: AddNotification }, 
+      { path  : "teacher/notifications/add", Component: AddNotificationTeacher }, 
       { path: "admin/teachers", Component: AdminTeachers },
       { path: "admin/teachers/add", Component: AddTeacher },
       { path: "admin/teachers/:id", Component: TeacherDetails },
@@ -249,6 +254,8 @@ export const router = createBrowserRouter([
       // Teacher Routes
       { path: "teacher/dashboard", Component: TeacherDashboard },
       { path: "teacher/classes", Component: TeacherClasses },
+         { path: "teacher/Teacherannouncement", Component: TeacherAnnouncements },
+
       { path: "teacher/class-details/:classOid", Component: TeacherClassDetails  },
       { path: "teacher/attendance", Component: TeacherAttendance },
       { path: "teacher/homework", Component: TeacherHomework },
@@ -286,6 +293,7 @@ export const router = createBrowserRouter([
       { path: "teacher/attendance/manual", Component: ManualAttendance },
       { path: "teacher/attendance/qrcode", Component: QRAttendance },
       { path: "teacher/attendance/code", Component: CodeAttendance },
+       { path: "teacher/TeacherAddAnnouncement", Component: TeacherAddAnnouncement },
 
       // Student Routes
       { path: "student/dashboard", Component: StudentDashboard },
@@ -307,6 +315,7 @@ export const router = createBrowserRouter([
        { path: "student/exams", Component: StudentExams  },
        { path: "student/exams/:examId", Component: StudentExamDetails  },
        { path: "student/homework/:homeworkId/submission", Component: StudentHomeworkSubmission  },
+        { path: "teacher/announcement", Component: StudentAnnouncements  },
 
        
 
@@ -327,6 +336,7 @@ export const router = createBrowserRouter([
       { path: "parent/schedule", Component: ParentSchedule },
       { path: "parent/receipts", Component: ParentReceipts },
       { path: "parent/messages/new", Component: ParentSendMessage },
+      { path: "parent/ParentAnnouncements", Component: ParentAnnouncements },
     ],
   },
   {

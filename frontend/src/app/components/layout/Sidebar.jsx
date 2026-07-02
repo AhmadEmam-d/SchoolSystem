@@ -213,6 +213,8 @@ export function Sidebar() {
     { icon: MessageSquare, label: t('messages'), path: '/teacher/messages' },
     { icon: Bot, label: t('smartTutor'), path: '/teacher/ai' },
       { icon: Bell, label: t('Notifications'), path: '/teacher/Notifications' },
+      , { 
+      icon: Megaphone, label: t('Announcement'), path: '/teacher/Teacherannouncement' },
     { icon: HelpCircle, label: t('support'), path: '/teacher/support' },
     { icon: UserCircle, label: t('profile'), path: '/teacher/profile' },
     { icon: Settings, label: t('settings'), path: '/teacher/settings' },
@@ -230,6 +232,12 @@ export function Sidebar() {
     
     { icon: MessageSquare, label: t('messages'), path: '/student/messages' },
     { icon: Bell, label: t('notifications'), path: '/student/notifications' },
+    { 
+      icon: Megaphone, 
+      label: t('announcements'), 
+    
+        
+         label: t('Announcement'), path: '/teacher/announcement' },
     { icon: Bot, label: t('smartTutor'), path: '/student/ai' },
     { icon: HelpCircle, label: t('support'), path: '/student/support' },
     { icon: UserCircle, label: t('profile'), path: '/student/profile' },
@@ -247,6 +255,12 @@ export function Sidebar() {
     { icon: CreditCard, label: t('payments'), path: '/parent/payments' },
    
     { icon: Bell, label: t('notifications'), path: '/parent/notifications' },
+     { 
+      icon: Megaphone, 
+      label: t('announcements'), 
+    
+        
+         label: t('Announcement'), path: '/parent/ParentAnnouncements' },
     { icon: HelpCircle, label: t('support'), path: '/parent/support' },
     { icon: UserCircle, label: t('profile'), path: '/parent/profile' },
     { icon: Settings, label: t('settings'), path: '/parent/settings' },

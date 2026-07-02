@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Megaphone, Calendar, User, Trash2, Edit } from 'lucide-react';
+import { Megaphone, Calendar, User } from 'lucide-react';
 import { api } from '../../lib/api';
 
-export function AdminAnnouncements() {
+export function TeacherAnnouncements() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
@@ -19,44 +19,35 @@ export function AdminAnnouncements() {
     fetchData();
   }, []);
 
-  const calculateSummary = (list) => ({
-    totalAnnouncements: list.length,
-    publishedCount: list.filter(
-      a => a.status?.toLowerCase() === 'published'
-    ).length,
-    draftCount: list.filter(
-      a => a.status?.toLowerCase() === 'draft'
-    ).length,
-    urgentCount: list.filter(
-      a => a.priority?.toLowerCase() === 'urgent'
-    ).length,
-  });
-
   const fetchData = async () => {
     try {
       const announcementsRes = await api.announcements.getAll();
 
-      const allAnnouncements = announcementsRes.data || [];
+      // عرض إعلانات المعلمين فقط + الإعلانات العامة
+      const teacherAnnouncements = (announcementsRes.data || []).filter(a =>
+        ['teacher', 'all'].includes(a.target?.toLowerCase())
+      );
 
-      setAnnouncements(allAnnouncements);
-      setSummary(calculateSummary(allAnnouncements));
+      setAnnouncements(teacherAnnouncements);
+
+      // حساب الـ Summary للإعلانات المفلترة فقط
+      setSummary({
+        totalAnnouncements: teacherAnnouncements.length,
+        publishedCount: teacherAnnouncements.filter(
+          a => a.status?.toLowerCase() === 'published'
+        ).length,
+        draftCount: teacherAnnouncements.filter(
+          a => a.status?.toLowerCase() === 'draft'
+        ).length,
+        urgentCount: teacherAnnouncements.filter(
+          a => a.priority?.toLowerCase() === 'urgent'
+        ).length,
+      });
+
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (oid) => {
-    try {
-      await api.announcements.delete(oid);
-
-      const updated = announcements.filter(a => a.oid !== oid);
-
-      setAnnouncements(updated);
-      setSummary(calculateSummary(updated));
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -76,7 +67,7 @@ export function AdminAnnouncements() {
           </p>
         </div>
 
-        <Button onClick={() => navigate('/admin/announcements/add')}>
+        <Button onClick={() => navigate('/teacher/TeacherAddAnnouncement')}>
           <Megaphone className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
           {t('newAnnouncement')}
         </Button>
@@ -175,25 +166,13 @@ export function AdminAnnouncements() {
 
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4 text-gray-500" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(announcement.oid)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
               </CardHeader>
 
               <CardContent>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {isRTL ? announcement.contentAr : announcement.contentEn}
+                  {isRTL
+                    ? announcement.contentAr
+                    : announcement.contentEn}
                 </p>
               </CardContent>
             </Card>
