@@ -18,6 +18,7 @@ export function TeacherLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
+  const baseurl =`http://edusmarrt.runasp.net/api`;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -31,7 +32,7 @@ export function TeacherLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://localhost:7179/api/Auth/login', {
+      const response = await fetch(`${baseurl}/Auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -20,20 +20,20 @@ export function AttendanceMethodSelection() {
   const className = searchParams.get('className') || 'Class';
   const date      = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd');
 
-  const [selectedMethod, setSelectedMethod]   = useState(null);
+  const [selectedMethod, setSelectedMethod]     = useState(null);
   const [generatedNumbers, setGeneratedNumbers] = useState([]);
-  const [correctNumber, setCorrectNumber]     = useState(null);
-  const [loading, setLoading]                 = useState(false);
+  const [correctNumber, setCorrectNumber]       = useState(null);
+  const [loading, setLoading]                   = useState(false);
 
   // ─── Lesson ───────────────────────────────────────────────────────────────
-  const [lessonOid, setLessonOid]     = useState(null);
-  const [lessonTitle, setLessonTitle] = useState('');
+  const [lessonOid, setLessonOid]         = useState(null);
+  const [lessonTitle, setLessonTitle]     = useState('');
   const [lessonLoading, setLessonLoading] = useState(true);
   const [lessonError, setLessonError]     = useState(null);
 
   // ─── Existing Session ─────────────────────────────────────────────────────
-  const [existingSession, setExistingSession]   = useState(null);
-  const [checkingSession, setCheckingSession]   = useState(true);
+  const [existingSession, setExistingSession] = useState(null);
+  const [checkingSession, setCheckingSession] = useState(true);
 
   // 1️⃣ تحقق من session نشطة
   useEffect(() => {
@@ -103,18 +103,16 @@ export function AttendanceMethodSelection() {
   }, [selectedMethod]);
 
   const attendanceMethods = [
-    { id: 'manual', title: 'Take Attendance Manually', description: 'Mark each student manually', icon: ClipboardCheck, color: 'bg-blue-500' },
-    { id: 'qr',     title: 'Generate QR Code',         description: 'Students scan QR code',      icon: QrCode,         color: 'bg-green-500' },
-    { id: 'number', title: 'Number Selection',          description: 'Choose one number for attendance', icon: ListOrdered, color: 'bg-amber-500' },
+    { id: 'manual', title: 'Take Attendance Manually', description: 'Mark each student manually',       icon: ClipboardCheck, color: 'bg-blue-500' },
+    { id: 'qr',     title: 'Generate QR Code',         description: 'Students scan QR code',            icon: QrCode,         color: 'bg-green-500' },
+    { id: 'number', title: 'Number Selection',          description: 'Choose one number for attendance', icon: ListOrdered,    color: 'bg-amber-500' },
   ];
 
   // ─── Resume existing session ───────────────────────────────────────────────
-  // بيجيب تفاصيل الـ session الكاملة من الـ API وبيفتحها مباشرة
   const handleResumeSession = async () => {
     if (!existingSession) return;
     setLoading(true);
     try {
-      // جيب الـ attendance records الحالية + بيانات الطلاب
       const res = await api.attendance.getSessionAttendance(existingSession.sessionId);
       if (!res.ok || !res.data?.data) {
         toast.error('Failed to load session details');
@@ -122,32 +120,28 @@ export function AttendanceMethodSelection() {
       }
 
       const sd = res.data.data;
-
-      // بناء sessionData بنفس شكل start-session response
       const methodNum =
         existingSession.method === 'QRCode'          ? 2 :
         existingSession.method === 'NumberSelection'  ? 3 : 1;
 
-      // ✅ جيب الـ QR/randomNumbers من session endpoint لو محتاجهم
-      // الـ getSessionAttendance مش بيرجعهم — هنجيبهم من sessions list
-      // لكن الـ sessions list مش بيرجع QR — الحل: نبعت الـ sessionId وخلي الصفحة تجيبه
+      const expiresAt = existingSession.expiresAt.endsWith('Z')
+        ? existingSession.expiresAt
+        : existingSession.expiresAt + 'Z';
+
       const sessionData = {
         sessionId:        existingSession.sessionId,
         classOid:         sd.classOid,
-        lessonOid:        lessonOid,
+        lessonOid,
         lessonName:       lessonTitle,
-        className:        className,
+        className,
         method:           methodNum,
-        // QR/numbers مش موجودين في sessions list → هنعتمد على الصفحة إنها تجيبهم
         qrCodeBase64:     null,
         randomNumbers:    null,
         students:         sd.students?.map(s => ({
                             studentOid:  s.studentOid,
                             studentName: s.studentName,
                           })) || [],
-       expiresAt: existingSession.expiresAt.endsWith('Z')
-  ? existingSession.expiresAt
-  : existingSession.expiresAt + 'Z',
+        expiresAt,
         attendanceStatus: sd.students || [],
       };
 
@@ -159,9 +153,12 @@ export function AttendanceMethodSelection() {
           { state: { sessionData } }
         );
       } else if (methodNum === 3) {
+        // ✅ جيب correctNumber من localStorage
+        const saved = localStorage.getItem(`session_correct_${existingSession.sessionId}`);
+        const savedCorrect = saved ? parseInt(saved) : null;
         navigate(
           `/teacher/attendance/code?classOid=${classOid}&className=${encodeURIComponent(className)}&date=${date}`,
-          { state: { sessionData, correctNumber: null, numberOptions: [] } }
+          { state: { sessionData: { ...sessionData, correctNumber: savedCorrect }, correctNumber: savedCorrect, numberOptions: [] } }
         );
       } else {
         navigate(
@@ -179,8 +176,8 @@ export function AttendanceMethodSelection() {
 
   // ─── Start new session ─────────────────────────────────────────────────────
   const handleStartSession = async () => {
-    if (!classOid)    { toast.error('Invalid class selected'); return; }
-    if (!lessonOid)   { toast.error('No lesson found for today'); return; }
+    if (!classOid)       { toast.error('Invalid class selected'); return; }
+    if (!lessonOid)      { toast.error('No lesson found for today'); return; }
     if (!selectedMethod) { toast.error('Please select a method'); return; }
     if (selectedMethod === 'number' && correctNumber === null) {
       toast.error('Please select the correct number'); return;
@@ -214,9 +211,12 @@ export function AttendanceMethodSelection() {
           { state: { sessionData } }
         );
       } else {
+        // ✅ حفظ correctNumber في localStorage + sessionData
+        localStorage.setItem(`session_correct_${sessionData.sessionId}`, String(correctNumber));
+        const sessionDataWithCorrect = { ...sessionData, correctNumber };
         navigate(
           `/teacher/attendance/code?classOid=${classOid}&className=${encodeURIComponent(className)}&date=${date}`,
-          { state: { sessionData, correctNumber, numberOptions: generatedNumbers } }
+          { state: { sessionData: sessionDataWithCorrect, correctNumber, numberOptions: generatedNumbers } }
         );
       }
     } catch {
@@ -226,7 +226,6 @@ export function AttendanceMethodSelection() {
     }
   };
 
-  // ─── Loading spinner ───────────────────────────────────────────────────────
   if (checkingSession) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -249,7 +248,7 @@ export function AttendanceMethodSelection() {
         </div>
       </div>
 
-      {/* ✅ Active session banner */}
+      {/* Active session banner */}
       {existingSession && (
         <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-xl border-2 border-indigo-200 bg-indigo-50">
           <div className="flex items-center gap-3">
@@ -259,10 +258,10 @@ export function AttendanceMethodSelection() {
               <p className="text-sm text-indigo-600">
                 Method: <strong>{existingSession.method}</strong>
                 {' '}— Expires: {new Date(
-  existingSession.expiresAt.endsWith('Z')
-    ? existingSession.expiresAt
-    : existingSession.expiresAt + 'Z'
-).toLocaleTimeString()}
+                  existingSession.expiresAt.endsWith('Z')
+                    ? existingSession.expiresAt
+                    : existingSession.expiresAt + 'Z'
+                ).toLocaleTimeString()}
               </p>
             </div>
           </div>
@@ -271,10 +270,7 @@ export function AttendanceMethodSelection() {
             disabled={loading}
             className="bg-indigo-600 hover:bg-indigo-700 shrink-0"
           >
-            {loading
-              ? <Loader2 className="h-4 w-4 animate-spin" />
-              : 'Go to Session →'
-            }
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Go to Session →'}
           </Button>
         </div>
       )}
@@ -314,11 +310,7 @@ export function AttendanceMethodSelection() {
                 onClick={() => setSelectedMethod(method.id)}
               >
                 <CardHeader className="relative">
-                  {isSelected && (
-                    <div className="absolute top-4 right-4 text-primary">
-                      <CheckCircle2 className="h-6 w-6" />
-                    </div>
-                  )}
+                  {isSelected && <div className="absolute top-4 right-4 text-primary"><CheckCircle2 className="h-6 w-6" /></div>}
                   <div className={`w-12 h-12 rounded-lg ${method.color} flex items-center justify-center mb-4`}>
                     <Icon className="h-6 w-6 text-white" />
                   </div>

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API = "https://localhost:7179/api";
+const API = "http://edusmarrt.runasp.net/api";
 
 export function ExamSubmissions() {
   const navigate = useNavigate();
@@ -144,7 +144,7 @@ export function ExamSubmissions() {
 
   const handleViewAttachment = (url) => {
     if (!url) { toast.error('No attachment'); return; }
-    window.open(url.startsWith('http') ? url : `https://localhost:7179${url}`, '_blank');
+    window.open(url.startsWith('http') ? url : `http://edusmarrt.runasp.net/${url}`, '_blank');
   };
 
   const filteredSubmissions = submissions.filter(s =>

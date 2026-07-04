@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { toast } from "sonner";
 import { Loader2, Upload, X, FileText, Calendar } from "lucide-react";
 
-const API_BASE_URL = "https://localhost:7179/api";
+const API_BASE_URL = "http://edusmarrt.runasp.net/api";
 
 export function AddHomework() {
   const navigate = useNavigate();

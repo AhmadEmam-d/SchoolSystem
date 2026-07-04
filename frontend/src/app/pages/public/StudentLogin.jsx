@@ -19,7 +19,7 @@ export function StudentLogin() {
   const [error, setError] = useState('');
   const isRTL = i18n.language === 'ar';
 
-  const API_BASE_URL = 'https://localhost:7179/api';
+  const API_BASE_URL = 'http://edusmarrt.runasp.net/api';
 
 
   const handleSubmit = async (e) => {

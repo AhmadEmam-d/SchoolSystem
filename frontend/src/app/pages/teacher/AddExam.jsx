@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
-const API_BASE_URL = "https://localhost:7179/api";
+const API_BASE_URL = "http://edusmarrt.runasp.net/api";
 
 export function AddExam() {
   const navigate = useNavigate();

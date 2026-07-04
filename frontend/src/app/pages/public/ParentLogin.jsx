@@ -29,6 +29,7 @@ export function ParentLogin() {
   const [error, setError] = useState('');
 
   const isRTL = i18n.language === 'ar';
+  const baseurl =`http://edusmarrt.runasp.net/api`;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -45,7 +46,7 @@ export function ParentLogin() {
 
     try {
       const response = await fetch(
-        'https://localhost:7179/api/Auth/login',
+        `${baseurl}/Auth/login`,
         {
           method: 'POST',
           headers: {

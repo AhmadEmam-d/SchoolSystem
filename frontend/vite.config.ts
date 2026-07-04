@@ -22,7 +22,7 @@ export default defineConfig({
    proxy: {
       '/api': {
         // 🚩 غير الرقم ده لرقم بورت السيرفر (Backend) بتاعك
-        target: 'http://localhost:5000', 
+        target: 'http://http://edusmarrt.runasp.net', 
         changeOrigin: true,
         secure: false,
         // ضيف السطر ده عشان تشيل كلمة /api من الـ URL قبل ما تروح للسيرفر لو السيرفر مش مستنيها

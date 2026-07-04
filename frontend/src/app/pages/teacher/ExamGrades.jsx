@@ -6,7 +6,7 @@ import { ArrowLeft, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { getGradeColors, getChartColors } from '../../lib/uiConstants';
 
-const API = "https://localhost:7179/api";
+const API = "http://edusmarrt.runasp.net/api";
 
 export function ExamGrades() {
   const navigate = useNavigate();

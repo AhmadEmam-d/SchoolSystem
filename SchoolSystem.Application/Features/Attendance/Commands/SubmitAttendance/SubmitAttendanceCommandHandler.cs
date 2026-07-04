@@ -34,10 +34,8 @@ namespace SchoolSystem.Application.Features.Attendance.Commands.SubmitAttendance
 
             if (session.Method == (int)AttendanceMethod.NumberSelection)
             {
-                if (!request.Dto.SelectedNumber.HasValue)
-                    throw new Exception("Please select a number");
-
-                if (request.Dto.SelectedNumber.Value != session.CorrectNumber)
+                if (request.Dto.SelectedNumber.HasValue &&
+                    request.Dto.SelectedNumber.Value != session.CorrectNumber)
                     throw new Exception("Invalid number selected");
             }
 
