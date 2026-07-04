@@ -7,9 +7,7 @@ import { toast } from 'sonner';
 
 export function CodeAttendance() {
   const navigate = useNavigate();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const location = useLocation();
 
   const className = searchParams.get('className') || 'Class';
@@ -28,11 +26,7 @@ export function CodeAttendance() {
   const [timeLeft, setTimeLeft] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [attendanceList, setAttendanceList] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [revealed, setRevealed] = useState(false);
-  const [attendanceList, setAttendanceList] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAttendance = useCallback(async () => {
@@ -60,11 +54,10 @@ export function CodeAttendance() {
   useEffect(() => {
     if (!sessionData?.expiresAt) return;
     const interval = setInterval(() => {
-     // ✅ لو الـ expiresAt مش فيه Z في الآخر نضيفه عشان يتعامل معاه كـ UTC
-const expiresAtUTC = sessionData.expiresAt.endsWith('Z')
-  ? sessionData.expiresAt
-  : sessionData.expiresAt + 'Z';
-const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000)); 
+      const expiresAtUTC = sessionData.expiresAt.endsWith('Z')
+        ? sessionData.expiresAt
+        : sessionData.expiresAt + 'Z';
+      const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000));
       setTimeLeft(diff);
       if (diff === 0) clearInterval(interval);
     }, 1000);
@@ -88,7 +81,6 @@ const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000
   };
 
   const isExpired = timeLeft === 0;
-  const isExpired = timeLeft === 0;
   const presentCount = attendanceList.filter(s => s.status === 'Present').length;
   const absentCount = attendanceList.filter(s => s.status === 'Absent' || s.status === 'NotRecorded').length;
 
@@ -96,17 +88,14 @@ const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000
   const submitLockRef = React.useRef(false);
 
   const handleSubmit = async () => {
-    if (submitLockRef.current) return;  
-    submitLockRef.current = true;   
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
 
     setSubmitting(true);
     try {
       const attendances = sessionData.students?.map(s => {
         const record = attendanceList.find(a => a.studentOid === s.studentOid);
         return {
-          studentOid: s.studentOid,
-          status: record?.status === 'Present' ? 'Present' : 'Absent',
-          remarks: record?.remarks || '',
           studentOid: s.studentOid,
           status: record?.status === 'Present' ? 'Present' : 'Absent',
           remarks: record?.remarks || '',
@@ -128,7 +117,7 @@ const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000
         toast.error(res.data?.errors?.[0] || 'Failed to submit');
         submitLockRef.current = false;
       }
-    } catch (e) {
+    } catch {
       toast.error('Connection error');
       submitLockRef.current = false;
     } finally {
@@ -241,7 +230,6 @@ const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000
           <div className="overflow-y-auto max-h-80 divide-y">
             {sessionData.students?.map((s) => {
               const record = attendanceList.find(a => a.studentOid === s.studentOid);
-              const record = attendanceList.find(a => a.studentOid === s.studentOid);
               const isPresent = record?.status === 'Present';
               const isAbsent = record?.status === 'Absent';
 
@@ -285,7 +273,7 @@ const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000
         <Button
           className="flex-1"
           variant="destructive"
-          disabled={submitting || isExpired}
+          disabled={submitting}
           onClick={handleSubmit}
         >
           {submitting ? 'Submitting...' : 'End & Submit Session'}
