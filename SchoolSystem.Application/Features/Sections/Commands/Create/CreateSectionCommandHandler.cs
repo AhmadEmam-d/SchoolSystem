@@ -1,37 +1,46 @@
 ﻿using AutoMapper;
 using MediatR;
+using SchoolSystem.Application.Features.Sections.Commands.Create;
 using SchoolSystem.Domain.Entities;
 using SchoolSystem.Domain.Interfaces.Common;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace SchoolSystem.Application.Features.Sections.Commands.Create
+public class CreateSectionCommandHandler
+    : IRequestHandler<CreateSectionCommand, CreateSectionCommandResponse>
 {
-    public class CreateSectionCommandHandler
-        : IRequestHandler<CreateSectionCommand, CreateSectionCommandResponse>
+    private readonly IGenericRepository<Section> _sectionRepo;
+    private readonly IGenericRepository<Class> _classRepo;
+    private readonly IMapper _mapper;
+
+    public CreateSectionCommandHandler(
+        IGenericRepository<Section> sectionRepo,
+        IGenericRepository<Class> classRepo,
+        IMapper mapper)
     {
-        private readonly IGenericRepository<Section> _repo;
-        private readonly IMapper _mapper;
+        _sectionRepo = sectionRepo;
+        _classRepo = classRepo;
+        _mapper = mapper;
+    }
 
-        public CreateSectionCommandHandler(IGenericRepository<Section> repo, IMapper mapper)
+    public async Task<CreateSectionCommandResponse> Handle(
+        CreateSectionCommand request,
+        CancellationToken cancellationToken)
+    {
+        var classEntity = await _classRepo.GetByOidAsync(request.Section.ClassOid);
+        if (classEntity == null)
         {
-            _repo = repo;
-            _mapper = mapper;
+            throw new Exception($"Class with Oid {request.Section.ClassOid} not found");
         }
 
-        public async Task<CreateSectionCommandResponse> Handle(CreateSectionCommand request, CancellationToken cancellationToken)
+        var entity = _mapper.Map<Section>(request.Section);
+        entity.Oid = Guid.NewGuid();
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.SchoolId = classEntity.SchoolId; 
+
+        await _sectionRepo.CreateAsync(entity);
+
+        return new CreateSectionCommandResponse
         {
-            var entity = _mapper.Map<Section>(request.Section);
-            entity.Oid = Guid.NewGuid();
-            entity.CreatedAt = DateTime.UtcNow;
-
-            await _repo.CreateAsync(entity);
-
-            return new CreateSectionCommandResponse
-            {
-                Oid = entity.Oid
-            };
-        }
+            Oid = entity.Oid
+        };
     }
 }
