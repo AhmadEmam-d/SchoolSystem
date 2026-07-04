@@ -8,7 +8,9 @@ export function AddStudent() {
 
   const [loading, setLoading] = useState(false);
   const [classes, setClasses] = useState([]);
+  const [sections, setSections] = useState([]);
   const [parents, setParents] = useState([]);
+  const [filteredSections, setFilteredSections] = useState([]);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -18,6 +20,7 @@ export function AddStudent() {
     gender: 'Male',
     address: '',
     classOid: '',
+    sectionOid: '',
     parentOid: ''
   });
 
@@ -25,11 +28,15 @@ export function AddStudent() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [clsRes, parRes] = await Promise.all([
+        const [clsRes, secRes, parRes] = await Promise.all([
           api.classes.getAll(),
+          fetch(`https://localhost:7179/api/Sections`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }).then(res => res.json()),
           api.parents.getAll()
         ]);
         setClasses(clsRes || []);
+        setSections(secRes?.data || []);
         setParents(parRes || []);
       } catch (err) {
         console.error(err);
@@ -41,6 +48,18 @@ export function AddStudent() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (formData.classOid) {
+      const filtered = sections.filter(
+        s => s.classOid === formData.classOid || s.class?.oid === formData.classOid
+      );
+      setFilteredSections(filtered);
+      setFormData(prev => ({ ...prev, sectionOid: '' }));
+    } else {
+      setFilteredSections([]);
+    }
+  }, [formData.classOid, sections]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -49,6 +68,7 @@ export function AddStudent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.classOid) return toast.error('Select class');
+    if (!formData.sectionOid) return toast.error('Select section');
     if (!formData.parentOid) return toast.error('Select parent');
 
     setLoading(true);
@@ -60,11 +80,13 @@ export function AddStudent() {
         email: formData.email.trim(),
         phone: formData.phone.trim(),
         classOid: formData.classOid,
+        sectionOid: formData.sectionOid,
         parentOid: formData.parentOid,
         address: formData.address?.trim() || null
       };
 
       const { ok, data } = await api.students.create(studentData);
+     
 
       if (ok && data.success) {
         toast.success('Student added successfully');
@@ -185,17 +207,39 @@ export function AddStudent() {
                 </select>
               </Field>
 
-              <Field label="Parent / Guardian" required>
-                <select style={styles.input} name="parentOid" value={formData.parentOid} onChange={handleChange} required>
-                  <option value="">Select Parent</option>
-                  {parents.map(p => (
-                    <option key={p.oid} value={p.oid}>
-                      {p.fatherName} — {p.phone}
-                    </option>
+              <Field label="Section" required>
+                <select
+                  style={{
+                    ...styles.input,
+                    opacity: !formData.classOid ? 0.5 : 1,
+                    cursor: !formData.classOid ? 'not-allowed' : 'default'
+                  }}
+                  name="sectionOid"
+                  value={formData.sectionOid}
+                  onChange={handleChange}
+                  disabled={!formData.classOid}
+                  required
+                >
+                  <option value="">
+                    {!formData.classOid ? 'Select a class first' : 'Select Section'}
+                  </option>
+                  {filteredSections.map(s => (
+                    <option key={s.oid} value={s.oid}>{s.name}</option>
                   ))}
                 </select>
               </Field>
             </div>
+
+            <Field label="Parent / Guardian" required>
+              <select style={styles.input} name="parentOid" value={formData.parentOid} onChange={handleChange} required>
+                <option value="">Select Parent</option>
+                {parents.map(p => (
+                  <option key={p.oid} value={p.oid}>
+                    {p.fatherName} — {p.phone}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </div>
 
           {/* Actions */}

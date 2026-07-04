@@ -23,7 +23,7 @@ const TeacherLessons = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         const lessonsRes = await fetch(
-          `http://edusmarrt.runasp.net/api/Lessons?TeacherOid=${user.teacherId}`,
+          `https://localhost:7179/api/Lessons?TeacherOid=${user.teacherId}`,
           { headers }
         ).then(r => r.json());
 
@@ -44,7 +44,7 @@ const TeacherLessons = () => {
     if (!window.confirm("متأكد من حذف الدرس؟")) return;
     try {
       const token = localStorage.getItem("token");
-      await fetch(`http://edusmarrt.runasp.net/api/Lessons/${id}`, {
+      await fetch(`https://localhost:7179/api/Lessons/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

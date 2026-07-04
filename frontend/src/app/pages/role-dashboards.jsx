@@ -260,7 +260,7 @@ function StudentAttendanceModal({ session, onClose, onSuccess }) {
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:50, background:'rgba(0,0,0,0.45)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div style={{ position:'fixed', inset:0, zIndex:50, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center' }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{ background:'var(--color-background-primary)', borderRadius:12, padding:'1.5rem', width:'100%', maxWidth:400, boxShadow:'0 8px 40px rgba(0,0,0,0.18)' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem' }}>
           <div>
@@ -329,18 +329,13 @@ export function StudentDashboard() {
   const fetchActiveSession = useCallback(async () => {
     try {
       const res = await api.attendance.getStudentActiveSession();
-     if (res.ok && res.data) {
-  setActiveSession(res.data);
-  const key = `attended_${res.data.sessionId}`;
-  // ✅ لو سجل قبل كده يفضل recorded
-  if (localStorage.getItem(key) === 'true') {
-    setAttended(true);
-  } else {
-    setAttended(false);
-  }
-} else {
-          setActiveSession(null);
-  setSessionLoading(false);
+      if (res.ok && res.data) {
+        setActiveSession(res.data);
+        const key = `attended_${res.data.sessionId}`;
+        setAttended(localStorage.getItem(key) === 'true');
+      } else {
+        setActiveSession(null);
+        setAttended(false);
       }
     } catch {
       setActiveSession(null);

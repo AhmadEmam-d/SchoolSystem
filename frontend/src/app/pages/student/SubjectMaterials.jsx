@@ -28,7 +28,7 @@ import { api } from '../../lib/api'; // ← عدّل المسار حسب مشر�
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-const API_BASE_URL = 'http://edusmarrt.runasp.net';
+const API_BASE_URL = 'https://localhost:7179';
 
 /** نرجع الـ icon المناسب حسب MIME أو اسم الملف */
 function getFileIcon(fileType = '', fileName = '') {

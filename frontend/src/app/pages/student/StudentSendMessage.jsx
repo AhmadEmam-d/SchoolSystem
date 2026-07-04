@@ -69,7 +69,7 @@ function ReceiverSearch({ token, selected, onSelect, isRTL }) {
       if (activeTab === "teachers") endpoint = "Teachers";
       else if (activeTab === "parents") endpoint = "Parents";
 
-      const res = await fetch(`http://edusmarrt.runasp.net/api/${endpoint}`, {
+      const res = await fetch(`https://localhost:7179/api/${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api';
 
-const API_BASE_URL = "http://edusmarrt.runasp.net";
+const API_BASE_URL = "https://localhost:7179";
 
 export function LessonDetails() {
   const navigate = useNavigate();

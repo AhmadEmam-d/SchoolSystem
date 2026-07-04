@@ -9,7 +9,7 @@ import {
   Loader2, Upload, Save, AlertCircle, BookOpen, Users
 } from "lucide-react";
 
-const API_BASE_URL = "http://edusmarrt.runasp.net/api";
+const API_BASE_URL = "https://localhost:7179/api";
 
 export const EditHomework = () => {
   const { id } = useParams();

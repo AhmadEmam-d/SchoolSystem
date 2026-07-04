@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 import { useAuth } from '../../context/AuthContext';
-const baseurl =`http://edusmarrt.runasp.net/api`;
+const baseurl =`http://localhost:5073/api`;
 
 export function AdminLogin() {
   const { login } = useAuth();
@@ -33,8 +33,6 @@ export function AdminLogin() {
           role: 1
         })
       });
-      console.log(response.status);
-console.log(response);
       
       const data = await response.json();
       console.log('Login response:', data);

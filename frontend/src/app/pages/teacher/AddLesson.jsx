@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ArrowLeft } from 'lucide-react';
 
-const API_BASE_URL = "http://edusmarrt.runasp.net/api";
+const API_BASE_URL = "https://localhost:7179/api";
 
 export function AddLesson() {
   const navigate = useNavigate();

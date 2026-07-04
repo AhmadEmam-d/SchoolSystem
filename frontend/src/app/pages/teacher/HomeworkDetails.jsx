@@ -7,7 +7,7 @@ import { ArrowLeft, Calendar, Clock, FileText, Users, Edit, Loader2, AlertCircle
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
-const API_BASE_URL = "http://edusmarrt.runasp.net";
+const API_BASE_URL = "https://localhost:7179";
 
 export function HomeworkDetails() {
   const navigate = useNavigate();

@@ -163,7 +163,7 @@ export function HomeworkGradeSubmission() {
 
   const handleViewAttachment = (url) => {
     if (!url) { toast.error('No attachment'); return; }
-    const base = 'http://edusmarrt.runasp.net';
+    const base = 'https://localhost:7179';
     window.open(url.startsWith('http') ? url : `${base}${url}`, '_blank');
   };
 

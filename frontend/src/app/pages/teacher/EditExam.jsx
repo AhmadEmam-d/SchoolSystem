@@ -10,7 +10,7 @@ import { ArrowLeft, Loader2, Paperclip, Upload, FileText, X, Download } from 'lu
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 
-const API_BASE_URL = "http://edusmarrt.runasp.net/api";
+const API_BASE_URL = "https://localhost:7179/api";
 
 const formatFileSize = (bytes) => {
   if (!bytes) return '';

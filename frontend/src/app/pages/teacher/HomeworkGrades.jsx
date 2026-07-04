@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { toast } from 'sonner';
 import { getGradeColors, getChartColors } from '../../lib/uiConstants';
 
-const API = "http://edusmarrt.runasp.net/api";
+const API = "https://localhost:7179/api";
 
 export function HomeworkGrades() {
   const navigate = useNavigate();

@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { api } from '../../lib/api';
 
-const API_BASE_URL = "http://edusmarrt.runasp.net/api";
+const API_BASE_URL = "https://localhost:7179";
 
 // ─── Helper: حجم الفايل ──────────────────────────────────────────────────────
 const formatFileSize = (bytes) => {

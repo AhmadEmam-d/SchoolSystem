@@ -24,7 +24,7 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { toast } from "sonner";
 
-const API = "http://edusmarrt.runasp.net/api";
+const API = "https://localhost:7179/api";
 
 export function TeacherHomework() {
   const navigate = useNavigate();

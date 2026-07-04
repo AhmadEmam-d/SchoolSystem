@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 
 export function CodeAttendance() {
   const navigate = useNavigate();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const location = useLocation();
 
   const className = searchParams.get('className') || 'Class';
@@ -26,7 +28,11 @@ export function CodeAttendance() {
   const [timeLeft, setTimeLeft] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [attendanceList, setAttendanceList] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [attendanceList, setAttendanceList] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAttendance = useCallback(async () => {
@@ -54,10 +60,11 @@ export function CodeAttendance() {
   useEffect(() => {
     if (!sessionData?.expiresAt) return;
     const interval = setInterval(() => {
-      const expiresAtUTC = sessionData.expiresAt.endsWith('Z')
-        ? sessionData.expiresAt
-        : sessionData.expiresAt + 'Z';
-      const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000));
+     // ✅ لو الـ expiresAt مش فيه Z في الآخر نضيفه عشان يتعامل معاه كـ UTC
+const expiresAtUTC = sessionData.expiresAt.endsWith('Z')
+  ? sessionData.expiresAt
+  : sessionData.expiresAt + 'Z';
+const diff = Math.max(0, Math.floor((new Date(expiresAtUTC) - new Date()) / 1000)); 
       setTimeLeft(diff);
       if (diff === 0) clearInterval(interval);
     }, 1000);
@@ -81,6 +88,7 @@ export function CodeAttendance() {
   };
 
   const isExpired = timeLeft === 0;
+  const isExpired = timeLeft === 0;
   const presentCount = attendanceList.filter(s => s.status === 'Present').length;
   const absentCount = attendanceList.filter(s => s.status === 'Absent' || s.status === 'NotRecorded').length;
 
@@ -96,6 +104,9 @@ export function CodeAttendance() {
       const attendances = sessionData.students?.map(s => {
         const record = attendanceList.find(a => a.studentOid === s.studentOid);
         return {
+          studentOid: s.studentOid,
+          status: record?.status === 'Present' ? 'Present' : 'Absent',
+          remarks: record?.remarks || '',
           studentOid: s.studentOid,
           status: record?.status === 'Present' ? 'Present' : 'Absent',
           remarks: record?.remarks || '',
@@ -117,7 +128,7 @@ export function CodeAttendance() {
         toast.error(res.data?.errors?.[0] || 'Failed to submit');
         submitLockRef.current = false;
       }
-    } catch {
+    } catch (e) {
       toast.error('Connection error');
       submitLockRef.current = false;
     } finally {
@@ -230,6 +241,7 @@ export function CodeAttendance() {
           <div className="overflow-y-auto max-h-80 divide-y">
             {sessionData.students?.map((s) => {
               const record = attendanceList.find(a => a.studentOid === s.studentOid);
+              const record = attendanceList.find(a => a.studentOid === s.studentOid);
               const isPresent = record?.status === 'Present';
               const isAbsent = record?.status === 'Absent';
 
@@ -273,7 +285,7 @@ export function CodeAttendance() {
         <Button
           className="flex-1"
           variant="destructive"
-          disabled={submitting}
+          disabled={submitting || isExpired}
           onClick={handleSubmit}
         >
           {submitting ? 'Submitting...' : 'End & Submit Session'}

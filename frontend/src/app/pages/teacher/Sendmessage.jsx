@@ -2,7 +2,7 @@ import { api } from '../../../app/lib/api';
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
-const API = "http://edusmarrt.runasp.net/api";
+const API = "https://localhost:7179/api";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const IconSend = () => (
