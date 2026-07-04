@@ -6,31 +6,29 @@ import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
 export function CodeAttendance() {
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const location  = useLocation();
+  const location = useLocation();
 
-  const className   = searchParams.get('className') || 'Class';
+  const className = searchParams.get('className') || 'Class';
   const sessionData = location.state?.sessionData;
 
-  // الأرقام من الـ sessionData أو navigation state
   const numberOptions = sessionData?.randomNumbers || location.state?.numberOptions || [];
 
-  // ✅ correctNumber: من state → sessionData → localStorage
-  const correctNumber =
+  const [correctNumber] = useState(() =>
     location.state?.correctNumber ??
     sessionData?.correctNumber ??
     (sessionData?.sessionId
       ? (parseInt(localStorage.getItem(`session_correct_${sessionData.sessionId}`)) || null)
-      : null);
+      : null)
+  );
 
-  const [timeLeft, setTimeLeft]                   = useState(null);
-  const [revealed, setRevealed]                   = useState(false);
-  const [attendanceList, setAttendanceList]       = useState([]);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [attendanceList, setAttendanceList] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
-  const [submitting, setSubmitting]               = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // ─── جيب حالة الحضور الحالية ─────────────────────────────────────────────
   const fetchAttendance = useCallback(async () => {
     if (!sessionData?.sessionId) return;
     setLoadingAttendance(true);
@@ -82,40 +80,46 @@ export function CodeAttendance() {
     return `${m}:${s}`;
   };
 
-  const isExpired    = timeLeft === 0;
+  const isExpired = timeLeft === 0;
   const presentCount = attendanceList.filter(s => s.status === 'Present').length;
-  const absentCount  = attendanceList.filter(s => s.status === 'Absent' || s.status === 'NotRecorded').length;
+  const absentCount = attendanceList.filter(s => s.status === 'Absent' || s.status === 'NotRecorded').length;
 
   // ─── Submit Session ───────────────────────────────────────────────────────
+  const submitLockRef = React.useRef(false);
+
   const handleSubmit = async () => {
+    if (submitLockRef.current) return;  
+    submitLockRef.current = true;   
+
     setSubmitting(true);
     try {
       const attendances = sessionData.students?.map(s => {
         const record = attendanceList.find(a => a.studentOid === s.studentOid);
         return {
-          studentOid:  s.studentOid,
-          status:      record?.status === 'Present' ? 'Present' : 'Absent',
-          remarks:     record?.remarks || '',
+          studentOid: s.studentOid,
+          status: record?.status === 'Present' ? 'Present' : 'Absent',
+          remarks: record?.remarks || '',
           checkInTime: record?.checkInTime || new Date().toISOString().split('T')[1].split('.')[0],
         };
       }) || [];
 
       const res = await api.attendance.submitSession({
-        sessionId:      sessionData.sessionId,
+        sessionId: sessionData.sessionId,
         selectedNumber: correctNumber,
         attendances,
       });
 
       if (res.ok) {
-        // ✅ امسح الـ localStorage بعد نجاح الـ submit
         localStorage.removeItem(`session_correct_${sessionData.sessionId}`);
         toast.success('Session submitted successfully!');
         navigate('/teacher/dashboard');
       } else {
         toast.error(res.data?.errors?.[0] || 'Failed to submit');
+        submitLockRef.current = false;
       }
     } catch {
       toast.error('Connection error');
+      submitLockRef.current = false;
     } finally {
       setSubmitting(false);
     }
@@ -141,11 +145,10 @@ export function CodeAttendance() {
         <div className="bg-card border rounded-xl shadow-sm p-6 flex flex-col items-center gap-5">
 
           {/* Timer */}
-          <div className={`flex items-center gap-2 text-lg font-semibold px-4 py-2 rounded-full w-full justify-center ${
-            isExpired ? 'bg-red-100 text-red-600'
-              : timeLeft !== null && timeLeft < 60 ? 'bg-orange-100 text-orange-600'
+          <div className={`flex items-center gap-2 text-lg font-semibold px-4 py-2 rounded-full w-full justify-center ${isExpired ? 'bg-red-100 text-red-600'
+            : timeLeft !== null && timeLeft < 60 ? 'bg-orange-100 text-orange-600'
               : 'bg-amber-100 text-amber-600'
-          }`}>
+            }`}>
             <Clock className="h-5 w-5" />
             {isExpired ? 'Session Expired' : `Expires in ${formatTime(timeLeft)}`}
           </div>
@@ -161,13 +164,12 @@ export function CodeAttendance() {
               return (
                 <div
                   key={idx}
-                  className={`py-8 rounded-xl border-2 text-4xl font-bold text-center transition-all ${
-                    revealed && isCorrect
-                      ? 'bg-amber-500 text-white border-amber-600 scale-105 shadow-lg'
-                      : revealed && !isCorrect
-                        ? 'bg-gray-50 text-gray-300 border-gray-200'
-                        : 'bg-white border-gray-200'
-                  }`}
+                  className={`py-8 rounded-xl border-2 text-4xl font-bold text-center transition-all ${revealed && isCorrect
+                    ? 'bg-amber-500 text-white border-amber-600 scale-105 shadow-lg'
+                    : revealed && !isCorrect
+                      ? 'bg-gray-50 text-gray-300 border-gray-200'
+                      : 'bg-white border-gray-200'
+                    }`}
                 >
                   {num}
                 </div>
@@ -227,16 +229,15 @@ export function CodeAttendance() {
 
           <div className="overflow-y-auto max-h-80 divide-y">
             {sessionData.students?.map((s) => {
-              const record    = attendanceList.find(a => a.studentOid === s.studentOid);
+              const record = attendanceList.find(a => a.studentOid === s.studentOid);
               const isPresent = record?.status === 'Present';
-              const isAbsent  = record?.status === 'Absent';
+              const isAbsent = record?.status === 'Absent';
 
               return (
                 <div key={s.studentOid} className={`flex items-center justify-between px-5 py-3 transition-colors ${isPresent ? 'bg-green-50' : ''}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      isPresent ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
-                    }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isPresent ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
+                      }`}>
                       {s.studentName.charAt(0)}
                     </div>
                     <span className={`text-sm font-medium ${isPresent ? 'text-green-800' : 'text-gray-700'}`}>
